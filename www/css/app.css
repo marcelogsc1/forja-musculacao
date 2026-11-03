@@ -515,3 +515,4 @@ input[type="date"].field{min-height:50px}
 .sec-head .eyebrow{color:var(--muted)}
 .hero-stats b small{font-size:13px;letter-spacing:0;margin-left:1px}
 .sheet .hero-name{font-size:clamp(30px,calc(100cqi / (var(--k,5) * .56)),64px);margin-top:16px}
+.kp-top .kp-x{background:transparent;margin-left:-6px;color:var(--muted)}

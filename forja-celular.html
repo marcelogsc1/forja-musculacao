@@ -538,6 +538,7 @@ input[type="date"].field{min-height:50px}
 .sec-head .eyebrow{color:var(--muted)}
 .hero-stats b small{font-size:13px;letter-spacing:0;margin-left:1px}
 .sheet .hero-name{font-size:clamp(30px,calc(100cqi / (var(--k,5) * .56)),64px);margin-top:16px}
+.kp-top .kp-x{background:transparent;margin-left:-6px;color:var(--muted)}
 
 </style>
 </head>
@@ -1069,14 +1070,27 @@ const Platform = (() => {
       const SB = plug('StatusBar'); if (SB){ SB.setStyle({style: dark ? 'DARK' : 'LIGHT'}).catch(() => {}); SB.setBackgroundColor && SB.setBackgroundColor({color: m.content}).catch(() => {}); }
     },
     /* Botão voltar do Android / gesto de voltar. handler() devolve false quando está na raiz. */
-    onBack(handler){
+    onBack(handler, depthFn){
       const App = plug('App');
       if (App){ App.addListener('backButton', () => { if (handler() === false) App.exitApp(); }); return; }
       if (isArtifact) return; // dentro do claude.ai o histórico pertence ao host
+      /* Voltar no navegador/PWA: o app mantém no histórico uma "escada" com um degrau por camada aberta
+         (folha, teclado, páginas, aba). Cada voltar consome um degrau e fecha a camada de cima.
+         O Chrome ignora no voltar degraus criados sem toque do usuário, por isso eles só são
+         criados logo depois de um toque ou tecla. Degraus que sobram (camada fechada pelo próprio app)
+         são pulados de uma vez quando o voltar chega à raiz. */
       try {
-        history.replaceState({forja: 'base'}, '');
-        history.pushState({forja: 'top'}, '');
-        window.addEventListener('popstate', e => { if (!e.state || e.state.forja !== 'base') return; if (handler() === false) history.back(); else history.pushState({forja: 'top'}, ''); });
+        let depth = 0;
+        history.replaceState({forja: 'step', n: 0}, '');
+        const sync = () => { const want = Math.min(8, Math.max(0, depthFn ? depthFn() : 1)); while (depth < want){ try { history.pushState({forja: 'step', n: depth + 1}, ''); depth++; } catch (e) { break; } } };
+        const later = () => setTimeout(sync, 0);
+        window.addEventListener('click', later, {passive: true});
+        window.addEventListener('keydown', later, {passive: true});
+        window.addEventListener('popstate', e => {
+          const st = e.state; if (!st || st.forja !== 'step') return;
+          const prev = depth; depth = st.n; if (st.n >= prev) return;
+          if (handler() === false){ if (st.n > 0) history.go(-st.n); else history.back(); }
+        });
       } catch (e) {}
     },
     /* Instalação como app (PWA). No Android o Chrome gera um WebAPK: ícone na lista de apps e em Configurações > Apps. */
@@ -1577,7 +1591,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.3.0';
+const APP_VERSION = '4.3.1';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -1678,7 +1692,7 @@ function ring(v, max, size = 96, stroke = 10, color = 'var(--ember)'){
 const TABS = ['inicio', 'rotinas', 'exercicios', 'progresso'];
 function push(page){ closeKP(); UI.scroll[UI.stack.length] = window.scrollY; UI.stack.push(page); closeSheet(); render(); window.scrollTo({top: 0}); }
 function pop(){ closeKP(); UI.stack.pop(); closeSheet(); render(); window.scrollTo({top: UI.scroll[UI.stack.length] || 0}); }
-function goTab(t){ closeKP(); UI.tab = t; UI.stack = []; closeSheet(); render(); window.scrollTo({top: 0}); }
+function goTab(t){ closeKP(); UI.tab = t; UI.stack = []; closeSheet(); if (!Platform.isArtifact && location.hash !== '#' + t) try { history.replaceState(history.state, '', '#' + t); } catch (e) {} render(); window.scrollTo({top: 0}); }
 const curPage = () => UI.stack[UI.stack.length - 1];
 function initials(){ const n = (ST.profile.name || '').trim(); return n ? n.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() : ''; }
 function render(){
@@ -1710,6 +1724,8 @@ function render(){
   if (KP.open) drawKP();
   if (fid){ const el = document.getElementById(fid); if (el){ el.focus({preventScroll: true}); if (sel && el.setSelectionRange) try { el.setSelectionRange(sel[0], sel[1]); } catch (e) {} } }
 }
+/* Quantas camadas o voltar ainda tem para fechar (usado pelo histórico do navegador). */
+function backDepth(){ return (!$('#sheet').hidden ? 1 : 0) + (KP.open ? 1 : 0) + UI.stack.length + (UI.tab !== 'inicio' ? 1 : 0); }
 /* Botão voltar (Android/gesto). Devolve false quando já está na raiz. */
 function handleBack(){
   if (!$('#sheet').hidden){ closeSheet(); return true; }
@@ -2053,7 +2069,7 @@ function drawKP(){
   if (!x){ closeKP(); return; }
   const ex = getEx(e.ex); const inc = KP.f === 'kg' ? ST.prefs.inc : 1;
   const el = $('#kp'); el.hidden = false;
-  el.innerHTML = `<div class="in"><div class="kp-top"><div class="what"><b>${esc(ex.n)}</b><span>${x.t === 'w' ? 'Aquecimento' : `Série ${e.sets.slice(0, KP.j + 1).filter(y => y.t !== 'w').length}`} · ${KP.f === 'kg' ? 'carga (kg)' : 'repetições'}${R.tick ? ' · descanso <span id="kprest" class="num"></span>' : ''}</span></div><button class="btn sm okbtn" data-act="kp-done">${I.check}${x.ok ? 'Confirmada' : 'Série feita'}</button></div>
+  el.innerHTML = `<div class="in"><div class="kp-top"><button class="icon sm kp-x" data-act="kp-close" aria-label="Fechar teclado e tirar a seleção" title="Fechar">${I.hide}</button><div class="what"><b>${esc(ex.n)}</b><span>${x.t === 'w' ? 'Aquecimento' : `Série ${e.sets.slice(0, KP.j + 1).filter(y => y.t !== 'w').length}`} · ${KP.f === 'kg' ? 'carga (kg)' : 'repetições'}${R.tick ? ' · descanso <span id="kprest" class="num"></span>' : ''}</span></div><button class="btn sm okbtn" data-act="kp-done">${I.check}${x.ok ? 'Confirmada' : 'Série feita'}</button></div>
     ${KP.f === 'kg' && ex.e === 'barra' && x.kg ? `<div class="kp-plates">${plates(x.kg)}</div>` : ''}
     <div class="kp-grid">${['1', '2', '3'].map(d => `<button data-act="kp" data-k="${d}">${d}</button>`).join('')}<button class="fn" data-act="kp" data-k="bk" aria-label="Apagar">${I.bksp}</button>
     ${['4', '5', '6'].map(d => `<button data-act="kp" data-k="${d}">${d}</button>`).join('')}<button class="fn" data-act="kp" data-k="minus" aria-label="Diminuir ${fmtN(inc)}">−${fmtN(inc)}</button>
@@ -2405,7 +2421,8 @@ A['pick-confirm'] = () => {
 };
 function newItem(ex){ const e = getEx(ex); const iso = ['quad-iso', 'fly', 'ombro-lat', 'ombro-front', 'ombro-post', 'biceps', 'martelo', 'triceps-over', 'triceps-push', 'flexora', 'pant', 'abd', 'abd-inf', 'obliquo', 'gluteo', 'adutor', 'antebraco', 'antebraco-flex', 'encolhimento'].includes(e.p); return {uid: uid('i'), ex, sets: 3, rmin: iso ? 10 : 8, rmax: iso ? 15 : 12, rest: iso ? 60 : 120, nota: ''}; }
 A.start = el => startSession(el.dataset.rid, el.dataset.wid);
-A.cell = el => { const k = +el.dataset.k, j = +el.dataset.j; const s = curSess(); if (s.items[k].sets[j].ok){ s.items[k].sets[j].ok = false; } openKP(k, j, el.dataset.f); };
+/* tocar de novo no campo selecionado tira a seleção; abrir um campo não desfaz a série (só digitar desfaz) */
+A.cell = el => { const k = +el.dataset.k, j = +el.dataset.j, f = el.dataset.f; if (KP.open && KP.k === k && KP.j === j && KP.f === f){ closeKP(); render(); return; } openKP(k, j, f); };
 A.kp = el => kpKey(el.dataset.k);
 A['kp-close'] = () => { closeKP(); render(); };
 A['kp-done'] = () => checkSet(KP.k, KP.j);
@@ -2463,7 +2480,10 @@ A.export = async () => { const data = JSON.stringify({app: 'forja', version: APP
 document.addEventListener('click', ev => {
   const nav = ev.target.closest('nav.tabs a');
   if (nav){ ev.preventDefault(); const t = nav.dataset.tab; if (Platform.isArtifact && location.hash !== '#' + t){ try { location.hash = t; } catch (e) { goTab(t); } } else { if (!Platform.isArtifact) try { history.replaceState(history.state, '', '#' + t); } catch (e) {} goTab(t); } return; }
-  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const el = ev.target.closest('[data-act]');
+  /* com o teclado aberto, tocar numa área vazia do treino tira a seleção (como fechar o teclado do celular) */
+  if (KP.open && !ev.target.closest('#kp') && (!el || el.closest('#top') === null && !['cell', 'check', 'kp', 'kp-done', 'kp-close'].includes(el.dataset.act) && el.closest('.ex') === null)){ closeKP(); render(); if (!el) return; }
+  if (!el) return;
   if (el.tagName === 'INPUT' || el.tagName === 'SELECT') return;
   const act = el.dataset.act; const fn = A[act]; if (!fn) return;
   fn(el, ev, act);
@@ -2677,7 +2697,7 @@ A.pics = el => { ST.prefs.pics = el.dataset.v; saveState(); render(); };
 document.addEventListener('input', ev => { const t = ev.target; if (t.dataset && t.dataset.act === 'xq'){ const was = xActive(); UI.xq = t.value; if (was !== xActive()){ render(); const i = $('#x-q'); if (i){ i.focus(); i.setSelectionRange(i.value.length, i.value.length); } } else { const el = $('#x-results'); if (el) el.innerHTML = xResults(); } } });
 
 // Inicialização (carregado por último)
-Platform.onBack(handleBack);
+Platform.onBack(handleBack, backDepth);
 Store.init();
 
 </script>

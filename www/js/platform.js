@@ -43,14 +43,27 @@ const Platform = (() => {
       const SB = plug('StatusBar'); if (SB){ SB.setStyle({style: dark ? 'DARK' : 'LIGHT'}).catch(() => {}); SB.setBackgroundColor && SB.setBackgroundColor({color: m.content}).catch(() => {}); }
     },
     /* Botão voltar do Android / gesto de voltar. handler() devolve false quando está na raiz. */
-    onBack(handler){
+    onBack(handler, depthFn){
       const App = plug('App');
       if (App){ App.addListener('backButton', () => { if (handler() === false) App.exitApp(); }); return; }
       if (isArtifact) return; // dentro do claude.ai o histórico pertence ao host
+      /* Voltar no navegador/PWA: o app mantém no histórico uma "escada" com um degrau por camada aberta
+         (folha, teclado, páginas, aba). Cada voltar consome um degrau e fecha a camada de cima.
+         O Chrome ignora no voltar degraus criados sem toque do usuário, por isso eles só são
+         criados logo depois de um toque ou tecla. Degraus que sobram (camada fechada pelo próprio app)
+         são pulados de uma vez quando o voltar chega à raiz. */
       try {
-        history.replaceState({forja: 'base'}, '');
-        history.pushState({forja: 'top'}, '');
-        window.addEventListener('popstate', e => { if (!e.state || e.state.forja !== 'base') return; if (handler() === false) history.back(); else history.pushState({forja: 'top'}, ''); });
+        let depth = 0;
+        history.replaceState({forja: 'step', n: 0}, '');
+        const sync = () => { const want = Math.min(8, Math.max(0, depthFn ? depthFn() : 1)); while (depth < want){ try { history.pushState({forja: 'step', n: depth + 1}, ''); depth++; } catch (e) { break; } } };
+        const later = () => setTimeout(sync, 0);
+        window.addEventListener('click', later, {passive: true});
+        window.addEventListener('keydown', later, {passive: true});
+        window.addEventListener('popstate', e => {
+          const st = e.state; if (!st || st.forja !== 'step') return;
+          const prev = depth; depth = st.n; if (st.n >= prev) return;
+          if (handler() === false){ if (st.n > 0) history.go(-st.n); else history.back(); }
+        });
       } catch (e) {}
     },
     /* Instalação como app (PWA). No Android o Chrome gera um WebAPK: ícone na lista de apps e em Configurações > Apps. */

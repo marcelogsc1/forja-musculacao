@@ -1,3 +1,3 @@
 // Inicialização (carregado por último)
-Platform.onBack(handleBack);
+Platform.onBack(handleBack, backDepth);
 Store.init();

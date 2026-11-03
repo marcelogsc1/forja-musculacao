@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.3.0';
+const APP_VERSION = '4.3.1';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -100,7 +100,7 @@ function ring(v, max, size = 96, stroke = 10, color = 'var(--ember)'){
 const TABS = ['inicio', 'rotinas', 'exercicios', 'progresso'];
 function push(page){ closeKP(); UI.scroll[UI.stack.length] = window.scrollY; UI.stack.push(page); closeSheet(); render(); window.scrollTo({top: 0}); }
 function pop(){ closeKP(); UI.stack.pop(); closeSheet(); render(); window.scrollTo({top: UI.scroll[UI.stack.length] || 0}); }
-function goTab(t){ closeKP(); UI.tab = t; UI.stack = []; closeSheet(); render(); window.scrollTo({top: 0}); }
+function goTab(t){ closeKP(); UI.tab = t; UI.stack = []; closeSheet(); if (!Platform.isArtifact && location.hash !== '#' + t) try { history.replaceState(history.state, '', '#' + t); } catch (e) {} render(); window.scrollTo({top: 0}); }
 const curPage = () => UI.stack[UI.stack.length - 1];
 function initials(){ const n = (ST.profile.name || '').trim(); return n ? n.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() : ''; }
 function render(){
@@ -132,6 +132,8 @@ function render(){
   if (KP.open) drawKP();
   if (fid){ const el = document.getElementById(fid); if (el){ el.focus({preventScroll: true}); if (sel && el.setSelectionRange) try { el.setSelectionRange(sel[0], sel[1]); } catch (e) {} } }
 }
+/* Quantas camadas o voltar ainda tem para fechar (usado pelo histórico do navegador). */
+function backDepth(){ return (!$('#sheet').hidden ? 1 : 0) + (KP.open ? 1 : 0) + UI.stack.length + (UI.tab !== 'inicio' ? 1 : 0); }
 /* Botão voltar (Android/gesto). Devolve false quando já está na raiz. */
 function handleBack(){
   if (!$('#sheet').hidden){ closeSheet(); return true; }
@@ -475,7 +477,7 @@ function drawKP(){
   if (!x){ closeKP(); return; }
   const ex = getEx(e.ex); const inc = KP.f === 'kg' ? ST.prefs.inc : 1;
   const el = $('#kp'); el.hidden = false;
-  el.innerHTML = `<div class="in"><div class="kp-top"><div class="what"><b>${esc(ex.n)}</b><span>${x.t === 'w' ? 'Aquecimento' : `Série ${e.sets.slice(0, KP.j + 1).filter(y => y.t !== 'w').length}`} · ${KP.f === 'kg' ? 'carga (kg)' : 'repetições'}${R.tick ? ' · descanso <span id="kprest" class="num"></span>' : ''}</span></div><button class="btn sm okbtn" data-act="kp-done">${I.check}${x.ok ? 'Confirmada' : 'Série feita'}</button></div>
+  el.innerHTML = `<div class="in"><div class="kp-top"><button class="icon sm kp-x" data-act="kp-close" aria-label="Fechar teclado e tirar a seleção" title="Fechar">${I.hide}</button><div class="what"><b>${esc(ex.n)}</b><span>${x.t === 'w' ? 'Aquecimento' : `Série ${e.sets.slice(0, KP.j + 1).filter(y => y.t !== 'w').length}`} · ${KP.f === 'kg' ? 'carga (kg)' : 'repetições'}${R.tick ? ' · descanso <span id="kprest" class="num"></span>' : ''}</span></div><button class="btn sm okbtn" data-act="kp-done">${I.check}${x.ok ? 'Confirmada' : 'Série feita'}</button></div>
     ${KP.f === 'kg' && ex.e === 'barra' && x.kg ? `<div class="kp-plates">${plates(x.kg)}</div>` : ''}
     <div class="kp-grid">${['1', '2', '3'].map(d => `<button data-act="kp" data-k="${d}">${d}</button>`).join('')}<button class="fn" data-act="kp" data-k="bk" aria-label="Apagar">${I.bksp}</button>
     ${['4', '5', '6'].map(d => `<button data-act="kp" data-k="${d}">${d}</button>`).join('')}<button class="fn" data-act="kp" data-k="minus" aria-label="Diminuir ${fmtN(inc)}">−${fmtN(inc)}</button>
@@ -827,7 +829,8 @@ A['pick-confirm'] = () => {
 };
 function newItem(ex){ const e = getEx(ex); const iso = ['quad-iso', 'fly', 'ombro-lat', 'ombro-front', 'ombro-post', 'biceps', 'martelo', 'triceps-over', 'triceps-push', 'flexora', 'pant', 'abd', 'abd-inf', 'obliquo', 'gluteo', 'adutor', 'antebraco', 'antebraco-flex', 'encolhimento'].includes(e.p); return {uid: uid('i'), ex, sets: 3, rmin: iso ? 10 : 8, rmax: iso ? 15 : 12, rest: iso ? 60 : 120, nota: ''}; }
 A.start = el => startSession(el.dataset.rid, el.dataset.wid);
-A.cell = el => { const k = +el.dataset.k, j = +el.dataset.j; const s = curSess(); if (s.items[k].sets[j].ok){ s.items[k].sets[j].ok = false; } openKP(k, j, el.dataset.f); };
+/* tocar de novo no campo selecionado tira a seleção; abrir um campo não desfaz a série (só digitar desfaz) */
+A.cell = el => { const k = +el.dataset.k, j = +el.dataset.j, f = el.dataset.f; if (KP.open && KP.k === k && KP.j === j && KP.f === f){ closeKP(); render(); return; } openKP(k, j, f); };
 A.kp = el => kpKey(el.dataset.k);
 A['kp-close'] = () => { closeKP(); render(); };
 A['kp-done'] = () => checkSet(KP.k, KP.j);
@@ -885,7 +888,10 @@ A.export = async () => { const data = JSON.stringify({app: 'forja', version: APP
 document.addEventListener('click', ev => {
   const nav = ev.target.closest('nav.tabs a');
   if (nav){ ev.preventDefault(); const t = nav.dataset.tab; if (Platform.isArtifact && location.hash !== '#' + t){ try { location.hash = t; } catch (e) { goTab(t); } } else { if (!Platform.isArtifact) try { history.replaceState(history.state, '', '#' + t); } catch (e) {} goTab(t); } return; }
-  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const el = ev.target.closest('[data-act]');
+  /* com o teclado aberto, tocar numa área vazia do treino tira a seleção (como fechar o teclado do celular) */
+  if (KP.open && !ev.target.closest('#kp') && (!el || el.closest('#top') === null && !['cell', 'check', 'kp', 'kp-done', 'kp-close'].includes(el.dataset.act) && el.closest('.ex') === null)){ closeKP(); render(); if (!el) return; }
+  if (!el) return;
   if (el.tagName === 'INPUT' || el.tagName === 'SELECT') return;
   const act = el.dataset.act; const fn = A[act]; if (!fn) return;
   fn(el, ev, act);
