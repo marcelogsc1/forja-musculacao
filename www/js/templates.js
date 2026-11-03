@@ -1,0 +1,47 @@
+// ---------- referências ----------
+const MUSC = {peito:'Peito',costas:'Costas',ombros:'Ombros',biceps:'Bíceps',triceps:'Tríceps',antebraco:'Antebraço',abdomen:'Abdômen',quadriceps:'Quadríceps',posteriores:'Posteriores',gluteos:'Glúteos',adutores:'Adutores',panturrilha:'Panturrilha',cardio:'Cardio'};
+const REG = {peitoral:'Peitoral',delt_ant:'Deltoide anterior',delt_lat:'Deltoide lateral',delt_post:'Deltoide posterior',trapezio:'Trapézio',dorsal:'Dorsal',meio_costas:'Meio das costas',lombar:'Lombar',biceps:'Bíceps',triceps:'Tríceps',antebraco:'Antebraço',abdomen:'Abdômen',obliquos:'Oblíquos',quadriceps:'Quadríceps',posteriores:'Posteriores de coxa',gluteos:'Glúteos',abdutores:'Glúteo médio',adutores:'Adutores',panturrilha:'Panturrilha'};
+const REG2GROUP = {peitoral:'peito',delt_ant:'ombros',delt_lat:'ombros',delt_post:'ombros',trapezio:'costas',dorsal:'costas',meio_costas:'costas',lombar:'costas',biceps:'biceps',triceps:'triceps',antebraco:'antebraco',abdomen:'abdomen',obliquos:'abdomen',quadriceps:'quadriceps',posteriores:'posteriores',gluteos:'gluteos',abdutores:'gluteos',adutores:'adutores',panturrilha:'panturrilha'};
+const EQUIP = {barra:'Barra',halter:'Halteres',cabo:'Cabo / polia',maquina:'Máquina',smith:'Smith',peso:'Peso corporal',kettlebell:'Kettlebell',elastico:'Elástico',suspensao:'Fita de suspensão',outros:'Outros'};
+const PAT = {'press-reto':'supino reto','press-incl':'supino inclinado','press-decl':'supino declinado',fly:'crucifixo','dip-peito':'mergulho',puxada:'puxada',remada:'remada',pullover:'pullover',encolhimento:'encolhimento','ombro-press':'desenvolvimento','ombro-lat':'elevação lateral','ombro-front':'elevação frontal','ombro-post':'posterior de ombro',biceps:'rosca',martelo:'rosca neutra','antebraco-flex':'rosca inversa',antebraco:'punho',carregar:'carregamento','triceps-over':'tríceps acima da cabeça','triceps-push':'tríceps empurrando','quad-comp':'agachamento e afundo','quad-iso':'isolado de quadríceps',flexora:'flexora',hinge:'dobradiça de quadril',terra:'levantamento terra',gluteo:'glúteo',adutor:'adutor',pant:'panturrilha',abd:'abdominal','abd-inf':'abdominal infra',obliquo:'oblíquos',core:'estabilidade',cardio:'cardio',custom:'personalizado'};
+const COLORS = 8;
+const col = i => `var(--c${((i % COLORS) + COLORS) % COLORS})`;
+
+// ---------- modelos de rotina ----------
+const X = (ex, sets, rmin, rmax, rest, nota = '') => ({ex, sets, rmin, rmax, rest, nota});
+const TEMPLATES = [
+  {id:'t-hip5', nome:'Hipertrofia 5 Dias', nivel:'Intermediário', dias:'5x por semana', desc:'Upper, Lower, Push, Pull e Legs. Cada músculo 2x por semana, com prioridade para peito, costas e braços.', workouts:[
+    {nome:'Upper', cor:0, items:[X('supino-reto-barra',3,6,10,150,'Faça 1 a 2 séries leves de aproximação antes.'),X('puxada-aberta',3,8,12,120),X('supino-incl-halter',3,8,12,120),X('remada-iso',3,8,12,120),X('elev-lateral-halter',3,12,20,60),X('rosca-halter',3,8,12,0,'Bi-set: vá direto para o tríceps, depois descanse.'),X('triceps-frances-cabo',3,10,15,90)]},
+    {nome:'Lower', cor:1, items:[X('agachamento',3,6,10,150,'Faça 2 séries leves de aproximação antes.'),X('leg-press',3,10,15,120),X('cadeira-flexora',3,10,15,90),X('extensora',2,12,15,90),X('pant-pe',3,10,15,90),X('abd-polia',3,10,15,60)]},
+    {nome:'Push', cor:2, items:[X('supino-incl-smith',3,8,12,150),X('supino-reto-maquina',2,8,12,120),X('voador',3,10,15,90),X('desenv-halter',2,8,12,120),X('elev-lateral-cabo',4,12,20,60),X('triceps-frances-halter',3,10,15,90),X('triceps-corda',2,10,15,60)]},
+    {nome:'Pull', cor:3, items:[X('remada-baixa',3,8,12,120),X('puxada-neutra',3,8,12,120),X('serrote',3,8,12,90,'Repetições contadas em cada lado.'),X('voador-inverso',3,12,20,60),X('rosca-inclinada',3,8,12,90),X('rosca-martelo',2,10,15,60)]},
+    {nome:'Legs', cor:4, items:[X('stiff-halter',3,8,12,150),X('elevacao-pelvica',3,8,12,120),X('bulgaro',2,8,12,90,'Repetições contadas em cada perna.'),X('mesa-flexora',2,10,15,90),X('extensora',2,12,15,90),X('pant-sentado',3,12,20,60),X('elev-pernas',2,10,15,60)]}]},
+  {id:'t-ul4', nome:'Upper Lower 4x', nivel:'Intermediário', dias:'4x por semana', desc:'Dois treinos de superiores e dois de inferiores. Um dia mais pesado e um mais volumoso para cada metade.', workouts:[
+    {nome:'Upper A (pesado)', cor:0, items:[X('supino-reto-barra',3,5,8,180),X('remada-curvada',3,6,10,150),X('desenv-halter',3,8,10,120),X('puxada-supinada',3,8,12,120),X('rosca-barra',2,8,12,90),X('triceps-testa',2,8,12,90)]},
+    {nome:'Lower A (pesado)', cor:1, items:[X('agachamento',3,5,8,180),X('stiff-barra',3,6,10,150),X('leg-press',2,10,12,120),X('cadeira-flexora',3,10,15,90),X('pant-pe',3,10,15,60)]},
+    {nome:'Upper B (volume)', cor:2, items:[X('supino-incl-halter',3,8,12,120),X('puxada-neutra',3,10,12,120),X('voador',3,12,15,90),X('remada-iso',3,10,12,90),X('elev-lateral-cabo',3,12,20,60),X('rosca-inclinada',2,10,15,60),X('triceps-frances-cabo',2,10,15,60)]},
+    {nome:'Lower B (volume)', cor:3, items:[X('hack',3,8,12,150),X('elevacao-pelvica',3,8,12,120),X('bulgaro',2,10,12,90),X('mesa-flexora',3,10,15,90),X('extensora',2,12,15,60),X('pant-sentado',3,12,20,60)]}]},
+  {id:'t-ppl', nome:'Push Pull Legs', nivel:'Avançado', dias:'6x por semana (sequência 2x)', desc:'Três treinos repetidos duas vezes na semana. Alto volume para quem já treina há mais de um ano.', workouts:[
+    {nome:'Push', cor:2, items:[X('supino-reto-barra',4,6,10,150),X('supino-incl-halter',3,8,12,120),X('desenv-halter',3,8,12,120),X('voador',2,12,15,60),X('elev-lateral-halter',4,12,20,60),X('triceps-corda',3,10,15,60),X('triceps-frances-cabo',2,10,15,60)]},
+    {nome:'Pull', cor:3, items:[X('puxada-aberta',4,8,12,120),X('remada-curvada',3,8,10,120),X('remada-baixa',3,10,12,90),X('face-pull',3,12,20,60),X('rosca-barra',3,8,12,90),X('rosca-martelo',2,10,15,60)]},
+    {nome:'Legs', cor:1, items:[X('agachamento',4,6,10,180),X('stiff-barra',3,8,10,150),X('leg-press',3,10,15,120),X('cadeira-flexora',3,10,15,90),X('extensora',2,12,15,60),X('pant-pe',4,10,15,60)]}]},
+  {id:'t-fb3', nome:'Full Body 3x', nivel:'Iniciante', dias:'3x por semana', desc:'Corpo inteiro em cada treino, com dias de descanso entre eles. Ótimo para quem treina 3 vezes ou está voltando.', workouts:[
+    {nome:'Full A', cor:5, items:[X('agachamento',3,6,10,150),X('supino-reto-halter',3,8,12,120),X('remada-baixa',3,8,12,120),X('desenv-halter',2,8,12,90),X('cadeira-flexora',2,10,15,90),X('rosca-halter',2,10,15,60),X('abd-polia',2,10,15,60)]},
+    {nome:'Full B', cor:6, items:[X('stiff-barra',3,8,12,150),X('supino-incl-maquina',3,8,12,120),X('puxada-aberta',3,8,12,120),X('leg-press',3,10,15,120),X('elev-lateral-halter',3,12,20,60),X('triceps-corda',2,10,15,60)]},
+    {nome:'Full C', cor:7, items:[X('hack',3,8,12,150),X('supino-reto-maquina',3,8,12,120),X('serrote',3,8,12,90),X('elevacao-pelvica',3,8,12,90),X('voador-inverso',2,12,20,60),X('rosca-martelo',2,10,15,60),X('triceps-frances-cabo',2,10,15,60),X('pant-pe',3,10,15,60)]}]},
+  {id:'t-maq3', nome:'Iniciante nas Máquinas', nivel:'Iniciante', dias:'3x por semana', desc:'Só máquinas e polias, fáceis de aprender e seguras. Bom para as primeiras 8 a 12 semanas.', workouts:[
+    {nome:'Máquinas A', cor:1, items:[X('leg-press',3,10,15,120),X('supino-reto-maquina',3,10,12,90),X('puxada-aberta',3,10,12,90),X('cadeira-flexora',2,12,15,60),X('desenv-maquina',2,10,12,90),X('abd-maquina',2,12,15,60)]},
+    {nome:'Máquinas B', cor:3, items:[X('extensora',3,12,15,90),X('voador',3,12,15,60),X('remada-iso',3,10,12,90),X('mesa-flexora',2,12,15,60),X('triceps-corda',2,12,15,60),X('rosca-cabo',2,12,15,60),X('pant-sentado',2,12,20,60)]}]},
+  {id:'t-bracos', nome:'Especialização Braços e Ombros', nivel:'Complemento', dias:'2x por semana', desc:'Dois treinos curtos para somar ao seu plano quando quiser acelerar braços e ombros. Use por 6 a 8 semanas.', workouts:[
+    {nome:'Braços', cor:6, items:[X('rosca-barra',3,8,12,90),X('triceps-testa',3,8,12,90),X('rosca-inclinada',3,10,12,60),X('triceps-frances-cabo',3,10,15,60),X('rosca-martelo',2,10,15,60),X('triceps-corda',2,12,15,60)]},
+    {nome:'Ombros e Braços', cor:7, items:[X('elev-lateral-cabo',4,12,20,60),X('face-pull',3,12,20,60),X('rosca-spider',3,10,12,60),X('mergulho-maquina',3,8,12,90),X('rosca-concentrada',2,10,15,60),X('rosca-punho',2,12,20,45)]}]},
+  {id:'t-express', nome:'Express 45 minutos', nivel:'Todos', dias:'3x por semana', desc:'Corpo inteiro em bi-sets (dois exercícios seguidos, depois descanso). Para dias corridos.', workouts:[
+    {nome:'Express A', cor:0, items:[X('goblet',3,10,12,0,'Bi-set com o próximo.'),X('supino-reto-halter',3,8,12,90),X('serrote',3,10,12,0,'Bi-set com o próximo.'),X('desenv-halter',3,10,12,90),X('rosca-halter',2,10,15,0,'Bi-set com o próximo.'),X('triceps-corda',2,10,15,60)]},
+    {nome:'Express B', cor:5, items:[X('stiff-halter',3,10,12,0,'Bi-set com o próximo.'),X('puxada-aberta',3,10,12,90),X('leg-press',3,12,15,0,'Bi-set com o próximo.'),X('supino-incl-maquina',3,10,12,90),X('elev-lateral-halter',3,12,20,0,'Bi-set com o próximo.'),X('abd-polia',3,12,15,60)]}]},
+];
+function routineFromTemplate(t, id, keepIds){
+  return {id: id || uid('r'), nome: t.nome, desc: t.desc, from: t.id, workouts: t.workouts.map((w, i) => {
+    const wid = keepIds ? 'd' + (i + 1) : uid('w');
+    return {id: wid, nome: w.nome, cor: w.cor, items: w.items.map((x, j) => ({uid: keepIds ? `${wid}-${j + 1}` : uid('i'), ...x}))};
+  })};
+}

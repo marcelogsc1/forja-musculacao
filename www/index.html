@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Forja</title>
+<meta name="description" content="Forja: registro de treinos de musculação, rotinas, mapa muscular e progresso.">
+<meta name="theme-color" content="#0E0F11">
+<meta name="color-scheme" content="dark light">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/base.css?v=4.2.0">
+<link rel="stylesheet" href="css/app.css?v=4.2.0">
+</head>
+<body>
+
+<div class="app">
+  <header class="top" id="top"></header>
+  <main id="view"></main>
+  <p class="credit">Ilustrações: Open Exercise Illustrations (CC0) · Fotos: Free Exercise DB (domínio público) · Anatomia: react-native-body-highlighter (MIT)</p>
+</div>
+<div id="rest" class="rest" hidden></div>
+<div id="kp" class="kp" hidden></div>
+<nav class="tabs" aria-label="Seções"><div class="in">
+  <a href="#inicio" data-tab="inicio"><svg viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Início</a>
+  <a href="#rotinas" data-tab="rotinas"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg>Rotinas</a>
+  <button class="tab fab" id="fab" data-act="fab" aria-label="Treinar"><span class="b"><svg viewBox="0 0 24 24"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span>Treinar</button>
+  <a href="#exercicios" data-tab="exercicios"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>Exercícios</a>
+  <a href="#progresso" data-tab="progresso"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V11M11 16V6.5M15.5 16v-6M20 16V8.5"/></svg>Progresso</a>
+</div></nav>
+<div id="sheet" hidden></div>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script src="config.js"></script>
+<script src="js/util.js?v=4.2.0"></script>
+<script src="js/templates.js?v=4.2.0"></script>
+<script src="js/catalog.js?v=4.2.0"></script>
+<script src="js/programs.js?v=4.2.0"></script>
+<script src="js/bodydata.js?v=4.2.0"></script>
+<script src="js/body.js?v=4.2.0"></script>
+<script src="js/platform.js?v=4.2.0"></script>
+<script src="js/store.js?v=4.2.0"></script>
+<script src="js/app.js?v=4.2.0"></script>
+<script src="js/explore.js?v=4.2.0"></script>
+<script src="js/boot.js?v=4.2.0"></script>
+<script>
+/* PWA: instala o service worker (funciona sem internet) e aplica atualizações sem interromper um treino */
+if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) && (location.protocol === 'https:' || location.hostname === 'localhost')){
+  let had = !!navigator.serviceWorker.controller, reloading = false;
+  navigator.serviceWorker.register('sw.js').then(reg => setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000)).catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!had){ had = true; return; }
+    if (reloading) return;
+    const go = () => { reloading = true; location.reload(); };
+    if (typeof openSession === 'function' && openSession()) toast('Nova versão do Forja pronta.', go, 'Atualizar', 15000); else go();
+  });
+}
+</script>
+</body>
+</html>

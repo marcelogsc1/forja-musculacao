@@ -1,0 +1,22 @@
+{
+  "appId": "app.forja.treino",
+  "appName": "Forja",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0E0F11",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#0E0F11"
+    },
+    "LocalNotifications": {
+      "iconColor": "#FF6A2B"
+    }
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
