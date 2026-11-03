@@ -84,11 +84,51 @@ const LocalDB = (() => {
   };
 })();
 
-/* ---------- login no seu backend ---------- */
+/* ---------- qual backend está configurado (www/config.js) ---------- */
+function firebaseCfg(){ const f = (window.FORJA_CONFIG || {}).firebase; return f && f.apiKey && f.projectId && !/COLE|SEU_|xxx/i.test(f.apiKey + f.projectId) ? f : null; }
+function backendKind(){ return firebaseCfg() ? 'firebase' : apiBase() ? 'rest' : null; }
+/* No app Android (Capacitor) a página roda em https://localhost, então uma API própria precisa de endereço completo */
+function apiBase(){
+  const c = window.FORJA_CONFIG || {};
+  const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+  return ((native && c.nativeApiUrl) || c.apiUrl || '').replace(/\/$/, '');
+}
+
+/* ---------- Firebase (Auth + Firestore), carregado só quando configurado ----------
+   O SDK fica em www/vendor/firebase (sem depender de CDN: abre no app Android e sem internet). */
+const FIREBASE_DIR = 'vendor/firebase-13.2.0/';
+const FB = (() => {
+  let p = null; const o = {sdk: null, app: null, auth: null, db: null};
+  async function load(){
+    let sdk = window.FORJA_FIREBASE_SDK;                                  // usado nos testes automatizados
+    if (!sdk){ const base = new URL(FIREBASE_DIR, document.baseURI).href; const mods = await Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js'].map(f => import(base + f))); sdk = Object.assign({}, ...mods); }
+    const cfg = firebaseCfg();
+    o.sdk = sdk; o.app = sdk.initializeApp(cfg);
+    const c = window.FORJA_CONFIG || {}; const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    if (c.appCheckSiteKey && !native && !window.FORJA_FIREBASE_SDK){ try { const ac = await import(new URL(FIREBASE_DIR + 'firebase-app-check.js', document.baseURI).href); ac.initializeAppCheck(o.app, {provider: new ac.ReCaptchaV3Provider(c.appCheckSiteKey), isTokenAutoRefreshEnabled: true}); } catch (e) { console.warn('App Check indisponível', e); } }
+    /* initializeAuth sem popup/redirect: funciona igual no navegador e no WebView do Android */
+    o.auth = sdk.initializeAuth(o.app, {persistence: [sdk.indexedDBLocalPersistence, sdk.browserLocalPersistence]});
+    o.auth.languageCode = 'pt-BR';
+    o.db = sdk.initializeFirestore(o.app, {ignoreUndefinedProperties: true});   // cache em memória: o app já guarda tudo no IndexedDB
+    await new Promise(ok => { const un = sdk.onAuthStateChanged(o.auth, () => { un(); ok(); }); });
+    return o;
+  }
+  o.ready = () => p || (p = load().catch(e => { p = null; throw e; }));
+  return o;
+})();
+/* traduz erros do Firebase para os códigos que a interface já entende */
+function fbErr(e){
+  const c = (e && e.code) || '';
+  const m = {'auth/invalid-credential': [401, 'E-mail ou senha incorretos.'], 'auth/wrong-password': [401, 'E-mail ou senha incorretos.'], 'auth/user-not-found': [401, 'E-mail ou senha incorretos.'], 'auth/invalid-login-credentials': [401, 'E-mail ou senha incorretos.'],
+    'auth/email-already-in-use': [409, 'Já existe uma conta com este e-mail.'], 'auth/invalid-email': [400, 'E-mail inválido.'], 'auth/weak-password': [400, 'Senha fraca. Use pelo menos 8 caracteres.'], 'auth/password-does-not-meet-requirements': [400, 'A senha não atende aos requisitos.'],
+    'auth/too-many-requests': [429, 'Muitas tentativas. Aguarde alguns minutos.'], 'auth/network-request-failed': [0, 'Sem conexão.'], 'auth/requires-recent-login': [401, 'Confirme sua senha de novo.'], 'unavailable': [0, 'Sem conexão.'], 'permission-denied': [403, 'Acesso negado.']}[c];
+  return Object.assign(new Error(m ? m[1] : (e && e.message) || 'Erro'), {status: m ? m[0] : 500, code: c});
+}
+
+/* ---------- conta: mesma interface para Firebase e para uma API própria ---------- */
 const Auth = (() => {
   const KEY = 'forja.auth';
   let data = null; try { data = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
-  const cfg = () => window.FORJA_CONFIG || {};
   async function call(path, body){
     let r;
     try { r = await fetch(apiBase() + path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}); }
@@ -99,23 +139,108 @@ const Auth = (() => {
   }
   function save(j){ data = {token: j.token, refreshToken: j.refreshToken || null, user: j.user}; try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
   let refreshing = null;
+  const fb = () => backendKind() === 'firebase';
   return {
-    get enabled(){ return !!apiBase(); },
+    get enabled(){ return !!backendKind(); },
+    get kind(){ return backendKind(); },
     get token(){ return data && data.token; },
-    get user(){ return data && data.user; },
-    async login(email, password){ save(await call('/auth/login', {email, password})); },
-    async register(name, email, password){ save(await call('/auth/register', {name, email, password})); },
-    /* várias requisições podem receber 401 juntas: só uma renova o token */
+    get user(){
+      if (fb()){ const u = FB.auth && FB.auth.currentUser; return u ? {id: u.uid, email: u.email, name: u.displayName || '', verified: u.emailVerified} : null; }
+      return data && data.user;
+    },
+    async login(email, password){
+      if (fb()){ await FB.ready(); try { await FB.sdk.signInWithEmailAndPassword(FB.auth, email, password); } catch (e) { throw fbErr(e); } return; }
+      save(await call('/auth/login', {email, password}));
+    },
+    async register(name, email, password){
+      if (fb()){
+        await FB.ready();
+        try { const cr = await FB.sdk.createUserWithEmailAndPassword(FB.auth, email, password); if (name) await FB.sdk.updateProfile(cr.user, {displayName: name}); FB.sdk.sendEmailVerification(cr.user).catch(() => {}); }
+        catch (e) { throw fbErr(e); }
+        return;
+      }
+      save(await call('/auth/register', {name, email, password}));
+    },
+    async resetPassword(email){
+      if (!fb()) throw Object.assign(new Error('Recuperação de senha ainda não disponível.'), {status: 501});
+      await FB.ready(); try { await FB.sdk.sendPasswordResetEmail(FB.auth, email); } catch (e) { const er = fbErr(e); if (er.status !== 401) throw er; }   // não revela se o e-mail existe
+    },
+    async resendVerification(){ if (fb() && FB.auth && FB.auth.currentUser) { try { await FB.sdk.sendEmailVerification(FB.auth.currentUser); } catch (e) { throw fbErr(e); } } },
+    async reloadUser(){ if (fb() && FB.auth && FB.auth.currentUser) try { await FB.auth.currentUser.reload(); } catch (e) {} },
+    /* várias requisições podem receber 401 juntas: só uma renova o token (API própria) */
     refresh(){ if (!data || !data.refreshToken) return Promise.resolve(false); return refreshing || (refreshing = call('/auth/refresh', {refreshToken: data.refreshToken}).then(j => { save(j); return true; }).catch(e => e.status === 0 ? null : false).finally(() => { refreshing = null; })); },
-    async logout(){ const rt = data && data.refreshToken; data = null; try { localStorage.removeItem(KEY); } catch (e) {} if (rt) call('/auth/logout', {refreshToken: rt}).catch(() => {}); },
-    cfg,
+    async logout(){
+      if (fb()){ if (FB.auth) try { await FB.sdk.signOut(FB.auth); } catch (e) {} return; }
+      const rt = data && data.refreshToken; data = null; try { localStorage.removeItem(KEY); } catch (e) {} if (rt) call('/auth/logout', {refreshToken: rt}).catch(() => {});
+    },
   };
 })();
-/* No app Android (Capacitor) a página roda em https://localhost, então a API precisa de endereço completo */
-function apiBase(){
-  const c = window.FORJA_CONFIG || {};
-  const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-  return ((native && c.nativeApiUrl) || c.apiUrl || '').replace(/\/$/, '');
+
+/* ---------- Firestore: users/{uid}/records/{tipo}__{id} ----------
+   Cada documento: {type, id, data, deleted, updatedAt (Timestamp do aparelho), serverAt (horário do servidor)}.
+   As regras (firestore.rules) garantem dono, formato e "a alteração mais recente vence". */
+function FirebaseAdapter(){
+  const {sdk, db, auth} = FB; let uid = null, unsub = null;
+  const col = () => sdk.collection(db, 'users', uid, 'records');
+  const ref = (t, i) => sdk.doc(db, 'users', uid, 'records', t + '__' + i);
+  const toDoc = c => ({type: c.type, id: c.id, data: c.deleted ? null : c.data, deleted: !!c.deleted, updatedAt: sdk.Timestamp.fromDate(new Date(c.updatedAt)), serverAt: sdk.serverTimestamp()});
+  const fromDoc = d => { const x = d.data(); return {type: x.type, id: x.id, data: x.deleted ? null : x.data, deleted: !!x.deleted, updatedAt: x.updatedAt && x.updatedAt.toDate ? x.updatedAt.toDate().toISOString() : x.updatedAt, at: x.serverAt && x.serverAt.toMillis ? x.serverAt.toMillis() : 0}; };
+  async function push(changes){
+    const back = [];
+    for (let i = 0; i < changes.length; i += 400){
+      const chunk = changes.slice(i, i + 400); const b = sdk.writeBatch(db);
+      chunk.forEach(c => b.set(ref(c.type, c.id), toDoc(c)));
+      try { await b.commit(); continue; } catch (e) { if (e.code !== 'permission-denied' && e.code !== 'invalid-argument') throw fbErr(e); }
+      /* algum registro foi recusado (o servidor tem versão mais nova, ou formato inválido): grava um a um */
+      for (const c of chunk){
+        try { await sdk.setDoc(ref(c.type, c.id), toDoc(c)); }
+        catch (e) {
+          if (e.code !== 'permission-denied' && e.code !== 'invalid-argument') throw fbErr(e);
+          const snap = await sdk.getDoc(ref(c.type, c.id));
+          if (snap.exists()) back.push(fromDoc(snap)); else console.warn('Registro recusado pelas regras do Firestore:', c.type, c.id);
+        }
+      }
+    }
+    return back;
+  }
+  async function pull(since){
+    /* janela de 60 s para trás: cobre gravações de outros aparelhos que chegaram fora de ordem */
+    const from = since ? Math.max(0, Number(since) - 60000) : 0; const out = []; let cursor = Number(since || 0); let last = null;
+    for (;;){
+      const parts = [col(), sdk.where('serverAt', '>', sdk.Timestamp.fromMillis(from)), sdk.orderBy('serverAt')];
+      if (last) parts.push(sdk.startAfter(last)); parts.push(sdk.limit(500));
+      const snap = await sdk.getDocs(sdk.query(...parts));
+      snap.docs.forEach(d => { const r = fromDoc(d); out.push(r); if (r.at > cursor) cursor = r.at; });
+      if (snap.docs.length < 500) break; last = snap.docs[snap.docs.length - 1];
+    }
+    return {cursor: String(cursor), changes: out};
+  }
+  return {
+    name: 'api', assets: null, downloads: null,
+    async init(){ const u = auth.currentUser; if (!u) return null; uid = u.uid; return {uid}; },
+    async sync({since, changes}){
+      /* sem internet o Firestore segura a gravação até reconectar: desistimos em 20 s e a fila tenta de novo depois */
+      const limit = (pr, ms) => Promise.race([pr, new Promise((_, no) => setTimeout(() => no(Object.assign(new Error('sem conexão'), {status: 0})), ms))]);
+      try { const back = changes.length ? await limit(push(changes), 20000) : []; const res = await limit(pull(since), 20000); res.changes.push(...back); return res; }
+      catch (e) { throw e.status !== undefined ? e : fbErr(e); }
+    },
+    /* tempo real: mudanças de outros aparelhos chegam na hora */
+    subscribe(onRecs){
+      const q = sdk.query(col(), sdk.where('serverAt', '>', sdk.Timestamp.fromMillis(Date.now() - 60000)));
+      unsub = sdk.onSnapshot(q, snap => { const recs = snap.docChanges().filter(ch => ch.type !== 'removed' && !ch.doc.metadata.hasPendingWrites).map(ch => fromDoc(ch.doc)); if (recs.length) onRecs(recs); }, e => console.warn('tempo real indisponível', e));
+      return () => { if (unsub) unsub(); unsub = null; };
+    },
+    /* exclusão de conta: confirma a senha, apaga todos os registros e depois o usuário */
+    async deleteMe(password){
+      const u = auth.currentUser; if (!u) throw Object.assign(new Error('sem conta'), {status: 401});
+      try {
+        await sdk.reauthenticateWithCredential(u, sdk.EmailAuthProvider.credential(u.email, password));
+        for (;;){ const snap = await sdk.getDocs(sdk.query(col(), sdk.limit(400))); if (!snap.docs.length) break; const b = sdk.writeBatch(db); snap.docs.forEach(d => b.delete(d.ref)); await b.commit(); }
+        await sdk.deleteUser(u);
+      } catch (e) { const er = fbErr(e); if (er.status === 401) er.status = 403; throw er; }
+    },
+    async exportAll(){ const snap = await sdk.getDocs(col()); return {exportedAt: new Date().toISOString(), records: snap.docs.map(fromDoc).filter(r => !r.deleted)}; },
+  };
 }
 
 function RestAdapter(){
@@ -182,7 +307,7 @@ const Store = (() => {
   const SIG = new Map();       // chave → JSON do conteúdo (detecta o que mudou)
   let outbox = new Map();      // chave → updatedAt enviado pendente
   let cursor = null, account = null;
-  let adapter = null, ready = false, syncing = false, again = false, timer = null, subscribed = false, renderLater = false;
+  let adapter = null, ready = false, syncing = false, again = false, timer = null, subscribed = false, renderLater = false, unsubscribe = null;
   const writes = new Map(); let writeTimer = null;
   const api = {mode: 'loading', uid: null, adapter: null, authExpired: false};
 
@@ -308,8 +433,11 @@ const Store = (() => {
   };
   async function connect(){
     ready = false; adapter = null; api.adapter = null;
-    const cfg = window.FORJA_CONFIG || {};
-    const a = apiBase() ? (Auth.token ? RestAdapter() : null) : (window.claude && window.claude.use ? ClaudeAdapter() : null);
+    if (unsubscribe){ unsubscribe(); unsubscribe = null; } subscribed = false;
+    const kind = backendKind(); let a = null;
+    if (kind === 'firebase'){ try { await FB.ready(); if (FB.auth.currentUser) a = FirebaseAdapter(); } catch (e) { console.warn('Firebase indisponível', e); } }
+    else if (kind === 'rest') a = Auth.token ? RestAdapter() : null;
+    else if (window.claude && window.claude.use) a = ClaudeAdapter();
     let info = null; if (a){ try { info = await a.init(); } catch (e) { info = null; } }
     if (!info || info.expired){ api.mode = 'local'; api.authExpired = !!(info && info.expired); renderSync(); render(); return; }
     /* dados locais de outra conta não podem subir para esta */
@@ -317,13 +445,13 @@ const Store = (() => {
     if (account !== info.uid){ account = info.uid; cursor = null; saveMeta(); }
     adapter = a; api.adapter = a; api.uid = info.uid; api.mode = a.name === 'api' ? 'api' : 'cloud'; ready = true;
     render(); await sync();
-    if (adapter.subscribe && !subscribed){ subscribed = true; adapter.subscribe((recs, o) => applyRemote(recs, o || {})); }
+    if (adapter.subscribe && !subscribed){ subscribed = true; unsubscribe = adapter.subscribe((recs, o) => applyRemote(recs, o || {})) || null; }
   }
   async function wipe(){ R.clear(); SIG.clear(); outbox = new Map(); cursor = null; account = null; writes.clear(); await LocalDB.clear(); }
   api.switchToApi = async () => { subscribed = false; await connect(); };
   /* sair: tenta enviar o que falta e limpa este aparelho */
-  api.logout = async () => { await sync().catch(() => {}); const left = outbox.size; await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; return left; };
-  api.deleteAccount = async password => { if (!adapter || !adapter.deleteMe) throw new Error('sem conta'); await adapter.deleteMe(password); await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; };
+  api.logout = async () => { await Promise.race([sync().catch(() => {}), new Promise(ok => setTimeout(ok, 6000))]); const left = outbox.size; if (unsubscribe){ unsubscribe(); unsubscribe = null; } await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; return left; };
+  api.deleteAccount = async password => { if (!adapter || !adapter.deleteMe) throw new Error('sem conta'); if (unsubscribe){ unsubscribe(); unsubscribe = null; } await adapter.deleteMe(password); await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; };
   api.wipeLocal = wipe;
   api.reloadRemote = () => { if (ready && adapter && !adapter.subscribe) sync(); };
   api.storage = () => LocalDB.mode;

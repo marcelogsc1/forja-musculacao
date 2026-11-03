@@ -1,9 +1,17 @@
 /* Configuração do Forja
-   apiUrl        endereço da API para a versão web. Na Vercel, a API fica no mesmo domínio: '/api'.
-   nativeApiUrl  endereço COMPLETO da API para o app Android (lá a página roda em https://localhost).
-                 Troque pelo domínio do seu projeto na Vercel, ex.: 'https://forja-app.vercel.app/api'.
-   Com apiUrl vazio o app funciona sem conta, salvando só no aparelho. */
+   firebase: cole aqui o objeto firebaseConfig do seu projeto
+             (Console do Firebase > Configurações do projeto > Seus apps > App da Web).
+             Esses valores são públicos por natureza; a proteção dos dados vem das regras (firestore.rules).
+   Enquanto estiver com "COLE_AQUI", o app funciona sem conta, salvando só no aparelho. */
 window.FORJA_CONFIG = {
-  apiUrl: location.protocol === 'file:' ? '' : '/api',
-  nativeApiUrl: 'https://SEU-PROJETO.vercel.app/api'
+  firebase: {
+    apiKey: 'COLE_AQUI',
+    authDomain: 'SEU-PROJETO.firebaseapp.com',
+    projectId: 'SEU-PROJETO',
+    storageBucket: 'SEU-PROJETO.firebasestorage.app',
+    messagingSenderId: '',
+    appId: ''
+  },
+  /* Opcional: chave do site do reCAPTCHA v3 para o App Check na versão web. */
+  appCheckSiteKey: ''
 };

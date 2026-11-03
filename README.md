@@ -6,7 +6,8 @@ O mesmo código vira três coisas:
 
 | Versão | Como chega ao usuário | Guia |
 |---|---|---|
-| Site + API | GitHub → Vercel (com banco PostgreSQL Neon) | `docs/DEPLOY.md` |
+| Site | GitHub → Vercel | `docs/DEPLOY.md` |
+| Contas e dados | Firebase Authentication + Cloud Firestore | `docs/FIREBASE.md` |
 | App instalável pelo navegador (PWA) | Botão "Instalar" no app ou menu do Chrome | já incluído |
 | App da Play Store | Capacitor gera o `.aab` no Android Studio | `docs/PLAY-STORE.md` |
 
@@ -14,12 +15,13 @@ O mesmo código vira três coisas:
 
 ```
 www/                      o app (HTML, CSS e JS puros, sem etapa de build)
-  index.html, config.js   config.js: endereço da API (web e Android)
+  index.html, config.js   config.js: firebaseConfig do seu projeto
   manifest.webmanifest    PWA: nome, ícones, capturas de tela (instalação rica no Android)
   sw.js                   service worker: abre sem internet e se atualiza sozinho
   privacidade.html        política de privacidade (modelo para completar)
   excluir-conta.html      exclusão de conta pela web (exigência da Play Store)
-  js/store.js             DADOS: registros, IndexedDB, fila de envio, sincronização, login
+  vendor/firebase-13.2.0  SDK do Firebase embutido (sem depender de CDN)
+  js/store.js             DADOS: registros, IndexedDB, fila de envio, sincronização, conta (Firebase)
   js/app.js               telas, treino ao vivo, teclado numérico, descanso
   js/explore.js           biblioteca de programas e assistente
   js/programs.js          programas e gerador de treinos
@@ -28,26 +30,22 @@ www/                      o app (HTML, CSS e JS puros, sem etapa de build)
   js/util.js, templates.js, bodydata.js, body.js, boot.js
   fig/                    ilustrações (início e fim do movimento lado a lado)
   screenshots/            capturas usadas na instalação e na ficha da Play Store
-api/index.js              função da Vercel: recebe todas as rotas /api/*
-server/handler.js         a API (cadastro, login, sincronização, conta, exportação)
-server/schema.sql         tabelas do PostgreSQL
-server/lib/               banco (pg ou PGlite) e segurança (senhas, tokens)
-server/dev.js             servidor local: app + API no mesmo endereço
-tests/api.test.js         24 verificações da API
-vercel.json               publicação na Vercel (pasta www + função /api)
+firestore.rules           regras de segurança do Firestore
+tests/firestore.rules.test.js   32 testes das regras no emulador
+firebase.json, .firebaserc, firestore.indexes.json   projeto Firebase (CLI)
+vercel.json               publicação na Vercel
 capacitor.config.json     projeto Android
-docs/                     API.md, DEPLOY.md, PLAY-STORE.md, licenças
+docs/                     FIREBASE.md, DEPLOY.md, PLAY-STORE.md, licenças
+extras/backend-postgres/  alternativa sem Firebase (API própria + PostgreSQL), não usada
 ```
 
 ## Rodar no computador
 
 ```bash
 npm install
-npm run dev        # http://localhost:8080  (app + API + banco local PGlite em .data/)
-npm run test:api   # testa a API num banco temporário
+npm run dev          # http://localhost:8080
+npm run test:rules   # testa as regras do Firestore no emulador (Java 21+)
 ```
-
-Sem `DATABASE_URL`, o servidor usa PGlite, um PostgreSQL de verdade que roda dentro do Node. Com `DATABASE_URL`, usa o seu banco.
 
 ## Como os dados funcionam
 
@@ -58,7 +56,8 @@ Tudo o que o usuário grava vira um **registro** pequeno: perfil, preferências,
 - **Download:** cada aparelho guarda um cursor e baixa só o que mudou desde a última vez.
 - **Conflitos:** vale a alteração mais recente de cada registro. Editar o treino no celular e a rotina no computador ao mesmo tempo não gera perda, porque são registros diferentes.
 - **Primeiro login num aparelho:** o que já está na conta prevalece; o que só existe no aparelho é enviado.
-- **Sair da conta:** envia o que falta e limpa o aparelho. **Excluir conta:** apaga tudo no servidor (Perfil, Excluir minha conta, ou `excluir-conta.html`).
+- **Tempo real:** com o app aberto, mudanças feitas em outro aparelho aparecem na hora.
+- **Conta:** cadastro com e-mail de confirmação, recuperação de senha por e-mail, sair (envia o que falta e limpa o aparelho) e excluir conta (apaga tudo no Firestore e o login: Perfil, Excluir minha conta, ou `excluir-conta.html`).
 - **Versão do claude.ai:** continua usando o banco do claude.ai no formato antigo, sem migração de dados.
 
 ## Testar direto no celular sem servidor
@@ -72,4 +71,4 @@ Tudo o que o usuário grava vira um **registro** pequeno: perfil, preferências,
 - Fotos opcionais: Free Exercise DB, domínio público.
 - Desenho anatômico: react-native-body-highlighter, MIT (`docs/LICENSE-body-highlighter.txt`).
 - Fonte Archivo: SIL Open Font License 1.1 (`www/fonts/OFL-Archivo.txt`).
-- Dependências do servidor: `pg` (MIT); `@electric-sql/pglite` (Apache 2.0, só em desenvolvimento).
+- Firebase JS SDK 13.2.0: Apache 2.0 (`www/vendor/firebase-13.2.0`).

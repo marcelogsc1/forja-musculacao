@@ -21,22 +21,32 @@ button{margin-top:16px;width:100%;padding:14px;border:0;border-radius:14px;font-
 <div class="msg" id="msg" role="status"></div>
 </form>
 <p class="muted">Dúvidas sobre seus dados: veja a <a href="privacidade.html">política de privacidade</a>.</p>
-<script>
-const API = (window.FORJA_API || '/api');
+<script src="config.js"></script>
+<script type="module">
+/* Exclusão pela web com Firebase: entra, confirma, apaga todos os registros e depois o usuário. */
+const DIR = 'vendor/firebase-13.2.0/';
+const m = document.getElementById('msg'), b = document.getElementById('go');
+const say = (t, cls = '') => { m.className = 'msg ' + cls; m.textContent = t; };
 document.getElementById('f').addEventListener('submit', async e => {
-  e.preventDefault(); const m = document.getElementById('msg'), b = document.getElementById('go'); m.className = 'msg'; m.textContent = 'Verificando...'; b.disabled = true;
+  e.preventDefault(); b.disabled = true; say('Verificando...');
   const email = document.getElementById('email').value.trim(), password = document.getElementById('pass').value;
   try {
-    const r = await fetch(API + '/auth/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, password})});
-    if (r.status === 401){ throw new Error('E-mail ou senha incorretos.'); }
-    if (r.status === 429){ throw new Error('Muitas tentativas. Aguarde alguns minutos.'); }
-    if (!r.ok) throw new Error('Não foi possível conectar. Tente de novo.');
-    const j = await r.json();
-    if (!confirm('Excluir a conta ' + email + ' e todos os dados? Não dá para desfazer.')){ m.textContent = 'Cancelado.'; b.disabled = false; return; }
-    const d = await fetch(API + '/me', {method: 'DELETE', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + j.token}, body: JSON.stringify({password})});
-    if (d.status !== 204) throw new Error('Não foi possível excluir agora. Tente de novo.');
-    m.className = 'msg ok'; m.textContent = 'Conta e dados excluídos.'; document.getElementById('f').reset();
-  } catch (err) { m.className = 'msg err'; m.textContent = err.message; b.disabled = false; }
+    const cfg = (window.FORJA_CONFIG || {}).firebase;
+    if (!cfg || !cfg.apiKey || /COLE/.test(cfg.apiKey)) throw new Error('Serviço ainda não configurado. Use o e-mail de contato acima.');
+    const [A, Au, F] = await Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js'].map(f => import('./' + DIR + f)));
+    const app = A.initializeApp(cfg, 'exclusao');
+    const auth = Au.initializeAuth(app, {persistence: Au.inMemoryPersistence});
+    const db = F.getFirestore(app);
+    let cred;
+    try { cred = await Au.signInWithEmailAndPassword(auth, email, password); }
+    catch (err) { throw new Error(err.code === 'auth/too-many-requests' ? 'Muitas tentativas. Aguarde alguns minutos.' : err.code === 'auth/network-request-failed' ? 'Sem conexão. Tente de novo.' : 'E-mail ou senha incorretos.'); }
+    if (!confirm('Excluir a conta ' + email + ' e todos os dados? Não dá para desfazer.')){ await Au.signOut(auth); say('Cancelado.'); b.disabled = false; return; }
+    say('Apagando seus dados...');
+    const col = F.collection(db, 'users', cred.user.uid, 'records');
+    for (;;){ const snap = await F.getDocs(F.query(col, F.limit(400))); if (!snap.docs.length) break; const batch = F.writeBatch(db); snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); }
+    await Au.deleteUser(cred.user);
+    say('Conta e dados excluídos.', 'ok'); document.getElementById('f').reset();
+  } catch (err) { say(err.message || 'Não foi possível excluir agora. Tente de novo.', 'err'); b.disabled = false; }
 });
 </script>
 </main></body></html>

@@ -2,7 +2,7 @@
 const http = require('http');
 const os = require('os'); const fs = require('fs'); const path = require('path');
 process.env.PGLITE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'forja-test-'));
-const handle = require('../server/handler');
+const handle = require('./handler');
 const assert = (c, m) => { if (!c) { console.error('FALHOU:', m); process.exit(1); } else console.log('ok -', m); };
 (async () => {
   const srv = http.createServer((req, res) => handle(req, res)).listen(0); const port = srv.address().port;

@@ -1,6 +1,6 @@
 # Publicar na Play Store
 
-**Você não envia o HTML para o Play Console.** O Play Console só aceita um Android App Bundle (`.aab`). O Capacitor coloca a pasta `www` dentro de um projeto Android nativo, e o Android Studio gera o `.aab` assinado. O app instalado roda os arquivos localmente (abre sem internet) e conversa com a sua API na Vercel.
+**Você não envia o HTML para o Play Console.** O Play Console só aceita um Android App Bundle (`.aab`). O Capacitor coloca a pasta `www` dentro de um projeto Android nativo, e o Android Studio gera o `.aab` assinado. O app instalado roda os arquivos localmente (abre sem internet) e conversa direto com o Firebase.
 
 ## 1. Gerar o app Android
 
@@ -17,7 +17,7 @@ O modelo do Capacitor 8 já vem com `targetSdkVersion 36` (Android 16), que é o
 
 Antes do primeiro envio:
 
-1. **config.js:** `nativeApiUrl` com o endereço completo da sua API (`https://SEU-PROJETO.vercel.app/api`).
+1. **config.js:** com o `firebaseConfig` do seu projeto preenchido (o mesmo do site). Se restringir a chave de API por referenciador, inclua `https://localhost/*`, que é a origem do app Android.
 2. **Ícone e tela de abertura:** `npx @capacitor/assets generate` a partir de `www/icons/maskable-512.png`, ou Android Studio, New, Image Asset.
 3. **Permissões** em `android/app/src/main/AndroidManifest.xml`: `POST_NOTIFICATIONS` (aviso de fim de descanso) e `VIBRATE`.
 4. **Orientação:** `android:screenOrientation="portrait"` na `MainActivity`.
@@ -32,7 +32,7 @@ Antes do primeiro envio:
 4. **Conteúdo do app:**
    - **Política de privacidade:** `https://SEU-PROJETO.vercel.app/privacidade.html` (preencha os campos antes).
    - **Exclusão de conta:** obrigatória para apps que criam conta. No app: Perfil, Excluir minha conta. Na web: `https://SEU-PROJETO.vercel.app/excluir-conta.html`.
-   - **Segurança dos dados:** declare que coleta nome, e-mail, informações de saúde e condicionamento físico (treinos e medidas), criptografados em trânsito, sem compartilhamento com terceiros, com opção de exclusão.
+   - **Segurança dos dados:** declare que coleta nome, e-mail, informações de saúde e condicionamento físico (treinos e medidas), criptografados em trânsito, com opção de exclusão. O Google Firebase atua como prestador de serviço (processador), o que não conta como compartilhamento com terceiros.
    - **Declaração de apps de saúde:** obrigatória para todos os apps publicados; o Forja entra em "Atividade e condicionamento físico".
    - Classificação indicativa, público-alvo e anúncios (não tem).
 5. **Envio:** crie a versão na faixa de teste fechado, envie o `.aab`, adicione os testadores e, depois dos 14 dias, peça acesso à produção.
@@ -45,4 +45,4 @@ Ferramentas como Bubblewrap ou PWABuilder geram um `.aab` que abre o seu site da
 
 - Mudanças só no site: envie ao GitHub, a Vercel publica.
 - Mudanças no app Android: `npm run android:sync`, aumente `versionCode`, gere o `.aab` e envie no Console.
-- A API deve aceitar as versões antigas do app que ainda estão nos celulares; evite remover campos ou rotas.
+- As regras do Firestore precisam aceitar o formato das versões antigas que ainda estão nos celulares: acrescente campos, evite remover.

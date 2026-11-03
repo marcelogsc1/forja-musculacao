@@ -632,6 +632,7 @@ function vProfile(){
   const tog = (k, label, sub) => `<button class="toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="grow"><b>${label}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span><i></i></button>`;
   return `<section class="profile-hero"><div class="avatar xl">${initials() || I.user}</div><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
+    ${Store.mode === 'api' && Auth.user && Auth.user.verified === false ? '<p class="small" style="margin:10px 0 0;color:var(--warn,#F2BE2E)">Confirme seu e-mail pelo link que enviamos. <button class="link" style="min-height:0;padding:0" data-act="resend-verify">Reenviar</button></p>' : ''}
     <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'api' ? '<button class="btn ghost block" data-act="logout">Sair da conta</button>' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
   ${installCard()}
   <section class="stats"><div class="stat"><b class="num">${L.n}</b><span>treinos</span></div><div class="stat"><b class="num">${fmtN(Math.round(L.hours * 10) / 10)}</b><span>horas</span></div><div class="stat ember"><b class="num">${L.vol >= 10000 ? fmtN(Math.round(L.vol / 100) / 10) : fmtInt(L.vol)}</b><span>${L.vol >= 10000 ? 'toneladas' : 'kg'} levantados</span></div></section>
@@ -667,7 +668,8 @@ function openLogin(mode = 'login'){
     ${mode === 'register' ? '<p class="tiny muted" style="margin:0">Ao criar a conta você concorda com a <a class="link" style="padding:0;min-height:0" href="privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</p>' : ''}
     <p id="au-err" class="small" style="color:var(--bad);margin:0" hidden></p>
     <button class="btn primary block" type="submit">${mode === 'login' ? 'Entrar' : 'Criar conta'}</button>
-    <button class="link" type="button" data-act="login-mode" data-m="${mode === 'login' ? 'register' : 'login'}">${mode === 'login' ? 'Ainda não tem conta? Criar conta' : 'Já tem conta? Entrar'}</button></form>`);
+    <button class="link" type="button" data-act="login-mode" data-m="${mode === 'login' ? 'register' : 'login'}">${mode === 'login' ? 'Ainda não tem conta? Criar conta' : 'Já tem conta? Entrar'}</button>
+    ${mode === 'login' && Auth.kind === 'firebase' ? '<button class="link muted" type="button" data-act="forgot">Esqueci minha senha</button>' : ''}</form>`);
 }
 // ================= arrastar para reordenar =================
 let DRAG = null;
@@ -708,13 +710,16 @@ A.undo = () => { const f = toastUndo; toastUndo = null; $('#toast').hidden = tru
 A['confirm-ok'] = () => { const f = UI.sheet && UI.sheet.onOk; closeSheet(); if (f) f(); };
 A['confirm-cancel'] = () => { const f = UI.sheet && UI.sheet.onCancel; closeSheet(); if (f) f(); };
 A['menu-pick'] = el => { const it = UI.sheet.items[+el.dataset.i]; closeSheet(); if (it && it.run) it.run(); };
-A.profile = () => push({type: 'profile'});
+A.profile = () => { push({type: 'profile'}); if (Auth.kind === 'firebase' && Store.mode === 'api') Auth.reloadUser().then(() => { if (curPage()?.type === 'profile' && canRerender()) render(); }); };
 A.pref = el => { const k = el.dataset.k; let v = el.dataset.v; if (k !== 'theme') v = +v; ST.prefs[k] = v; saveState(); applyTheme(); render(); };
 A['pref-tog'] = el => { const k = el.dataset.k; ST.prefs[k] = !ST.prefs[k]; saveState(); render(); if (k === 'sound' && ST.prefs.sound){ Platform.unlockAudio(); Platform.alarm(); } };
 A['pf-set'] = el => { const k = el.dataset.k; ST.profile[k] = ST.profile[k] === el.dataset.v ? '' : el.dataset.v; saveState(); render(); };
 A['go-body'] = () => { UI.progTab = 'corpo'; goTab('progresso'); };
 A.login = () => openLogin('login');
 A['login-mode'] = el => openLogin(el.dataset.m);
+A.forgot = async () => { const email = ($('#au-email').value || '').trim(); const err = $('#au-err'); if (!email){ err.textContent = 'Digite seu e-mail acima e toque de novo em Esqueci minha senha.'; err.hidden = false; return; }
+  try { await Auth.resetPassword(email); closeSheet(); toast('Se houver conta com esse e-mail, enviamos um link para criar uma nova senha.', null, '', 6000); } catch (e) { err.textContent = e.status === 0 ? 'Sem conexão. Tente de novo.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : 'Não foi possível enviar agora.'; err.hidden = false; } };
+A['resend-verify'] = async () => { try { await Auth.resendVerification(); toast('Enviamos outro e-mail de confirmação.'); } catch (e) { toast(e.status === 429 ? 'Aguarde alguns minutos para reenviar.' : 'Não foi possível reenviar agora.'); } };
 A.logout = () => confirmSheet({title: 'Sair da conta?', text: 'Seus dados continuam salvos na conta. Este aparelho fica limpo até você entrar de novo.', ok: 'Sair', onOk: async () => { const left = await Store.logout(); UI.stack = []; UI.tab = 'inicio'; render(); toast(left ? 'Saiu. Algumas alterações recentes não chegaram ao servidor.' : 'Você saiu da conta'); }});
 A['ask-delete-account'] = () => { UI.sheet = {kind: 'delacc'}; openSheet(`${sheetHead('Conta', 'Excluir minha conta')}<form class="stack" style="margin-top:14px" data-form="delacc"><p class="ink2" style="margin:0">Isso apaga para sempre a conta e todos os dados dela no servidor: rotinas, treinos, medidas e perfil. Não dá para desfazer. Se quiser guardar uma cópia, exporte um backup antes.</p>
     <label class="flabel"><span class="tiny muted">Confirme sua senha</span><input id="del-pass" class="field" type="password" autocomplete="current-password" required></label>

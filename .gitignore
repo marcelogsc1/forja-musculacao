@@ -4,3 +4,5 @@ android/
 .env
 .env.*
 .vercel/
+.firebase/
+*-debug.log
