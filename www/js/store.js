@@ -167,6 +167,8 @@ const Auth = (() => {
     },
     async resendVerification(){ if (fb() && FB.auth && FB.auth.currentUser) { try { await FB.sdk.sendEmailVerification(FB.auth.currentUser); } catch (e) { throw fbErr(e); } } },
     async reloadUser(){ if (fb() && FB.auth && FB.auth.currentUser) try { await FB.auth.currentUser.reload(); } catch (e) {} },
+    /* as regras leem email_verified do token: depois de confirmar, o token precisa ser renovado */
+    async freshToken(){ const u = fb() && FB.auth && FB.auth.currentUser; if (!u || !u.emailVerified) return; try { const r = await u.getIdTokenResult(); if (!(r && r.claims && r.claims.email_verified === true)) await u.getIdToken(true); } catch (e) {} },
     /* várias requisições podem receber 401 juntas: só uma renova o token (API própria) */
     refresh(){ if (!data || !data.refreshToken) return Promise.resolve(false); return refreshing || (refreshing = call('/auth/refresh', {refreshToken: data.refreshToken}).then(j => { save(j); return true; }).catch(e => e.status === 0 ? null : false).finally(() => { refreshing = null; })); },
     async logout(){
@@ -435,7 +437,14 @@ const Store = (() => {
     ready = false; adapter = null; api.adapter = null;
     if (unsubscribe){ unsubscribe(); unsubscribe = null; } subscribed = false;
     const kind = backendKind(); let a = null;
-    if (kind === 'firebase'){ try { await FB.ready(); if (FB.auth.currentUser) a = FirebaseAdapter(); } catch (e) { console.warn('Firebase indisponível', e); } }
+    if (kind === 'firebase'){
+      try {
+        await FB.ready(); const u = FB.auth.currentUser;
+        /* conta com e-mail ainda não confirmado: os dados ficam no aparelho e sobem assim que confirmar */
+        if (u && !u.emailVerified){ api.mode = 'verify'; renderSync(); render(); return; }
+        if (u){ await Auth.freshToken(); a = FirebaseAdapter(); }
+      } catch (e) { console.warn('Firebase indisponível', e); }
+    }
     else if (kind === 'rest') a = Auth.token ? RestAdapter() : null;
     else if (window.claude && window.claude.use) a = ClaudeAdapter();
     let info = null; if (a){ try { info = await a.init(); } catch (e) { info = null; } }
@@ -450,14 +459,19 @@ const Store = (() => {
   async function wipe(){ R.clear(); SIG.clear(); outbox = new Map(); cursor = null; account = null; writes.clear(); await LocalDB.clear(); }
   api.switchToApi = async () => { subscribed = false; await connect(); };
   /* sair: tenta enviar o que falta e limpa este aparelho */
-  api.logout = async () => { await Promise.race([sync().catch(() => {}), new Promise(ok => setTimeout(ok, 6000))]); const left = outbox.size; if (unsubscribe){ unsubscribe(); unsubscribe = null; } await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; return left; };
+  api.logout = async () => {
+    /* sem e-mail confirmado nada foi enviado: sai da conta e mantém os dados no aparelho */
+    if (api.mode === 'verify'){ await Auth.logout(); api.mode = 'local'; return 0; }
+    await Promise.race([sync().catch(() => {}), new Promise(ok => setTimeout(ok, 6000))]); const left = outbox.size; if (unsubscribe){ unsubscribe(); unsubscribe = null; } await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; return left; };
   api.deleteAccount = async password => { if (!adapter || !adapter.deleteMe) throw new Error('sem conta'); if (unsubscribe){ unsubscribe(); unsubscribe = null; } await adapter.deleteMe(password); await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; };
   api.wipeLocal = wipe;
   api.reloadRemote = () => { if (ready && adapter && !adapter.subscribe) sync(); };
   api.storage = () => LocalDB.mode;
+  /* "Já confirmei": relê a conta e, se o e-mail foi confirmado, começa a sincronizar */
+  api.checkVerified = async () => { await Auth.reloadUser(); const u = Auth.user; if (u && u.verified){ await connect(); return true; } return false; };
 
   window.addEventListener('online', () => schedule(200));
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden'){ flushWrites(); if (outbox.size) sync(); } else api.reloadRemote(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden'){ flushWrites(); if (outbox.size) sync(); } else { api.reloadRemote(); if (api.mode === 'verify') api.checkVerified().then(ok => { if (ok) toast('E-mail confirmado. Seus dados estão sendo salvos na conta.'); }); } });
   window.addEventListener('pagehide', () => { flushWrites(); });
   setInterval(() => { if (document.visibilityState === 'visible') api.reloadRemote(); }, 60000);
   return api;
@@ -466,4 +480,4 @@ function saveState(){ Store.saveState(); }
 function saveSession(s){ Store.saveSession(s); }
 function deleteSession(id){ Store.deleteSession(id); }
 function renderSync(){ const el = document.querySelector('.sync'); if (el) el.className = 'sync ' + syncClass(); }
-function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' ? 'local' : ''; }
+function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }

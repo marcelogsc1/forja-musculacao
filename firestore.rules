@@ -6,7 +6,8 @@ rules_version = '2';
 //   { type, id, data, deleted, updatedAt (Timestamp do aparelho), serverAt (horário do servidor) }
 //
 // O que estas regras garantem:
-//   1. Cada pessoa só lê e grava os próprios dados (uid do login = uid do caminho).
+//   1. Cada pessoa só lê e grava os próprios dados (uid do login = uid do caminho),
+//      e só depois de CONFIRMAR O E-MAIL (conta com e-mail real). Contas anônimas ficam de fora.
 //   2. Nada fora de users/{uid}/records pode ser lido ou gravado.
 //   3. Formato de cada documento conferido: campos permitidos, tipos, tamanhos e id coerente com o caminho.
 //   4. "A alteração mais recente vence": uma gravação com updatedAt mais antigo que a salva é recusada.
@@ -20,6 +21,13 @@ service cloud.firestore {
     // ---------- autenticação ----------
     function signedIn() { return request.auth != null; }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    // e-mail confirmado e login por e-mail/senha ou Google (bloqueia contas anônimas)
+    function realAccount() {
+      return request.auth.token.email is string
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider in ['password', 'google.com'];
+    }
+    function isVerifiedOwner(uid) { return isOwner(uid) && realAccount(); }
 
     // ---------- ajudantes de validação ----------
     function optStr(m, k, n) { return !(k in m) || m[k] == null || (m[k] is string && m[k].size() <= n); }
@@ -97,6 +105,7 @@ service cloud.firestore {
         && rid == r.type + '__' + r.id
         && r.deleted is bool
         && r.updatedAt is timestamp
+        && r.updatedAt > timestamp.date(2024, 1, 1)
         && r.updatedAt <= request.time + duration.value(1, 'd')
         && r.serverAt == request.time
         && ((r.deleted == true && r.data == null)
@@ -104,12 +113,13 @@ service cloud.firestore {
     }
 
     match /users/{uid}/records/{rid} {
-      allow get, list: if isOwner(uid);
-      allow create: if isOwner(uid) && validRecord(rid);
-      allow update: if isOwner(uid) && validRecord(rid)
+      allow get, list: if isVerifiedOwner(uid);
+      allow create: if isVerifiedOwner(uid) && validRecord(rid);
+      allow update: if isVerifiedOwner(uid) && validRecord(rid)
         && request.resource.data.type == resource.data.type
         && request.resource.data.id == resource.data.id
         && request.resource.data.updatedAt >= resource.data.updatedAt;
+      // apagar a própria conta funciona mesmo sem e-mail confirmado
       allow delete: if isOwner(uid);
     }
 

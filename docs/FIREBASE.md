@@ -44,7 +44,7 @@ O app Android usa a mesma configuração web: o Capacitor roda o mesmo código. 
 
 O que elas garantem:
 
-1. Cada pessoa só lê e grava `users/{seu uid}/records/...`. Todo o resto do banco é bloqueado.
+1. Cada pessoa só lê e grava `users/{seu uid}/records/...`, e só com **e-mail confirmado** e login por e-mail/senha ou Google. Contas anônimas ou com e-mail não confirmado não acessam nada. Todo o resto do banco é bloqueado.
 2. Cada documento tem exatamente os 6 campos esperados, com tipos certos, e o nome do documento bate com `tipo__id`.
 3. Conteúdo validado por tipo: perfil só com campos conhecidos e tamanhos máximos; medidas com valores plausíveis (peso até 500 kg, medidas até 300 cm); treinos com status válido, data AAAA-MM-DD e no máximo 80 exercícios; rotinas com até 30 treinos.
 4. `serverAt` tem de ser o horário do servidor, então ninguém consegue furar a sincronização.
@@ -62,9 +62,15 @@ npx firebase use --add          # escolha o projeto; atualiza o .firebaserc
 npm run rules:deploy
 ```
 
-**Testar as regras (32 testes):** precisa de Java 21 ou mais novo. `npm run test:rules` sobe o emulador oficial e confere que o dono consegue gravar e ler; que outra pessoa, ou alguém sem login, não consegue; e que formatos inválidos, `serverAt` forjado e gravações antigas são recusados.
+**Testar as regras (38 testes):** precisa de Java 21 ou mais novo. `npm run test:rules` sobe o emulador oficial e confere que o dono consegue gravar e ler; que outra pessoa, ou alguém sem login, não consegue; e que formatos inválidos, `serverAt` forjado e gravações antigas são recusados.
 
 Ao acrescentar um campo novo no perfil ou nas medidas, inclua o nome dele na lista correspondente das regras, ou a gravação será recusada.
+
+## Confirmação de e-mail no app
+
+- Ao criar a conta, o app envia o e-mail de confirmação e mostra no Perfil "Já confirmei meu e-mail" e "Reenviar".
+- Até a confirmação, tudo continua salvo no aparelho; nada se perde. Ao confirmar, o app renova o token (as regras leem `email_verified` dele) e envia tudo para a conta.
+- Ao voltar para o app depois de clicar no link, ele confere sozinho.
 
 ## 4. Proteções recomendadas antes de lançar
 

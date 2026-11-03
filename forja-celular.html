@@ -1177,6 +1177,8 @@ const Auth = (() => {
     },
     async resendVerification(){ if (fb() && FB.auth && FB.auth.currentUser) { try { await FB.sdk.sendEmailVerification(FB.auth.currentUser); } catch (e) { throw fbErr(e); } } },
     async reloadUser(){ if (fb() && FB.auth && FB.auth.currentUser) try { await FB.auth.currentUser.reload(); } catch (e) {} },
+    /* as regras leem email_verified do token: depois de confirmar, o token precisa ser renovado */
+    async freshToken(){ const u = fb() && FB.auth && FB.auth.currentUser; if (!u || !u.emailVerified) return; try { const r = await u.getIdTokenResult(); if (!(r && r.claims && r.claims.email_verified === true)) await u.getIdToken(true); } catch (e) {} },
     /* várias requisições podem receber 401 juntas: só uma renova o token (API própria) */
     refresh(){ if (!data || !data.refreshToken) return Promise.resolve(false); return refreshing || (refreshing = call('/auth/refresh', {refreshToken: data.refreshToken}).then(j => { save(j); return true; }).catch(e => e.status === 0 ? null : false).finally(() => { refreshing = null; })); },
     async logout(){
@@ -1445,7 +1447,14 @@ const Store = (() => {
     ready = false; adapter = null; api.adapter = null;
     if (unsubscribe){ unsubscribe(); unsubscribe = null; } subscribed = false;
     const kind = backendKind(); let a = null;
-    if (kind === 'firebase'){ try { await FB.ready(); if (FB.auth.currentUser) a = FirebaseAdapter(); } catch (e) { console.warn('Firebase indisponível', e); } }
+    if (kind === 'firebase'){
+      try {
+        await FB.ready(); const u = FB.auth.currentUser;
+        /* conta com e-mail ainda não confirmado: os dados ficam no aparelho e sobem assim que confirmar */
+        if (u && !u.emailVerified){ api.mode = 'verify'; renderSync(); render(); return; }
+        if (u){ await Auth.freshToken(); a = FirebaseAdapter(); }
+      } catch (e) { console.warn('Firebase indisponível', e); }
+    }
     else if (kind === 'rest') a = Auth.token ? RestAdapter() : null;
     else if (window.claude && window.claude.use) a = ClaudeAdapter();
     let info = null; if (a){ try { info = await a.init(); } catch (e) { info = null; } }
@@ -1460,14 +1469,19 @@ const Store = (() => {
   async function wipe(){ R.clear(); SIG.clear(); outbox = new Map(); cursor = null; account = null; writes.clear(); await LocalDB.clear(); }
   api.switchToApi = async () => { subscribed = false; await connect(); };
   /* sair: tenta enviar o que falta e limpa este aparelho */
-  api.logout = async () => { await Promise.race([sync().catch(() => {}), new Promise(ok => setTimeout(ok, 6000))]); const left = outbox.size; if (unsubscribe){ unsubscribe(); unsubscribe = null; } await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; return left; };
+  api.logout = async () => {
+    /* sem e-mail confirmado nada foi enviado: sai da conta e mantém os dados no aparelho */
+    if (api.mode === 'verify'){ await Auth.logout(); api.mode = 'local'; return 0; }
+    await Promise.race([sync().catch(() => {}), new Promise(ok => setTimeout(ok, 6000))]); const left = outbox.size; if (unsubscribe){ unsubscribe(); unsubscribe = null; } await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; return left; };
   api.deleteAccount = async password => { if (!adapter || !adapter.deleteMe) throw new Error('sem conta'); if (unsubscribe){ unsubscribe(); unsubscribe = null; } await adapter.deleteMe(password); await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; };
   api.wipeLocal = wipe;
   api.reloadRemote = () => { if (ready && adapter && !adapter.subscribe) sync(); };
   api.storage = () => LocalDB.mode;
+  /* "Já confirmei": relê a conta e, se o e-mail foi confirmado, começa a sincronizar */
+  api.checkVerified = async () => { await Auth.reloadUser(); const u = Auth.user; if (u && u.verified){ await connect(); return true; } return false; };
 
   window.addEventListener('online', () => schedule(200));
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden'){ flushWrites(); if (outbox.size) sync(); } else api.reloadRemote(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden'){ flushWrites(); if (outbox.size) sync(); } else { api.reloadRemote(); if (api.mode === 'verify') api.checkVerified().then(ok => { if (ok) toast('E-mail confirmado. Seus dados estão sendo salvos na conta.'); }); } });
   window.addEventListener('pagehide', () => { flushWrites(); });
   setInterval(() => { if (document.visibilityState === 'visible') api.reloadRemote(); }, 60000);
   return api;
@@ -1476,7 +1490,7 @@ function saveState(){ Store.saveState(); }
 function saveSession(s){ Store.saveSession(s); }
 function deleteSession(id){ Store.deleteSession(id); }
 function renderSync(){ const el = document.querySelector('.sync'); if (el) el.className = 'sync ' + syncClass(); }
-function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' ? 'local' : ''; }
+function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
 const APP_VERSION = '4.2.0';
@@ -2105,15 +2119,14 @@ function installCard(home){
 }
 function vProfile(){
   const P = ST.prefs, pf = ST.profile; const L = lifetime(); const lastBw = (ST.bw || []).slice().sort((a, b) => a.date.localeCompare(b.date)).filter(x => x.kg != null).pop();
-  const acct = Store.mode === 'api' ? `Conectado como <b>${esc(Auth.user?.email || Auth.user?.name || 'usuário')}</b>. Seus treinos ficam salvos na sua conta e sincronizam entre aparelhos.` : Store.mode === 'cloud' ? 'Seus dados estão salvos na sua conta do Claude e sincronizam entre aparelhos.' : Store.authExpired ? 'Sua sessão expirou. Entre de novo para voltar a sincronizar.' : 'Seus dados estão salvos só neste aparelho. Crie uma conta para guardar na nuvem e usar em outros aparelhos.';
+  const acct = Store.mode === 'verify' ? `Conta <b>${esc(Auth.user?.email || '')}</b> criada. Falta confirmar o e-mail: abra o link que enviamos (confira também o spam). Até lá, tudo fica salvo neste aparelho e sobe para a conta assim que você confirmar.` : Store.mode === 'api' ? `Conectado como <b>${esc(Auth.user?.email || Auth.user?.name || 'usuário')}</b>. Seus treinos ficam salvos na sua conta e sincronizam entre aparelhos.` : Store.mode === 'cloud' ? 'Seus dados estão salvos na sua conta do Claude e sincronizam entre aparelhos.' : Store.authExpired ? 'Sua sessão expirou. Entre de novo para voltar a sincronizar.' : 'Seus dados estão salvos só neste aparelho. Crie uma conta para guardar na nuvem e usar em outros aparelhos.';
   const field = (id, label, val, attrs = '') => `<label class="flabel"><span class="tiny muted">${label}</span><input id="pf-${id}" class="field" value="${esc(val ?? '')}" data-act="pf" data-k="${id}" ${attrs}></label>`;
   const seg = (k, opts) => `<div class="seg wrapseg">${opts.map(([v, l]) => `<button data-act="pf-set" data-k="${k}" data-v="${v}" aria-pressed="${String(pf[k] || '') === String(v)}">${l}</button>`).join('')}</div>`;
   const pseg = (k, opts, fmt = x => x) => `<div class="seg">${opts.map(v => `<button data-act="pref" data-k="${k}" data-v="${v}" aria-pressed="${String(P[k]) === String(v)}">${fmt(v)}</button>`).join('')}</div>`;
   const tog = (k, label, sub) => `<button class="toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="grow"><b>${label}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span><i></i></button>`;
   return `<section class="profile-hero"><div class="avatar xl">${initials() || I.user}</div><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
-    ${Store.mode === 'api' && Auth.user && Auth.user.verified === false ? '<p class="small" style="margin:10px 0 0;color:var(--warn,#F2BE2E)">Confirme seu e-mail pelo link que enviamos. <button class="link" style="min-height:0;padding:0" data-act="resend-verify">Reenviar</button></p>' : ''}
-    <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'api' ? '<button class="btn ghost block" data-act="logout">Sair da conta</button>' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
+        <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'verify' ? '<button class="btn primary block" data-act="check-verified">Já confirmei meu e-mail</button><button class="btn ghost block" data-act="resend-verify">Reenviar e-mail de confirmação</button><button class="link muted" data-act="logout">Sair desta conta</button>' : Store.mode === 'api' ? '<button class="btn ghost block" data-act="logout">Sair da conta</button>' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
   ${installCard()}
   <section class="stats"><div class="stat"><b class="num">${L.n}</b><span>treinos</span></div><div class="stat"><b class="num">${fmtN(Math.round(L.hours * 10) / 10)}</b><span>horas</span></div><div class="stat ember"><b class="num">${L.vol >= 10000 ? fmtN(Math.round(L.vol / 100) / 10) : fmtInt(L.vol)}</b><span>${L.vol >= 10000 ? 'toneladas' : 'kg'} levantados</span></div></section>
   ${L.n ? `<section class="card small ink2">${L.prs} recordes batidos · ${L.sets} séries no total${L.fav ? ` · mais feito: <b style="color:var(--ink)">${esc(exName(L.fav))}</b>` : ''}${L.first ? ` · desde ${fmtDLong(L.first)}` : ''}</section>` : ''}
@@ -2199,8 +2212,9 @@ A.login = () => openLogin('login');
 A['login-mode'] = el => openLogin(el.dataset.m);
 A.forgot = async () => { const email = ($('#au-email').value || '').trim(); const err = $('#au-err'); if (!email){ err.textContent = 'Digite seu e-mail acima e toque de novo em Esqueci minha senha.'; err.hidden = false; return; }
   try { await Auth.resetPassword(email); closeSheet(); toast('Se houver conta com esse e-mail, enviamos um link para criar uma nova senha.', null, '', 6000); } catch (e) { err.textContent = e.status === 0 ? 'Sem conexão. Tente de novo.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : 'Não foi possível enviar agora.'; err.hidden = false; } };
+A['check-verified'] = async el => { el.disabled = true; const ok = await Store.checkVerified(); render(); toast(ok ? 'E-mail confirmado. Seus dados estão sendo salvos na conta.' : 'Ainda não aparece como confirmado. Abra o link do e-mail e tente de novo.'); };
 A['resend-verify'] = async () => { try { await Auth.resendVerification(); toast('Enviamos outro e-mail de confirmação.'); } catch (e) { toast(e.status === 429 ? 'Aguarde alguns minutos para reenviar.' : 'Não foi possível reenviar agora.'); } };
-A.logout = () => confirmSheet({title: 'Sair da conta?', text: 'Seus dados continuam salvos na conta. Este aparelho fica limpo até você entrar de novo.', ok: 'Sair', onOk: async () => { const left = await Store.logout(); UI.stack = []; UI.tab = 'inicio'; render(); toast(left ? 'Saiu. Algumas alterações recentes não chegaram ao servidor.' : 'Você saiu da conta'); }});
+A.logout = () => Store.mode === 'verify' ? Store.logout().then(() => { render(); toast('Você saiu. Seus dados continuam neste aparelho.'); }) : confirmSheet({title: 'Sair da conta?', text: 'Seus dados continuam salvos na conta. Este aparelho fica limpo até você entrar de novo.', ok: 'Sair', onOk: async () => { const left = await Store.logout(); UI.stack = []; UI.tab = 'inicio'; render(); toast(left ? 'Saiu. Algumas alterações recentes não chegaram ao servidor.' : 'Você saiu da conta'); }});
 A['ask-delete-account'] = () => { UI.sheet = {kind: 'delacc'}; openSheet(`${sheetHead('Conta', 'Excluir minha conta')}<form class="stack" style="margin-top:14px" data-form="delacc"><p class="ink2" style="margin:0">Isso apaga para sempre a conta e todos os dados dela no servidor: rotinas, treinos, medidas e perfil. Não dá para desfazer. Se quiser guardar uma cópia, exporte um backup antes.</p>
     <label class="flabel"><span class="tiny muted">Confirme sua senha</span><input id="del-pass" class="field" type="password" autocomplete="current-password" required></label>
     <p id="del-err" class="small" style="color:var(--bad);margin:0" hidden></p>
@@ -2351,8 +2365,12 @@ document.addEventListener('change', async ev => {
 document.addEventListener('submit', async ev => {
   const f = ev.target; if (f.dataset.form !== 'auth') return; ev.preventDefault();
   const err = $('#au-err'); const btn = f.querySelector('[type=submit]'); btn.disabled = true; err.hidden = true;
-  try { if (UI.sheet.mode === 'register') await Auth.register($('#au-name').value.trim(), $('#au-email').value.trim(), $('#au-pass').value); else await Auth.login($('#au-email').value.trim(), $('#au-pass').value);
-    closeSheet(); toast('Conectado. Sincronizando seus dados…'); await Store.switchToApi(); if (Store.mode !== 'api') toast('Conta conectada, mas o servidor não respondeu. Tentaremos de novo.'); if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } render(); }
+  const wasReg = UI.sheet.mode === 'register';
+  try { if (wasReg) await Auth.register($('#au-name').value.trim(), $('#au-email').value.trim(), $('#au-pass').value); else await Auth.login($('#au-email').value.trim(), $('#au-pass').value);
+    closeSheet(); toast('Conectando…'); await Store.switchToApi();
+    if (Store.mode === 'verify'){ UI.stack = [{type: 'profile'}]; render(); toast(wasReg ? 'Conta criada. Confirme o e-mail para começar a salvar na nuvem.' : 'Confirme seu e-mail para começar a salvar na nuvem.', null, '', 6000); }
+    else if (Store.mode === 'api') toast('Conectado. Seus dados estão sincronizados.');
+    else toast('Conta conectada, mas o servidor não respondeu. Tentaremos de novo.'); if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } render(); }
   catch (e) { err.textContent = e.status === 401 ? 'E-mail ou senha incorretos.' : e.status === 409 ? 'Já existe uma conta com este e-mail.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : e.status === 400 ? (e.message || 'Confira os dados.') : 'Não foi possível conectar ao servidor. Verifique a internet.'; err.hidden = false; btn.disabled = false; }
 });
 document.addEventListener('submit', async ev => {

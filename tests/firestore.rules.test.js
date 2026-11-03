@@ -13,12 +13,22 @@ const session = id => ({id, status: 'done', date: '2026-11-03', wname: 'Upper', 
 
 (async () => {
   const env = await initializeTestEnvironment({projectId: 'forja-teste', firestore: {rules: fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8'), host: '127.0.0.1', port: 8085}});
-  const ana = env.authenticatedContext('ana').firestore();
-  const bia = env.authenticatedContext('bia').firestore();
+  const real = (email, provider = 'password') => ({email, email_verified: true, firebase: {sign_in_provider: provider}});
+  const ana = env.authenticatedContext('ana', real('ana@x.com')).firestore();
+  const bia = env.authenticatedContext('bia', real('bia@x.com')).firestore();
+  const naoConfirmada = env.authenticatedContext('ana', {email: 'ana@x.com', email_verified: false, firebase: {sign_in_provider: 'password'}}).firestore();
+  const anonima = env.authenticatedContext('ana', {firebase: {sign_in_provider: 'anonymous'}}).firestore();
+  const google = env.authenticatedContext('gui', real('gui@gmail.com', 'google.com')).firestore();
   const anon = env.unauthenticatedContext().firestore();
   const R = (db, uid, rid) => doc(db, 'users', uid, 'records', rid);
 
   await t('dono grava treino', () => assertSucceeds(setDoc(R(ana, 'ana', 'session__s-1'), rec('session', 's-1', session('s-1')))));
+  await t('e-mail não confirmado não grava', () => assertFails(setDoc(R(naoConfirmada, 'ana', 'session__s-x'), rec('session', 's-x', session('s-x')))));
+  await t('e-mail não confirmado não lê', () => assertFails(getDoc(R(naoConfirmada, 'ana', 'session__s-1'))));
+  await t('conta anônima não grava', () => assertFails(setDoc(R(anonima, 'ana', 'session__s-y'), rec('session', 's-y', session('s-y')))));
+  await t('login com Google confirmado grava', () => assertSucceeds(setDoc(R(google, 'gui', 'session__g-1'), rec('session', 'g-1', session('g-1')))));
+  await t('não confirmado pode apagar os próprios dados (exclusão de conta)', () => assertSucceeds(deleteDoc(R(naoConfirmada, 'ana', 'session__inexistente'))));
+  await t('updatedAt antigo demais recusado', () => assertFails(setDoc(R(ana, 'ana', 'session__s-old'), rec('session', 's-old', session('s-old'), '2001-01-01T00:00:00.000Z'))));
   await t('dono lê o próprio treino', () => assertSucceeds(getDoc(R(ana, 'ana', 'session__s-1'))));
   await t('outra pessoa não lê', () => assertFails(getDoc(R(bia, 'ana', 'session__s-1'))));
   await t('outra pessoa não grava', () => assertFails(setDoc(R(bia, 'ana', 'session__s-2'), rec('session', 's-2', session('s-2')))));

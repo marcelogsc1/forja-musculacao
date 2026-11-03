@@ -31,7 +31,7 @@ www/                      o app (HTML, CSS e JS puros, sem etapa de build)
   fig/                    ilustrações (início e fim do movimento lado a lado)
   screenshots/            capturas usadas na instalação e na ficha da Play Store
 firestore.rules           regras de segurança do Firestore
-tests/firestore.rules.test.js   32 testes das regras no emulador
+tests/firestore.rules.test.js   38 testes das regras no emulador
 firebase.json, .firebaserc, firestore.indexes.json   projeto Firebase (CLI)
 vercel.json               publicação na Vercel
 capacitor.config.json     projeto Android
