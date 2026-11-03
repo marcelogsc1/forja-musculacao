@@ -70,5 +70,5 @@ Tudo o que o usuário grava vira um **registro** pequeno: perfil, preferências,
 - Ilustrações: Open Exercise Illustrations, CC0 (`docs/LICENSE-open-exercise-illustrations-CC0.txt`). Geradas por IA e revisadas a olho pelo autor do projeto; detalhes podem ter imperfeições.
 - Fotos opcionais: Free Exercise DB, domínio público.
 - Desenho anatômico: react-native-body-highlighter, MIT (`docs/LICENSE-body-highlighter.txt`).
-- Fonte Archivo: SIL Open Font License 1.1 (`www/fonts/OFL-Archivo.txt`).
+- Fontes Archivo, Geist e Geist Mono: SIL Open Font License 1.1 (`www/fonts/OFL-Archivo.txt`, `www/fonts/OFL-Geist.txt`).
 - Firebase JS SDK 13.2.0: Apache 2.0 (`www/vendor/firebase-13.2.0`).

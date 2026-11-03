@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Forja</title>
 <meta name="description" content="Forja: registro de treinos de musculação, rotinas, mapa muscular e progresso.">
-<meta name="theme-color" content="#0E0F11">
+<meta name="theme-color" content="#0B0B0C">
 <meta name="color-scheme" content="dark light">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,9 +13,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/favicon-48.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/base.css?v=4.2.0">
-<link rel="stylesheet" href="css/app.css?v=4.2.0">
+<link rel="stylesheet" href="css/base.css?v=4.3.0">
+<link rel="stylesheet" href="css/app.css?v=4.3.0">
 </head>
 <body>
 
@@ -37,17 +39,17 @@
 <div id="toast" class="toast" hidden role="status"></div>
 
 <script src="config.js"></script>
-<script src="js/util.js?v=4.2.0"></script>
-<script src="js/templates.js?v=4.2.0"></script>
-<script src="js/catalog.js?v=4.2.0"></script>
-<script src="js/programs.js?v=4.2.0"></script>
-<script src="js/bodydata.js?v=4.2.0"></script>
-<script src="js/body.js?v=4.2.0"></script>
-<script src="js/platform.js?v=4.2.0"></script>
-<script src="js/store.js?v=4.2.0"></script>
-<script src="js/app.js?v=4.2.0"></script>
-<script src="js/explore.js?v=4.2.0"></script>
-<script src="js/boot.js?v=4.2.0"></script>
+<script src="js/util.js?v=4.3.0"></script>
+<script src="js/templates.js?v=4.3.0"></script>
+<script src="js/catalog.js?v=4.3.0"></script>
+<script src="js/programs.js?v=4.3.0"></script>
+<script src="js/bodydata.js?v=4.3.0"></script>
+<script src="js/body.js?v=4.3.0"></script>
+<script src="js/platform.js?v=4.3.0"></script>
+<script src="js/store.js?v=4.3.0"></script>
+<script src="js/app.js?v=4.3.0"></script>
+<script src="js/explore.js?v=4.3.0"></script>
+<script src="js/boot.js?v=4.3.0"></script>
 <script>
 /* PWA: instala o service worker (funciona sem internet) e aplica atualizações sem interromper um treino */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) && (location.protocol === 'https:' || location.hostname === 'localhost')){

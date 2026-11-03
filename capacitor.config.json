@@ -3,14 +3,14 @@
   "appName": "Forja",
   "webDir": "www",
   "android": {
-    "backgroundColor": "#0E0F11",
+    "backgroundColor": "#0B0B0C",
     "allowMixedContent": false
   },
   "plugins": {
     "StatusBar": {
       "overlaysWebView": false,
       "style": "DARK",
-      "backgroundColor": "#0E0F11"
+      "backgroundColor": "#0B0B0C"
     },
     "LocalNotifications": {
       "iconColor": "#FF6A2B"
