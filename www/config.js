@@ -1,16 +1,15 @@
 /* Configuração do Forja
-   firebase: cole aqui o objeto firebaseConfig do seu projeto
-             (Console do Firebase > Configurações do projeto > Seus apps > App da Web).
+   firebase: firebaseConfig do projeto (Console do Firebase > Configurações do projeto > Seus apps > App da Web).
              Esses valores são públicos por natureza; a proteção dos dados vem das regras (firestore.rules).
-   Enquanto estiver com "COLE_AQUI", o app funciona sem conta, salvando só no aparelho. */
+   Para voltar a funcionar sem conta, troque apiKey por 'COLE_AQUI'. */
 window.FORJA_CONFIG = {
   firebase: {
-    apiKey: 'COLE_AQUI',
-    authDomain: 'SEU-PROJETO.firebaseapp.com',
-    projectId: 'SEU-PROJETO',
-    storageBucket: 'SEU-PROJETO.firebasestorage.app',
-    messagingSenderId: '',
-    appId: ''
+    apiKey: 'AIzaSyCzWfoIpOwOiHUMy2V1H7k-KwJ__QAtgtc',
+    authDomain: 'haltera-50d53.firebaseapp.com',
+    projectId: 'haltera-50d53',
+    storageBucket: 'haltera-50d53.firebasestorage.app',
+    messagingSenderId: '121379477082',
+    appId: '1:121379477082:web:80df97370b045c0263aa63'
   },
   /* Opcional: chave do site do reCAPTCHA v3 para o App Check na versão web. */
   appCheckSiteKey: ''
