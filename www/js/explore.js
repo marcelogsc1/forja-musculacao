@@ -144,7 +144,7 @@ A.bld = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' 
 A['add-template'] = el => {
   const t = effTpl(tplById(el.dataset.tid)); if (!t) return;
   const r = routineFromTemplate(t); ST.routines.push(r); if (!activeRoutine()) ST.active = r.id; saveState();
-  UI.tab = 'rotinas'; UI.rtab = 'minhas'; UI.stack = [{type: 'routine', rid: r.id}]; render(); window.scrollTo({top: 0}); toast(`${t.nome} salvo nas suas rotinas`); Platform.haptic('success');
+  UI.tab = 'rotinas'; UI.rtab = 'minhas'; UI.stack = [{type: 'routine', rid: r.id}]; render(); window.scrollTo({top: 0}); Platform.haptic('success'); if (r.workouts.length) openDaysSheet(r.id, true); else toast(`${t.nome} salvo nas suas rotinas`);
 };
 A['add-tpl-workout'] = el => {
   const t = effTpl(tplById(el.dataset.tid)); const r = activeRoutine(); if (!t || !r) return;

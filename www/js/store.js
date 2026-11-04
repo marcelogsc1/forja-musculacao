@@ -465,6 +465,7 @@ const Store = (() => {
     await Promise.race([sync().catch(() => {}), new Promise(ok => setTimeout(ok, 6000))]); const left = outbox.size; if (unsubscribe){ unsubscribe(); unsubscribe = null; } await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; return left; };
   api.deleteAccount = async password => { if (!adapter || !adapter.deleteMe) throw new Error('sem conta'); if (unsubscribe){ unsubscribe(); unsubscribe = null; } await adapter.deleteMe(password); await Auth.logout(); await wipe(); ST = freshState(); fixState(); SESS = []; diffState(); await flushWrites(); outbox = new Map(); saveMeta(); ready = false; adapter = null; api.adapter = null; api.mode = 'local'; };
   api.wipeLocal = wipe;
+  api.hasAccount = () => !!account;
   api.reloadRemote = () => { if (ready && adapter && !adapter.subscribe) sync(); };
   api.storage = () => LocalDB.mode;
   /* "Já confirmei": relê a conta e, se o e-mail foi confirmado, começa a sincronizar */

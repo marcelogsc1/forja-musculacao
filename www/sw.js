@@ -3,8 +3,8 @@
    - Scripts e estilos (com ?v=versão): cache primeiro. Ilustrações: guardadas na primeira vez que aparecem.
    - /api nunca passa pelo cache.
    Ao publicar nova versão, o build muda VERSION e o app se atualiza sozinho. */
-const VERSION = 'forja-4.3.1';
-const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest", "css/base.css?v=4.3.1", "css/app.css?v=4.3.1", "fonts/archivo-latin-wdth-normal.woff2", "fonts/geist-latin-wght-normal.woff2", "fonts/geist-mono-latin-wght-normal.woff2", "icons/icon-192.png", "icons/icon-512.png", "js/util.js?v=4.3.1", "js/templates.js?v=4.3.1", "js/catalog.js?v=4.3.1", "js/programs.js?v=4.3.1", "js/bodydata.js?v=4.3.1", "js/body.js?v=4.3.1", "js/platform.js?v=4.3.1", "js/store.js?v=4.3.1", "js/app.js?v=4.3.1", "js/explore.js?v=4.3.1", "js/boot.js?v=4.3.1"];
+const VERSION = 'forja-4.4.0';
+const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest", "css/base.css?v=4.4.0", "css/app.css?v=4.4.0", "fonts/archivo-latin-wdth-normal.woff2", "fonts/geist-latin-wght-normal.woff2", "fonts/geist-mono-latin-wght-normal.woff2", "icons/icon-192.png", "icons/icon-512.png", "js/util.js?v=4.4.0", "js/templates.js?v=4.4.0", "js/catalog.js?v=4.4.0", "js/instructions.js?v=4.4.0", "js/programs.js?v=4.4.0", "js/bodydata.js?v=4.4.0", "js/body.js?v=4.4.0", "js/platform.js?v=4.4.0", "js/store.js?v=4.4.0", "js/app.js?v=4.4.0", "js/explore.js?v=4.4.0", "js/boot.js?v=4.4.0"];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== 'forja-media').map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

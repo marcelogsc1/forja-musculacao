@@ -1,11 +1,12 @@
 // ================= estado =================
-const APP_VERSION = '4.3.1';
+const APP_VERSION = '4.4.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
 const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '', progTab: 'geral', progEx: null, progMetric: 'kg', calMonth: null, calSel: today(), bwMetric: 'kg', exTab: 'sobre', expand: {}, rtab: 'minhas', xf: {}, tplOpt: {}, bld: null };
 const PAGES = {};
-function freshState(){ const r = routineFromTemplate(TEMPLATES[0], 'r-hip5', true); return { v: 4, routines: [r], active: r.id, custom: {}, media: {}, bw: [], prefs: {...DEFAULT_PREFS}, profile: {createdAt: new Date().toISOString()} }; }
+/* Conta nova começa vazia: nenhuma rotina pré-carregada (o usuário escolhe um programa ou monta o seu). */
+function freshState(){ return { v: 4, routines: [], active: null, custom: {}, media: {}, bw: [], prefs: {...DEFAULT_PREFS}, profile: {createdAt: new Date().toISOString()} }; }
 function fixState(){ ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
 function getEx(id){ return CAT[id] || ST.custom[id] || {n: 'Exercício removido', m: 'peito', p: 'custom', e: 'outros', pri: [], sec: [], d: []}; }
 const exName = id => getEx(id).n;
@@ -25,7 +26,11 @@ function normSession(s){
 }
 function migrateOld(plano){ const r = routineFromTemplate(TEMPLATES[0], 'r-hip5', true); if (plano && Array.isArray(plano.days)) r.workouts = plano.days.map((d, i) => ({id: d.id, nome: d.nome, cor: i, items: d.items})); return r; }
 let booted = false;
-function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); render(); }
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+/* Tela de entrada na primeira abertura: só com Firebase configurado, sem conta e sem nenhum dado no aparelho. */
+const shouldWelcome = () => Auth.kind === 'firebase' && !lsGet('forja.welcome') && !(Store.hasAccount && Store.hasAccount()) && !Auth.user && !SESS.length && !ST.routines.length && !ST.profile.name;
+function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); else if (shouldWelcome()) UI.stack = [{type: 'auth', first: true}]; render(); }
 function isTyping(){ const a = document.activeElement; return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT'); }
 function canRerender(){ return !isTyping() && !KP.open && $('#sheet').hidden && !DRAG; }
 
@@ -39,6 +44,28 @@ function nextWorkout(r){
   const i = r.workouts.findIndex(w => w.id === last.workout);
   return r.workouts[(i + 1) % r.workouts.length];
 }
+/* ---- agenda da semana ----
+   routine.dias = {"1": wid, ...} com a chave = dia da semana do JS (0 domingo ... 6 sábado).
+   Sem agenda, vale a sequência (próximo treino depois do último feito). */
+const WEEK = [1, 2, 3, 4, 5, 6, 0];
+const DIA3 = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const hasSchedule = r => !!(r && r.dias && Object.values(r.dias).some(id => r.workouts.some(w => w.id === id)));
+const scheduledOn = (r, d) => hasSchedule(r) ? r.workouts.find(w => w.id === r.dias[d.getDay()]) || null : null;
+function defaultDays(n){ return n <= 1 ? [1] : n === 2 ? [1, 4] : n === 3 ? [1, 3, 5] : n === 4 ? [1, 2, 4, 5] : n === 5 ? [1, 2, 3, 4, 5] : n === 6 ? [1, 2, 3, 4, 5, 6] : WEEK.slice(); }
+function setDays(r, days){ r.dias = {}; const ord = WEEK.filter(d => days.includes(d)); ord.forEach((d, i) => { const w = r.workouts[i % r.workouts.length]; if (w) r.dias[d] = w.id; }); if (!ord.length) delete r.dias; }
+/* próximo dia (a partir de amanhã) com treino marcado */
+function nextScheduled(r, from = new Date()){ for (let k = 1; k <= 7; k++){ const d = addDays(from, k); const w = scheduledOn(r, d); if (w) return {d, w, k}; } return null; }
+/* O que o Início deve mostrar hoje */
+function todayPlan(r){
+  const td = today(); const doneToday = done().filter(s => s.date === td);
+  if (doneToday.length) return {kind: 'done', s: doneToday[0], after: r ? (hasSchedule(r) ? nextScheduled(r) : {w: nextWorkout(r)}) : null};
+  if (!r || !r.workouts.length) return {kind: 'none'};
+  if (hasSchedule(r)){ const w = scheduledOn(r, new Date()); return w ? {kind: 'today', w} : {kind: 'rest', after: nextScheduled(r)}; }
+  return {kind: 'next', w: nextWorkout(r)};
+}
+/* treino sugerido ao tocar em Treinar: o de hoje pela agenda, senão o próximo da sequência */
+function suggested(r){ if (!r || !r.workouts.length) return null; if (hasSchedule(r)) return scheduledOn(r, new Date()) || nextScheduled(r)?.w || r.workouts[0]; return nextWorkout(r); }
+const whenLabel = k => k === 1 ? 'amanhã' : k === 2 ? 'depois de amanhã' : '';
 const isWork = x => x.ok && x.t !== 'w';
 const workSets = e => (e.sets || []).filter(isWork);
 function lastItem(ex, excludeId){
@@ -107,12 +134,15 @@ function render(){
   const a = document.activeElement; const fid = a && a.id; const sel = a && a.selectionStart != null ? [a.selectionStart, a.selectionEnd] : null;
   const p = curPage(); const inSess = p && p.type === 'session';
   document.body.classList.toggle('in-session', !!inSess);
+  document.body.classList.toggle('auth-mode', !!(p && p.type === 'auth'));
+  if (p && p.type === 'auth' && p.first && (Store.mode === 'cloud' || Store.mode === 'api')){ UI.stack.pop(); return render(); }
   document.querySelectorAll('nav.tabs a').forEach(x => x.setAttribute('aria-current', !p && x.dataset.tab === UI.tab ? 'page' : 'false'));
   $('#fab').classList.toggle('live', !!openSession());
   const syncLbl = {cloud: 'Salvo na nuvem', pending: 'Sincronizando', local: 'Salvo só neste aparelho'}[syncClass()] || 'Conectando';
   const sync = `<span class="sync ${syncClass()}" title="${syncLbl}" role="img" aria-label="${syncLbl}"></span>`;
   let head, body;
-  if (!p){
+  if (p && p.type === 'auth'){ head = ''; body = vAuth(p); }
+  else if (!p){
     head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar" data-act="profile" aria-label="Perfil e ajustes">${initials() || I.user}</button>`;
     body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'exercicios' ? vLibrary() : UI.tab === 'progresso' ? vProgress() : vHome();
   } else if (inSess){
@@ -172,47 +202,74 @@ function fitNames(){ document.querySelectorAll('.hero-name').forEach(el => { let
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => typeof render === 'function' && booted && canRerender() && render());
 const glow = () => '<i class="glow g1" aria-hidden="true"></i><i class="glow g2" aria-hidden="true"></i><i class="grain" aria-hidden="true"></i>';
 function vHome(){
-  const r = activeRoutine(); const next = nextWorkout(r); const open = openSession();
+  const r = activeRoutine(); const open = openSession(); const plan = todayPlan(r);
   const now = new Date(); const mon = mondayOf(now); const D = done(); const td = today();
   const byDate = {}; D.forEach(s => (byDate[s.date] = byDate[s.date] || []).push(s));
   const days = [...Array(7)].map((_, i) => addDays(mon, i));
   const weekSess = D.filter(s => s.date >= isoDate(mon));
-  const goal = ST.prefs.goal || (r ? Math.min(7, r.workouts.length) : 3);
+  const sched = hasSchedule(r);
+  const goal = ST.prefs.goal || (sched ? WEEK.filter(d => r.workouts.some(w => w.id === r.dias[d])).length : r ? Math.min(7, r.workouts.length) : 3);
   const monthCount = D.filter(s => s.date.startsWith(td.slice(0, 7))).length;
   let streak = 0; for (let k = 0; k < 104; k++){ const a = isoDate(addDays(mon, -7 * k)), b = isoDate(addDays(mon, -7 * k + 6)); if (D.some(s => s.date >= a && s.date <= b)) streak++; else if (k === 0) continue; else break; }
   const weekVol = weekSess.reduce((a, s) => a + stats(s).vol, 0);
-  const sel = (r && !open && r.workouts.find(x => x.id === UI.homeSel)) || next;
-  const trainedToday = !!byDate[td];
-  const f = focusLine(next);
-  const line = open ? 'Treino em andamento.' : trainedToday ? 'Treino de hoje feito.' : f ? `Hoje é ${f}.` : r ? 'Monte o primeiro treino.' : 'Escolha uma rotina.';
+  const picked = r && !open && UI.homeSel ? r.workouts.find(x => x.id === UI.homeSel) : null;
+  const trainedToday = plan.kind === 'done';
+  const f = plan.w ? focusLine(plan.w) : '';
+  const line = open ? 'Treino em andamento.' : trainedToday ? 'Tá pago.' : plan.kind === 'rest' ? 'Hoje é descanso.' : f ? `Hoje é ${f}.` : r ? 'Monte o primeiro treino.' : 'Vamos montar seu treino.';
   const first = ST.profile.name ? `, ${esc(ST.profile.name.split(' ')[0])}` : '';
-  let h = `<section class="greet"><div class="eyebrow">${DIAS[now.getDay()]} · semana ${isoWeek(now)}</div><h1>${greet()}${first}.</h1><p>${line}</p></section>`;
+  let h = `<section class="greet"><div class="eyebrow">${DIAS[now.getDay()]} · semana ${isoWeek(now)}</div><h1>${greet()}${first}.</h1><p class="${trainedToday ? 'paid' : ''}">${line}</p></section>`;
+  const workoutCard = (w, lbl) => `<section class="hero home-hero" style="--pc:${col(w.cor)}">${glow()}<div class="hero-top"><span class="hero-lbl">${lbl}</span><span class="hero-rt">${esc(r.nome)}</span></div>
+      ${heroName(w.nome)}
+      ${w.items.length ? `<p class="hero-focus">${esc(groupsOf(w.items))}</p>` : ''}
+      <div class="hero-stats"><div><b>${pad2(w.items.length)}</b><span>exercícios</span></div><div><b>${pad2(wSets(w))}</b><span>séries</span></div><div><b>${w.items.length ? wMins(w) : 0}′</b><span>estimados</span></div></div>
+      <div class="hero-act"><button class="btn primary" data-act="start" data-rid="${r.id}" data-wid="${w.id}" ${w.items.length ? '' : 'disabled'}>${I.play}Começar</button><button class="btn ghost" data-act="open-workout" data-rid="${r.id}" data-wid="${w.id}">Ver treino</button></div></section>`;
+  const afterTxt = a => a && a.w ? (a.d ? `Próximo: ${a.k <= 2 ? whenLabel(a.k) : DIAS[a.d.getDay()]}, ${esc(a.w.nome)}` : `Próximo da sequência: ${esc(a.w.nome)}`) : '';
   if (open){
     const st = stats(open); const total = open.items.reduce((a, e) => a + e.sets.length, 0); const exDone = open.items.filter(e => e.sets.length && e.sets.every(x => x.ok)).length;
     h += `<section class="hero home-hero" style="--pc:${col(open.cor)}">${glow()}<div class="hero-top"><span class="hero-lbl live">Em andamento</span><span class="hero-rt mono">${fmtClock((Date.now() - new Date(open.startedAt)) / 1000)}</span></div>
       ${heroName(open.wname)}
       <div class="hero-stats"><div><b>${pad2(st.sets)}<small class="muted">/${pad2(total)}</small></b><span>séries feitas</span></div><div><b>${pad2(exDone)}<small class="muted">/${pad2(open.items.length)}</small></b><span>exercícios</span></div><div><b>${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}<small class="muted">${st.vol >= 10000 ? 't' : 'kg'}</small></b><span>volume</span></div></div>
       <div class="hero-act"><button class="btn primary" data-act="open-session">${I.play}Continuar treino</button></div></section>`;
-  } else if (sel){
-    const i = r.workouts.indexOf(sel); const isNext = sel === next;
-    h += `<section class="hero home-hero" style="--pc:${col(sel.cor)}">${glow()}<div class="hero-top"><span class="hero-lbl">${isNext ? 'Próximo' : 'Treino'} · ${pad2(i + 1)}/${pad2(r.workouts.length)}</span><span class="hero-rt">${esc(r.nome)}</span></div>
-      ${heroName(sel.nome)}
-      ${sel.items.length ? `<p class="hero-focus">${esc(groupsOf(sel.items))}</p>` : ''}
-      <div class="hero-stats"><div><b>${pad2(sel.items.length)}</b><span>exercícios</span></div><div><b>${pad2(wSets(sel))}</b><span>séries</span></div><div><b>${sel.items.length ? wMins(sel) : 0}′</b><span>estimados</span></div></div>
-      <div class="hero-act"><button class="btn primary" data-act="start" data-rid="${r.id}" data-wid="${sel.id}" ${sel.items.length ? '' : 'disabled'}>${I.play}Começar</button><button class="btn ghost" data-act="open-workout" data-rid="${r.id}" data-wid="${sel.id}">Ver treino</button></div></section>`;
-    if (r.workouts.length > 1){
-      const doneW = new Set(weekSess.filter(s => s.routine === r.id).map(s => s.workout)); const n = r.workouts.length;
-      h += `<div class="track ${n <= 5 ? 'fit' : ''}" style="--n:${n}" role="group" aria-label="Treinos da rotina">${r.workouts.map((x, j) => `<button class="tk" style="--pc:${col(x.cor)}" data-act="home-sel" data-wid="${x.id}" aria-pressed="${x === sel}"><span class="n">${pad2(j + 1)}<i class="${doneW.has(x.id) ? 'on' : ''}" title="${doneW.has(x.id) ? 'Feito nesta semana' : ''}"></i></span><b>${esc(x.nome)}</b></button>`).join('')}</div>`;
-    }
+  } else if (picked){
+    h += workoutCard(picked, `Treino · ${pad2(r.workouts.indexOf(picked) + 1)}/${pad2(r.workouts.length)}`);
+  } else if (plan.kind === 'done'){
+    const s = plan.s; const st = stats(s); const m = sessMins(s); const prs = sessionPRs(s);
+    h += `<section class="hero home-hero is-done" style="--pc:var(--good)">${glow()}<div class="hero-top"><span class="hero-lbl">${I.check}Concluído hoje</span>${prs.length ? `<span class="pill good" style="margin-left:auto">${I.trophy}${prs.length} ${prs.length === 1 ? 'PR' : 'PRs'}</span>` : ''}</div>
+      ${heroName(s.wname)}
+      <p class="hero-focus">${afterTxt(plan.after) || 'Bom descanso.'}</p>
+      <div class="hero-stats"><div><b>${m != null ? m : '–'}′</b><span>duração</span></div><div><b>${pad2(st.sets)}</b><span>séries</span></div><div><b>${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}<small class="muted">${st.vol >= 10000 ? 't' : 'kg'}</small></b><span>volume</span></div></div>
+      <div class="hero-act"><button class="btn ghost" style="flex:1" data-act="open-past" data-sid="${s.id}">Ver resumo do treino</button></div></section>`;
+  } else if (plan.kind === 'rest'){
+    const a = plan.after;
+    h += `<section class="hero home-hero is-rest" style="--pc:var(--muted)">${glow()}<div class="hero-top"><span class="hero-lbl">Descanso · ${DIA3[now.getDay()]}</span><span class="hero-rt">${esc(r.nome)}</span></div>
+      ${heroName('Descanso')}
+      <p class="hero-focus">${a ? `${afterTxt(a)}.` : ''} Recuperar também faz parte do treino.</p>
+      <div class="hero-act"><button class="btn ghost" style="flex:1" data-act="fab">Treinar mesmo assim</button>${a ? `<button class="btn ghost" data-act="open-workout" data-rid="${r.id}" data-wid="${a.w.id}">Ver ${esc(a.w.nome)}</button>` : ''}</div></section>`;
+  } else if (plan.kind === 'today'){
+    h += workoutCard(plan.w, `Hoje · ${DIA3[now.getDay()]}`);
+  } else if (plan.kind === 'next'){
+    h += workoutCard(plan.w, `Próximo · ${pad2(r.workouts.indexOf(plan.w) + 1)}/${pad2(r.workouts.length)}`);
+  } else if (!r){
+    h += `<section class="hero home-hero" style="--pc:var(--ember)">${glow()}<div class="hero-top"><span class="hero-lbl">Primeiro passo</span></div>
+      ${heroName('Comece aqui')}
+      <p class="hero-focus">Escolha um dos programas prontos ou monte um sob medida para seus dias, seu local e seu objetivo. Leva um minuto.</p>
+      <div class="hero-act"><button class="btn primary" data-act="go-explore">Ver programas</button><button class="btn ghost" data-act="open-builder">Montar o meu</button></div></section>`;
   } else {
-    h += `<section class="empty"><b>Nenhuma rotina ativa</b>Crie uma rotina ou escolha um programa pronto.<div style="margin-top:14px"><button class="btn primary sm" data-act="tab" data-tab="rotinas">Ver rotinas</button></div></section>`;
+    h += `<section class="empty"><b>Rotina sem treinos</b>Adicione um treino à rotina ${esc(r.nome)}.<div style="margin-top:14px"><button class="btn primary sm" data-act="open-routine" data-rid="${r.id}">Abrir rotina</button></div></section>`;
+  }
+  if (r && !open && r.workouts.length > 1){
+    const doneW = new Set(weekSess.filter(s => s.routine === r.id).map(s => s.workout)); const n = r.workouts.length;
+    const shown = picked || plan.w || (plan.kind === 'done' ? r.workouts.find(w => w.id === plan.s.workout) : null) || null;
+    const days4 = w => sched ? WEEK.filter(d => r.dias[d] === w.id).map(d => DIA3[d]).join(' ') : '';
+    h += `<div class="track ${n <= 5 ? 'fit' : ''}" style="--n:${n}" role="group" aria-label="Treinos da rotina">${r.workouts.map((x, j) => `<button class="tk" style="--pc:${col(x.cor)}" data-act="home-sel" data-wid="${x.id}" aria-pressed="${x === shown}"><span class="n"><em>${sched ? (days4(x) || '—') : pad2(j + 1)}</em><i class="${doneW.has(x.id) ? 'on' : ''}" title="${doneW.has(x.id) ? 'Feito nesta semana' : ''}"></i></span><b>${esc(x.nome)}</b></button>`).join('')}</div>`;
+    if (!sched) h += `<button class="sched-hint" data-act="days" data-rid="${r.id}">${I.cal || ''}<span>Defina os dias da semana de cada treino e o app mostra o certo para hoje.</span>${I.chev}</button>`;
   }
   if (Platform.canInstall() && !installHidden()) h += installCard(true);
   if (!ST.profile.name) h += `<section><button class="lastrow" data-act="profile"><span class="avatar">${I.user}</span><div class="grow"><div class="eyebrow">Perfil</div><b>Complete seu perfil</b><div class="small muted" style="margin-top:2px">Nome, objetivo e meta semanal personalizam o app.</div></div>${I.chev}</button></section>`;
   const left = Math.max(0, goal - weekSess.length); const daysLeft = 7 - ((now.getDay() + 6) % 7) - (trainedToday ? 1 : 0);
   const hint = left === 0 ? `Meta cumprida.<span>${weekSess.length > goal ? `${weekSess.length - goal} além da meta` : 'Semana fechada'}</span>` : `Faltam ${left} ${left === 1 ? 'treino' : 'treinos'}<span>${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'} até domingo</span>`;
   h += `<section class="card wk"><div class="wk-top"><div><div class="eyebrow">Meta da semana</div><div class="wk-n"><b>${weekSess.length}</b><span>/${goal}</span></div></div><p class="wk-hint">${hint}</p></div>
-    <div class="wk-bars">${days.map(d => { const k = isoDate(d); const l = byDate[k] || []; const cls = [k === td ? 'today' : '', l.length ? 'on' : '', l.length > 1 ? 'two' : '', k > td ? 'fut' : ''].join(' '); return `<div class="wb ${cls}" style="--pc:${l.length ? col(l[0].cor) : 'transparent'};--pc2:${l[1] ? col(l[1].cor) : 'transparent'}" title="${l.map(s => esc(s.wname)).join(', ')}"><i></i>${'STQQSSD'[(d.getDay() + 6) % 7]}</div>`; }).join('')}</div></section>
+    <div class="wk-bars">${days.map(d => { const k = isoDate(d); const l = byDate[k] || []; const pw = !l.length && k >= td ? scheduledOn(r, d) : null; const cls = [k === td ? 'today' : '', l.length ? 'on' : '', l.length > 1 ? 'two' : '', k > td ? 'fut' : '', pw ? 'plan' : ''].join(' '); return `<div class="wb ${cls}" style="--pc:${l.length ? col(l[0].cor) : pw ? col(pw.cor) : 'transparent'};--pc2:${l[1] ? col(l[1].cor) : 'transparent'}" title="${l.length ? l.map(s => esc(s.wname)).join(', ') : pw ? 'Planejado: ' + esc(pw.nome) : ''}"><i></i>${'STQQSSD'[(d.getDay() + 6) % 7]}</div>`; }).join('')}</div></section>
   <section class="strip"><div class="ac"><b>${streak}</b><span>${streak === 1 ? 'semana seguida' : 'semanas seguidas'}</span></div><div><b>${monthCount}</b><span>${monthCount === 1 ? 'treino' : 'treinos'} em ${MESL[now.getMonth()].toLowerCase()}</span></div><div><b>${weekVol >= 10000 ? fmtN(Math.round(weekVol / 100) / 10) : fmtInt(weekVol)}<small>${weekVol >= 10000 ? 't' : 'kg'}</small></b><span>volume na semana</span></div></section>`;
   const last = D[0];
   if (last){
@@ -253,6 +310,7 @@ function vRoutine(p){
   return `<section>${ed ? `<div class="stack"><input id="rname" class="field" value="${esc(r.nome)}" maxlength="40" aria-label="Nome da rotina"><textarea id="rdesc" class="field" maxlength="240" aria-label="Descrição" placeholder="Descrição (opcional)">${esc(r.desc || '')}</textarea><div class="row"><button class="btn primary sm" data-act="routine-save" data-rid="${r.id}">Salvar</button><button class="btn ghost sm" data-act="routine-cancel">Cancelar</button></div></div>`
     : `<div class="row between" style="align-items:flex-start;gap:12px"><h1 class="display h1">${esc(r.nome)}</h1><button class="icon" data-act="routine-menu" data-rid="${r.id}" aria-label="Mais opções">${I.more}</button></div>${r.desc ? `<p class="ink2" style="margin:10px 0 0">${esc(r.desc)}</p>` : ''}`}
     <div class="row wrap" style="margin-top:14px">${r.id === ST.active ? '<span class="tag good">Rotina ativa</span>' : `<button class="btn primary sm" data-act="set-active" data-rid="${r.id}">Usar como rotina ativa</button>`}</div></section>
+  ${r.workouts.length ? `<section><div class="sec-head"><span class="eyebrow">Dias da semana</span><button class="link" data-act="days" data-rid="${r.id}">${hasSchedule(r) ? 'Alterar' : 'Definir'}</button></div>${hasSchedule(r) ? `<div class="agenda">${WEEK.map(d => { const w = r.workouts.find(x => x.id === r.dias[d]); const isT = d === new Date().getDay(); return `<label class="ag-row ${isT ? 'today' : ''}" style="--pc:${w ? col(w.cor) : 'transparent'}"><span class="ag-d">${DIA3[d]}</span><i></i><select data-act="day-w" data-rid="${r.id}" data-d="${d}" aria-label="Treino de ${DIAS[d]}"><option value="">Descanso</option>${r.workouts.map(x => `<option value="${x.id}" ${w === x ? 'selected' : ''}>${esc(x.nome)}</option>`).join('')}</select>${isT ? '<span class="ag-t">hoje</span>' : ''}</label>`; }).join('')}</div>` : `<button class="sched-hint" style="margin-top:0" data-act="days" data-rid="${r.id}">${I.cal}<span>Sem dias fixos: o app sugere o próximo treino da sequência. Defina os dias para ele mostrar o treino certo de cada dia.</span>${I.chev}</button>`}</section>` : ''}
   <section><div class="sec-head"><span class="eyebrow">Sequência de treinos</span><button class="link" data-act="new-workout" data-rid="${r.id}">+ Treino</button></div>${r.workouts.length ? workoutRows(r, {drag: true}) : '<div class="empty"><b>Nenhum treino</b>Toque em + Treino para criar.</div>'}</section>
   <section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos do ciclo</div>${muscleBlock(m.pri, m.sec, false)}</section>`;
 }
@@ -288,6 +346,17 @@ function vLibrary(){
   <section id="lib-list" style="margin-top:14px">${libRows(libList())}</section>`;
 }
 function libRows(list){ return `<div class="tiny muted" style="margin:0 4px 10px">${list.length} exercícios</div>${list.length ? `<div class="list">${list.map(k => { const e = getEx(k); return `<button class="li" data-act="open-ex" data-ex="${k}">${thumb(k)}<div class="grow"><b>${esc(e.n)}</b><span class="sub">${MUSC[e.m] || ''} · ${EQUIP[e.e] || ''}${ST.custom[k] ? ' · seu' : ''}</span></div>${I.chev}</button>`; }).join('')}</div>` : '<div class="empty"><b>Nada encontrado</b>Tente outro nome ou limpe os filtros.</div>'}`; }
+/* Instrução completa: preparação, execução passo a passo, erros comuns e dica. Exercícios criados pelo usuário usam o texto dele. */
+function instBlock(id, e){
+  const x = typeof INS !== 'undefined' && INS[id];
+  if (!x) return e.d && e.d.length ? `<section class="card inst"><div class="eyebrow">Execução</div><ol class="steps">${e.d.map(s => `<li>${esc(s)}</li>`).join('')}</ol></section>` : '<section class="empty"><b>Sem instrução</b>Edite o exercício para escrever como executá-lo.</section>';
+  const [prep, steps, errs, tip] = x;
+  return `<section class="card inst"><div class="inst-h"><span class="inst-n mono">01</span><span class="eyebrow">Preparação</span></div><p>${esc(prep)}</p></section>
+  <section class="card inst"><div class="inst-h"><span class="inst-n mono">02</span><span class="eyebrow">Execução</span></div><ol class="steps">${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol></section>
+  <section class="card inst"><div class="inst-h"><span class="inst-n mono">03</span><span class="eyebrow">Erros comuns</span></div><ul class="errs">${errs.map(s => `<li>${esc(s)}</li>`).join('')}</ul></section>
+  ${tip ? `<section class="inst-tip"><div class="eyebrow">Dica</div><p>${esc(tip)}</p></section>` : ''}
+  <p class="tiny muted" style="margin:14px 4px 0">Orientação geral de técnica. Ajuste carga e amplitude ao seu nível e, se sentir dor, pare e procure um profissional.</p>`;
+}
 function exHistory(ex){ return done().slice().reverse().map(s => { const e = (s.items || []).find(e => e.ex === ex); if (!e) return null; const sets = workSets(e).filter(x => x.reps != null && x.kg != null); if (!sets.length) return null; return {date: s.date, sets, kg: Math.max(...sets.map(x => x.kg)), rm: Math.max(...sets.map(x => e1rm(x.kg, x.reps))), vol: sets.reduce((a, x) => a + x.kg * x.reps, 0)}; }).filter(Boolean); }
 function vExercise(p){
   const e = getEx(p.ex); const hist = exHistory(p.ex); const t = UI.exTab;
@@ -295,15 +364,15 @@ function vExercise(p){
   <section>${ST.media[p.ex] ? `<span class="demo own wide"><img src="/_blob/${esc(ST.media[p.ex])}" alt="Demonstração de ${esc(e.n)}"></span>` : CAT[p.ex] ? thumb(p.ex, 'wide') : ''}
     ${CAT[p.ex] && CAT[p.ex].ph && !ST.media[p.ex] && !window.FORJA_FIG && !window.FORJA_NOPHOTO ? `<div class="seg" style="margin-top:10px">${[['fig', 'Ilustração'], ['foto', 'Foto real']].map(([k, l]) => `<button data-act="pics" data-v="${k}" aria-pressed="${ST.prefs.pics === k}">${l}</button>`).join('')}</div>` : ''}
     ${Store.adapter?.assets ? `<div class="row wrap" style="margin-top:10px"><label class="btn sm" for="media-in" style="cursor:pointer">${ST.media[p.ex] ? 'Trocar minha imagem' : 'Usar minha imagem ou GIF'}</label><input id="media-in" type="file" accept="image/*" hidden data-act="media" data-ex="${p.ex}">${ST.media[p.ex] ? `<button class="link muted" data-act="media-del" data-ex="${p.ex}">Voltar à foto padrão</button>` : ''}</div>` : ''}</section>
-  <section class="seg" role="tablist">${[['sobre', 'Sobre'], ['hist', 'Histórico'], ['graf', 'Gráfico']].map(([k, l]) => `<button role="tab" data-act="extab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>`;
+  <section class="seg" role="tablist">${[['sobre', 'Sobre'], ['hist', 'Histórico'], ['inst', 'Instrução']].map(([k, l]) => `<button role="tab" data-act="extab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>`;
   if (t === 'hist'){
     h += hist.length ? `<section class="stats"><div class="stat"><b class="num">${fmtN(Math.max(...hist.map(x => x.kg)))}</b><span>kg máximo</span></div><div class="stat ember"><b class="num">${fmtN(Math.round(Math.max(...hist.map(x => x.rm)) * 10) / 10)}</b><span>1RM estimado</span></div><div class="stat"><b class="num">${hist.length}</b><span>treinos</span></div></section>
-      <section class="card"><div class="tablewrap"><table class="hist"><thead><tr><th>Data</th><th>Séries (kg × reps)</th><th>Máx.</th></tr></thead><tbody>${hist.slice().reverse().map(x => `<tr><td>${fmtD(x.date)}</td><td>${x.sets.map(y => `${fmtN(y.kg)}×${y.reps}`).join(' · ')}</td><td>${fmtN(x.kg)}</td></tr>`).join('')}</tbody></table></div></section>` : '<section class="empty"><b>Sem registros ainda</b>Faça este exercício num treino para ver o histórico.</section>';
-  } else if (t === 'graf'){
-    h += hist.length ? `<section class="card">${chartBlock(hist, UI.progMetric)}</section>` : '<section class="empty"><b>Sem dados para o gráfico</b>O gráfico aparece a partir do primeiro registro.</section>';
+      <section class="card">${chartBlock(hist, UI.progMetric)}</section><section class="card"><div class="eyebrow" style="margin-bottom:10px">Registros</div><div class="tablewrap"><table class="hist"><thead><tr><th>Data</th><th>Séries (kg × reps)</th><th>Máx.</th></tr></thead><tbody>${hist.slice().reverse().map(x => `<tr><td>${fmtD(x.date)}</td><td>${x.sets.map(y => `${fmtN(y.kg)}×${y.reps}`).join(' · ')}</td><td>${fmtN(x.kg)}</td></tr>`).join('')}</tbody></table></div></section>` : '<section class="empty"><b>Sem registros ainda</b>Faça este exercício num treino para ver o histórico.</section>';
+  } else if (t === 'inst'){
+    h += instBlock(p.ex, e);
   } else {
     h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos trabalhados</div>${muscleBlock(e.pri, e.sec)}</section>
-    ${e.d && e.d.length ? `<section class="card"><div class="eyebrow" style="margin-bottom:14px">Como fazer</div><ol class="cues">${e.d.map(c => `<li>${esc(c)}</li>`).join('')}</ol></section>` : ''}`;
+    ${e.d && e.d.length ? `<section class="card"><div class="sec-head" style="margin-bottom:12px"><span class="eyebrow">Pontos-chave</span><button class="link" data-act="extab" data-t="inst">Instrução completa</button></div><ol class="cues">${e.d.map(c => `<li>${esc(c)}</li>`).join('')}</ol></section>` : ''}`;
     const sim = Object.keys(CAT).filter(k => k !== p.ex && CAT[k].p === e.p).slice(0, 6);
     if (sim.length) h += `<section><div class="sec-head"><span class="eyebrow">Variações do mesmo movimento</span></div><div class="list">${sim.map(k => `<button class="li" data-act="open-ex" data-ex="${k}">${thumb(k)}<div class="grow"><b>${esc(CAT[k].n)}</b><span class="sub">${EQUIP[CAT[k].e]}</span></div>${I.chev}</button>`).join('')}</div></section>`;
   }
@@ -648,12 +717,23 @@ function openAddTo(ex){
   UI.sheet = {kind: 'addto', ex};
   openSheet(`${sheetHead('Adicionar a um treino', exName(ex))}<div class="stack" style="margin-top:16px">${ST.routines.map(r => `<div><div class="eyebrow" style="margin-bottom:8px">${esc(r.nome)}</div><div class="list" style="background:var(--s2)">${r.workouts.map((w, i) => `<button class="li noimg" data-act="addto-pick" data-rid="${r.id}" data-wid="${w.id}"><span class="plate" style="--pc:${col(w.cor)}">${i + 1}</span><div class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios</span></div>${I.plus.replace('<svg', '<svg class="chev" style="stroke:var(--ember)"')}</button>`).join('') || '<div class="li muted small">Sem treinos</div>'}</div></div>`).join('')}</div>`);
 }
+/* Escolha dos dias: o usuário marca os dias em que treina e os treinos são distribuídos na ordem da rotina. */
+function openDaysSheet(rid, fresh){
+  const r = routineById(rid); if (!r || !r.workouts.length) return;
+  if (!UI.sheet || UI.sheet.kind !== 'days' || UI.sheet.rid !== rid) UI.sheet = {kind: 'days', rid, fresh: !!fresh, sel: hasSchedule(r) ? WEEK.filter(d => r.workouts.some(w => w.id === r.dias[d])) : defaultDays(r.workouts.length)};
+  const sel = UI.sheet.sel; const ord = WEEK.filter(d => sel.includes(d));
+  openSheet(`${sheetHead(r.nome, fresh ? 'Em quais dias você treina?' : 'Dias da semana')}
+    <p class="ink2 small" style="margin:10px 0 0">Marque os dias. Os treinos entram na ordem da rotina e o Início mostra o treino certo de cada dia.${ord.length > r.workouts.length ? ' Com mais dias que treinos, a sequência recomeça.' : ''}</p>
+    <div class="daypick" role="group" aria-label="Dias de treino">${WEEK.map(d => `<button data-act="day-tog" data-d="${d}" aria-pressed="${sel.includes(d)}" aria-label="${DIAS[d]}">${DIA3[d].slice(0, 1).toUpperCase()}<small>${DIA3[d]}</small></button>`).join('')}</div>
+    <div class="list" style="background:var(--s2);margin-top:14px">${ord.length ? ord.map((d, i) => { const w = r.workouts[i % r.workouts.length]; return `<div class="li noimg" style="min-height:52px"><span class="plate" style="--pc:${col(w.cor)}">${DIA3[d]}</span><div class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ~${wMins(w)} min</span></div></div>`; }).join('') : '<div class="li noimg"><div class="grow muted small">Nenhum dia marcado: o app segue a sequência de treinos.</div></div>'}</div>
+    <div class="sheet-foot"><button class="btn primary block" data-act="days-save">${ord.length ? `Salvar ${ord.length} ${ord.length === 1 ? 'dia' : 'dias'}` : 'Seguir a sequência'}</button>${hasSchedule(r) && ord.length ? '<button class="link muted" style="width:100%;margin-top:4px" data-act="days-clear">Sem dias fixos (seguir a sequência)</button>' : fresh ? '<button class="link muted" style="width:100%;margin-top:4px" data-act="close">Depois</button>' : ''}</div>`);
+}
 function openStartSheet(date){
   const retro = !!date && date !== 'live'; const act = retro ? 'retro' : 'start'; const dd = retro ? `data-date="${date}"` : '';
-  const r = activeRoutine(); const w = nextWorkout(r);
+  const r = activeRoutine(); const w = suggested(r); const todayW = !retro && hasSchedule(r) && scheduledOn(r, new Date()) === w;
   UI.sheet = {kind: 'start'};
   openSheet(`${sheetHead(retro ? `Registrar treino · ${fmtDLong(date)}` : 'Começar treino', retro ? 'Qual treino você fez?' : 'O que vamos treinar?')}<div class="stack" style="margin-top:16px">
-    ${w ? `<button class="hero" style="--pc:${col(w.cor)};text-align:left;width:100%;padding:18px" data-act="${act}" ${dd} data-rid="${r.id}" data-wid="${w.id}">${glow()}<div class="hero-top"><span class="hero-lbl">${retro ? 'Sugestão' : 'Próximo da sequência'}</span></div>${heroName(w.nome, 'div')}<div class="meta mono" style="margin-top:12px;font-size:12px"><span><b>${pad2(w.items.length)}</b> exercícios</span><span><b>${wMins(w)}′</b> estimados</span></div></button>` : ''}
+    ${w ? `<button class="hero" style="--pc:${col(w.cor)};text-align:left;width:100%;padding:18px" data-act="${act}" ${dd} data-rid="${r.id}" data-wid="${w.id}">${glow()}<div class="hero-top"><span class="hero-lbl">${retro ? 'Sugestão' : todayW ? `Treino de hoje · ${DIA3[new Date().getDay()]}` : hasSchedule(r) ? 'Próximo da agenda' : 'Próximo da sequência'}</span></div>${heroName(w.nome, 'div')}<div class="meta mono" style="margin-top:12px;font-size:12px"><span><b>${pad2(w.items.length)}</b> exercícios</span><span><b>${wMins(w)}′</b> estimados</span></div></button>` : ''}
     ${ST.routines.map(rr => { const ws = rr.workouts.filter(x => x !== w); return ws.length ? `<div class="eyebrow" style="margin-top:4px">${rr === r ? 'Outro treino de ' : ''}${esc(rr.nome)}</div><div class="list" style="background:var(--s2)">${ws.map(x => `<button class="li noimg" data-act="${act}" ${dd} data-rid="${rr.id}" data-wid="${x.id}"><span class="plate" style="--pc:${col(x.cor)}">${rr.workouts.indexOf(x) + 1}</span><div class="grow"><b>${esc(x.nome)}</b><span class="sub">${x.items.length} exercícios · ~${wMins(x)} min</span></div>${I.chev}</button>`).join('')}</div>` : ''; }).join('')}
     <button class="btn ghost block" data-act="${act}" ${dd} data-rid="free">${I.plus}Treino livre (montar ${retro ? 'os exercícios' : 'na hora'})</button></div>`);
 }
@@ -704,18 +784,36 @@ function vProfile(){
     ${!Platform.isArtifact ? '<a class="link" style="text-align:center" href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>' : ''}</section>
   <p class="tiny muted" style="text-align:center;margin-top:18px">Forja ${APP_VERSION} · ilustração anatômica: react-native-body-highlighter (MIT) · fotos: Free Exercise DB</p>`;
 }
+/* ================= tela de entrada ================= */
+function vAuth(p){
+  const st = UI.auth || (UI.auth = {mode: 'login', show: false}); const m = st.mode;
+  const field = (id, label, type, ac, icon, extra = '') => `<label class="af"><span class="af-ic">${icon}</span><input id="${id}" type="${type}" placeholder=" " autocomplete="${ac}" ${extra}><span class="af-l">${label}</span></label>`;
+  const title = m === 'register' ? 'Crie sua<br>conta.' : m === 'forgot' ? 'Nova<br>senha.' : 'Bem-vindo<br>de volta.';
+  const sub = m === 'register' ? 'Seus treinos, cargas e recordes guardados na nuvem e disponíveis em qualquer aparelho.' : m === 'forgot' ? 'Digite o e-mail da conta. Enviamos um link para você criar uma senha nova.' : 'Entre para continuar de onde parou, em qualquer aparelho.';
+  return `<div class="auth">
+    <div class="auth-bg" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="grain"></i></div>
+    <div class="auth-top">${p.first ? '<span></span>' : `<button class="icon clear" data-act="back" aria-label="Voltar">${I.back}</button>`}<span class="brand">${I.brand}Forja</span><span></span></div>
+    <div class="auth-hero"><div class="eyebrow">${m === 'register' ? 'Nova conta' : m === 'forgot' ? 'Recuperar acesso' : 'Entrar'}</div><h1 class="cond">${title}</h1><p>${sub}</p></div>
+    ${m !== 'forgot' ? `<div class="seg auth-seg" role="tablist">${[['login', 'Entrar'], ['register', 'Criar conta']].map(([k, l]) => `<button type="button" role="tab" data-act="auth-mode" data-m="${k}" aria-pressed="${m === k}"${k === 'register' ? ' data-reg="1"' : ''}>${l}</button>`).join('')}</div>` : ''}
+    <form class="auth-form" data-form="auth" novalidate>
+      ${m === 'register' ? field('au-name', 'Nome', 'text', 'name', I.user, `value="${esc(st.name || '')}" maxlength="60"`) : ''}
+      ${field('au-email', 'E-mail', 'email', 'email', I.mail, `value="${esc(st.email || '')}" inputmode="email" autocapitalize="off" spellcheck="false" required`)}
+      ${m !== 'forgot' ? `<label class="af pw"><span class="af-ic">${I.lock}</span><input id="au-pass" type="${st.show ? 'text' : 'password'}" placeholder=" " autocomplete="${m === 'login' ? 'current-password' : 'new-password'}" minlength="8" required><span class="af-l">Senha</span><button type="button" class="eye" data-act="pw-toggle" aria-label="${st.show ? 'Ocultar senha' : 'Mostrar senha'}" aria-pressed="${!!st.show}">${st.show ? I.eyeoff : I.eye}</button></label>` : ''}
+      ${m === 'register' ? '<p class="af-rule" id="au-rule"><i></i>Pelo menos 8 caracteres</p>' : ''}
+      ${m === 'login' ? '<div class="af-row"><button type="button" class="link muted" data-act="auth-mode" data-m="forgot">Esqueci minha senha</button></div>' : ''}
+      ${st.note ? `<p class="auth-note" role="status">${esc(st.note)}</p>` : ''}
+      <p id="au-err" class="auth-err" role="alert" hidden></p>
+      ${m === 'forgot' ? `<button class="btn primary block auth-go" type="button" data-act="forgot"><span>Enviar link</span></button><button type="button" class="link muted" style="width:100%" data-act="auth-mode" data-m="login">Voltar para entrar</button>`
+        : `<button class="btn primary block auth-go" type="submit"><span>${m === 'login' ? 'Entrar' : 'Criar conta'}</span></button>`}
+    </form>
+    ${m !== 'forgot' ? `<div class="auth-or"><span>ou</span></div><button class="btn ghost block" data-act="auth-skip">Continuar sem conta</button><p class="auth-fine">Sem conta, seus treinos ficam só neste aparelho. Dá para criar a conta depois, no Perfil, sem perder nada.</p>` : ''}
+    <p class="auth-legal">${m === 'register' ? 'Ao criar a conta você concorda com a' : 'Veja nossa'} <a href="privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</p>
+  </div>`;
+}
+function authKeep(){ const st = UI.auth || {}; const e = $('#au-email'), n = $('#au-name'); if (e) st.email = e.value; if (n) st.name = n.value; UI.auth = st; }
 function openLogin(mode = 'login'){
   if (!Auth.enabled){ UI.sheet = {kind: 'info'}; openSheet(`${sheetHead('Conta', 'Login em breve')}<p class="ink2" style="margin:14px 0 0">O login fica ativo quando o app for ligado ao seu servidor. A tela, o fluxo e a sincronização já estão prontos no código (veja o README do projeto).</p><p class="ink2">Até lá, seus treinos ficam salvos ${Store.mode === 'cloud' ? 'na sua conta do Claude' : 'neste aparelho'}. Use “Exportar backup” para levar tudo para o app novo.</p><button class="btn primary block" style="margin-top:12px" data-act="close">Entendi</button>`); return; }
-  UI.sheet = {kind: 'login', mode};
-  openSheet(`${sheetHead('Conta Forja', mode === 'login' ? 'Entrar' : 'Criar conta')}<form class="stack" style="margin-top:16px" data-form="auth">
-    ${mode === 'register' ? '<label class="flabel"><span class="tiny muted">Nome</span><input id="au-name" class="field" autocomplete="name" required></label>' : ''}
-    <label class="flabel"><span class="tiny muted">E-mail</span><input id="au-email" class="field" type="email" autocomplete="email" required></label>
-    <label class="flabel"><span class="tiny muted">Senha${mode === 'register' ? ' (mínimo 8 caracteres)' : ''}</span><input id="au-pass" class="field" type="password" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" minlength="8" required></label>
-    ${mode === 'register' ? '<p class="tiny muted" style="margin:0">Ao criar a conta você concorda com a <a class="link" style="padding:0;min-height:0" href="privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</p>' : ''}
-    <p id="au-err" class="small" style="color:var(--bad);margin:0" hidden></p>
-    <button class="btn primary block" type="submit">${mode === 'login' ? 'Entrar' : 'Criar conta'}</button>
-    <button class="link" type="button" data-act="login-mode" data-m="${mode === 'login' ? 'register' : 'login'}">${mode === 'login' ? 'Ainda não tem conta? Criar conta' : 'Já tem conta? Entrar'}</button>
-    ${mode === 'login' && Auth.kind === 'firebase' ? '<button class="link muted" type="button" data-act="forgot">Esqueci minha senha</button>' : ''}</form>`);
+  UI.auth = {mode, show: false, email: UI.auth?.email || ''}; const p = curPage(); if (p && p.type === 'auth'){ render(); return; } push({type: 'auth'});
 }
 // ================= arrastar para reordenar =================
 let DRAG = null;
@@ -763,8 +861,12 @@ A['pf-set'] = el => { const k = el.dataset.k; ST.profile[k] = ST.profile[k] === 
 A['go-body'] = () => { UI.progTab = 'corpo'; goTab('progresso'); };
 A.login = () => openLogin('login');
 A['login-mode'] = el => openLogin(el.dataset.m);
+A['auth-mode'] = el => { authKeep(); UI.auth.mode = el.dataset.m; UI.auth.note = ''; render(); const f = $(UI.auth.mode === 'register' ? '#au-name' : '#au-email'); if (f && !f.value) f.focus(); };
+A['pw-toggle'] = el => { const i = $('#au-pass'); if (!i) return; const show = i.type === 'password'; i.type = show ? 'text' : 'password'; UI.auth.show = show; el.setAttribute('aria-pressed', show); el.setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha'); el.innerHTML = show ? I.eyeoff : I.eye; i.focus({preventScroll: true}); try { i.setSelectionRange(i.value.length, i.value.length); } catch (e) {} };
+A['auth-skip'] = () => { lsSet('forja.welcome', '1'); UI.stack.pop(); render(); window.scrollTo({top: 0}); };
+document.addEventListener('input', ev => { if (ev.target.id === 'au-pass'){ const r = $('#au-rule'); if (r) r.classList.toggle('ok', ev.target.value.length >= 8); } });
 A.forgot = async () => { const email = ($('#au-email').value || '').trim(); const err = $('#au-err'); if (!email){ err.textContent = 'Digite seu e-mail acima e toque de novo em Esqueci minha senha.'; err.hidden = false; return; }
-  try { await Auth.resetPassword(email); closeSheet(); toast('Se houver conta com esse e-mail, enviamos um link para criar uma nova senha.', null, '', 6000); } catch (e) { err.textContent = e.status === 0 ? 'Sem conexão. Tente de novo.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : 'Não foi possível enviar agora.'; err.hidden = false; } };
+  try { await Auth.resetPassword(email); if (curPage()?.type === 'auth'){ UI.auth = {mode: 'login', email, note: 'Se houver conta com esse e-mail, enviamos um link para criar uma nova senha. Confira também o spam.'}; render(); return; } closeSheet(); toast('Se houver conta com esse e-mail, enviamos um link para criar uma nova senha.', null, '', 6000); } catch (e) { err.textContent = e.status === 0 ? 'Sem conexão. Tente de novo.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : 'Não foi possível enviar agora.'; err.hidden = false; } };
 A['check-verified'] = async el => { el.disabled = true; const ok = await Store.checkVerified(); render(); toast(ok ? 'E-mail confirmado. Seus dados estão sendo salvos na conta.' : 'Ainda não aparece como confirmado. Abra o link do e-mail e tente de novo.'); };
 A['resend-verify'] = async () => { try { await Auth.resendVerification(); toast('Enviamos outro e-mail de confirmação.'); } catch (e) { toast(e.status === 429 ? 'Aguarde alguns minutos para reenviar.' : 'Não foi possível reenviar agora.'); } };
 A.logout = () => Store.mode === 'verify' ? Store.logout().then(() => { render(); toast('Você saiu. Seus dados continuam neste aparelho.'); }) : confirmSheet({title: 'Sair da conta?', text: 'Seus dados continuam salvos na conta. Este aparelho fica limpo até você entrar de novo.', ok: 'Sair', onOk: async () => { const left = await Store.logout(); UI.stack = []; UI.tab = 'inicio'; render(); toast(left ? 'Saiu. Algumas alterações recentes não chegaram ao servidor.' : 'Você saiu da conta'); }});
@@ -790,7 +892,12 @@ A['open-workout'] = el => push({type: 'workout', rid: el.dataset.rid, wid: el.da
 A['edit-workout'] = el => push({type: 'workout', rid: el.dataset.rid, wid: el.dataset.wid, edit: true});
 A['open-ex'] = el => { UI.exTab = 'sobre'; push({type: 'exercise', ex: el.dataset.ex}); };
 A['open-ex-sheet'] = el => { closeSheet(); A['open-ex'](el); };
-A['home-sel'] = el => { UI.homeSel = el.dataset.wid; render(); };
+A.days = el => openDaysSheet(el.dataset.rid);
+A['day-tog'] = el => { const d = +el.dataset.d; const s = UI.sheet; s.sel = s.sel.includes(d) ? s.sel.filter(x => x !== d) : [...s.sel, d]; openDaysSheet(s.rid, s.fresh); Platform.haptic('light'); };
+A['days-save'] = () => { const s = UI.sheet; const r = routineById(s.rid); if (!r) return; setDays(r, s.sel); saveState(); closeSheet(); UI.homeSel = null; render(); toast(hasSchedule(r) ? 'Dias salvos. O Início mostra o treino de cada dia.' : 'Sem dias fixos: o app segue a sequência.'); };
+A['days-clear'] = () => { const r = routineById(UI.sheet.rid); if (!r) return; delete r.dias; saveState(); closeSheet(); render(); toast('Sem dias fixos: o app segue a sequência.'); };
+A['go-explore'] = () => { UI.rtab = 'explorar'; goTab('rotinas'); };
+A['home-sel'] = el => { UI.homeSel = el.getAttribute('aria-pressed') === 'true' && UI.homeSel === el.dataset.wid ? null : el.dataset.wid; render(); };
 A['open-past'] = el => push({type: 'past', sid: el.dataset.sid});
 A['toggle-edit'] = () => { const p = curPage(); p.edit = !p.edit; render(); };
 A.extab = el => { UI.exTab = el.dataset.t; render(); };
@@ -843,7 +950,7 @@ A.addset = el => { const s = curSess(); const e = s.items[+el.dataset.k]; const 
 A.expand = el => { UI.expand[+el.dataset.k] = true; render(); };
 A['ex-menu'] = el => { const s = curSess(); const k = +el.dataset.k; const e = s.items[k]; const t = itemTarget(s, e);
   menuSheet('Exercício', exName(e.ex), [
-    {label: 'Ver como fazer', icon: I.info, run: () => { UI.exTab = 'sobre'; push({type: 'exercise', ex: e.ex}); }},
+    {label: 'Ver como fazer', icon: I.info, run: () => { UI.exTab = 'inst'; push({type: 'exercise', ex: e.ex}); }},
     {label: s.status === 'open' ? 'Trocar aparelho só hoje' : 'Trocar exercício', icon: I.swap, run: () => openPicker({kind: 'swap', k, cur: e.ex})},
     warmups(e) && !e.sets.some(x => x.t === 'w') ? {label: 'Adicionar séries de aquecimento', icon: I.flame, run: () => { e.sets.unshift(...warmups(e)); saveSession(s); render(); toast('3 séries de aquecimento adicionadas (50%, 70% e 85%)'); }} : null,
     {label: 'Anotação', icon: I.note, run: () => { UI.sheet = {kind: 'note', k}; openSheet(`${sheetHead(exName(e.ex), 'Anotação deste treino')}<textarea id="note-in" class="field" style="margin-top:16px" maxlength="200" placeholder="Ex.: senti o ombro, banco no 4º furo">${esc(e.note || '')}</textarea><button class="btn primary block" style="margin-top:12px" data-act="note-save">Salvar</button>`); setTimeout(() => $('#note-in')?.focus(), 50); }},
@@ -904,6 +1011,7 @@ document.addEventListener('input', ev => {
 document.addEventListener('change', async ev => {
   const t = ev.target; const act = t.dataset && t.dataset.act;
   if (act === 'progex'){ UI.progEx = t.value; render(); }
+  if (act === 'day-w'){ const r = routineById(t.dataset.rid); if (!r) return; r.dias = r.dias || {}; if (t.value) r.dias[t.dataset.d] = t.value; else delete r.dias[t.dataset.d]; if (!hasSchedule(r)) delete r.dias; saveState(); render(); }
   if (act === 'pf'){ ST.profile[t.dataset.k] = t.value.trim(); saveState(); if (t.dataset.k === 'name') render(); }
   if (act === 'ss-date' || act === 'ss-dur'){ const s = curSess(); if (!s) return; if (act === 'ss-date'){ if (t.value && t.value <= today()) s.date = t.value; } else { const v = parseInt(t.value, 10); s.dur = v > 0 ? v : null; } saveSession(s); }
   if (act === 's-note'){ const s = SESS.find(x => x.id === t.dataset.sid); if (s){ s.note = t.value.trim(); saveSession(s); } }
@@ -923,13 +1031,16 @@ document.addEventListener('change', async ev => {
 document.addEventListener('submit', async ev => {
   const f = ev.target; if (f.dataset.form !== 'auth') return; ev.preventDefault();
   const err = $('#au-err'); const btn = f.querySelector('[type=submit]'); btn.disabled = true; err.hidden = true;
-  const wasReg = UI.sheet.mode === 'register';
+  const wasReg = ((UI.auth && curPage()?.type === 'auth') ? UI.auth.mode : UI.sheet?.mode) === 'register';
+  { const em = $('#au-email'), pw = $('#au-pass'), nm = $('#au-name'); const bad = nm && !nm.value.trim() ? 'Digite seu nome.' : em && !/^\S+@\S+\.\S+$/.test(em.value.trim()) ? 'Digite um e-mail válido.' : pw && pw.value.length < 8 ? 'A senha tem pelo menos 8 caracteres.' : '';
+    if (bad){ err.textContent = bad; err.hidden = false; btn.disabled = false; btn.classList.remove('busy'); return; } }
+  btn.classList.add('busy');
   try { if (wasReg) await Auth.register($('#au-name').value.trim(), $('#au-email').value.trim(), $('#au-pass').value); else await Auth.login($('#au-email').value.trim(), $('#au-pass').value);
-    closeSheet(); toast('Conectando…'); await Store.switchToApi();
+    lsSet('forja.welcome', '1'); closeSheet(); if (curPage()?.type === 'auth') UI.stack.pop(); render(); toast('Conectando…'); await Store.switchToApi();
     if (Store.mode === 'verify'){ UI.stack = [{type: 'profile'}]; render(); toast(wasReg ? 'Conta criada. Confirme o e-mail para começar a salvar na nuvem.' : 'Confirme seu e-mail para começar a salvar na nuvem.', null, '', 6000); }
     else if (Store.mode === 'api') toast('Conectado. Seus dados estão sincronizados.');
     else toast('Conta conectada, mas o servidor não respondeu. Tentaremos de novo.'); if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } render(); }
-  catch (e) { err.textContent = e.status === 401 ? 'E-mail ou senha incorretos.' : e.status === 409 ? 'Já existe uma conta com este e-mail.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : e.status === 400 ? (e.message || 'Confira os dados.') : 'Não foi possível conectar ao servidor. Verifique a internet.'; err.hidden = false; btn.disabled = false; }
+  catch (e) { err.textContent = e.status === 401 ? 'E-mail ou senha incorretos.' : e.status === 409 ? 'Já existe uma conta com este e-mail.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : e.status === 400 ? (e.message || 'Confira os dados.') : 'Não foi possível conectar ao servidor. Verifique a internet.'; err.hidden = false; btn.disabled = false; btn.classList.remove('busy'); }
 });
 document.addEventListener('submit', async ev => {
   const f = ev.target; if (f.dataset.form !== 'delacc') return; ev.preventDefault();
