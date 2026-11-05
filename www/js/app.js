@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.4.0';
+const APP_VERSION = '4.5.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -271,6 +271,7 @@ function vHome(){
   h += `<section class="card wk"><div class="wk-top"><div><div class="eyebrow">Meta da semana</div><div class="wk-n"><b>${weekSess.length}</b><span>/${goal}</span></div></div><p class="wk-hint">${hint}</p></div>
     <div class="wk-bars">${days.map(d => { const k = isoDate(d); const l = byDate[k] || []; const pw = !l.length && k >= td ? scheduledOn(r, d) : null; const cls = [k === td ? 'today' : '', l.length ? 'on' : '', l.length > 1 ? 'two' : '', k > td ? 'fut' : '', pw ? 'plan' : ''].join(' '); return `<div class="wb ${cls}" style="--pc:${l.length ? col(l[0].cor) : pw ? col(pw.cor) : 'transparent'};--pc2:${l[1] ? col(l[1].cor) : 'transparent'}" title="${l.length ? l.map(s => esc(s.wname)).join(', ') : pw ? 'Planejado: ' + esc(pw.nome) : ''}"><i></i>${'STQQSSD'[(d.getDay() + 6) % 7]}</div>`; }).join('')}</div></section>
   <section class="strip"><div class="ac"><b>${streak}</b><span>${streak === 1 ? 'semana seguida' : 'semanas seguidas'}</span></div><div><b>${monthCount}</b><span>${monthCount === 1 ? 'treino' : 'treinos'} em ${MESL[now.getMonth()].toLowerCase()}</span></div><div><b>${weekVol >= 10000 ? fmtN(Math.round(weekVol / 100) / 10) : fmtInt(weekVol)}<small>${weekVol >= 10000 ? 't' : 'kg'}</small></b><span>volume na semana</span></div></section>`;
+  if (ST.prefs.plan) h += `<section>${planSummaryRow('home')}</section>`;
   const last = D[0];
   if (last){
     const prs = sessionPRs(last); const m = sessMins(last);
@@ -653,11 +654,12 @@ function progEx(){
   return `<section class="card stack"><label class="flabel"><span class="eyebrow">Exercício</span><select id="prog-ex" class="field" data-act="progex">${Object.keys(MUSC).filter(g => groups[g]).map(g => `<optgroup label="${MUSC[g]}">${groups[g].map(k => `<option value="${k}" ${k === UI.progEx ? 'selected' : ''}>${esc(exName(k))}</option>`).join('')}</optgroup>`).join('')}</select></label>${chartBlock(hist, UI.progMetric)}
     <div class="tablewrap"><table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Máx.</th></tr></thead><tbody>${hist.slice().reverse().map(h => `<tr><td>${fmtD(h.date)}</td><td>${h.sets.map(x => `${fmtN(x.kg)}×${x.reps}`).join(' · ')}</td><td>${fmtN(h.kg)}</td></tr>`).join('')}</tbody></table></div></section>`;
 }
-const BWF = {kg: 'Peso (kg)', cintura: 'Cintura (cm)', braco: 'Braço (cm)', peito: 'Peito (cm)', coxa: 'Coxa (cm)'};
+const BWF = {kg: 'Peso (kg)', cintura: 'Cintura (cm)', pescoco: 'Pescoço (cm)', quadril: 'Quadril (cm)', braco: 'Braço (cm)', peito: 'Peito (cm)', coxa: 'Coxa (cm)'};
 function progBody(){
+  const planRow = `<section>${planSummaryRow('body')}</section>`;
   const list = (ST.bw || []).slice().sort((a, b) => a.date.localeCompare(b.date)); const mt = UI.bwMetric; const unit = mt === 'kg' ? 'kg' : 'cm';
   const pts = list.filter(x => x[mt] != null).map(x => ({date: x.date, v: x[mt]}));
-  return `<section class="card stack"><div class="eyebrow">Nova medição</div><div class="formgrid"><label class="flabel"><span class="tiny muted">Data</span><input id="bw-date" class="field" type="date" value="${today()}"></label>${Object.entries(BWF).map(([k, l]) => `<label class="flabel"><span class="tiny muted">${l}</span><input id="bw-${k}" class="field num" inputmode="decimal" placeholder="—"></label>`).join('')}</div><button class="btn primary" data-act="bw-add">Salvar medição</button></section>
+  return `${planRow}<section class="card stack"><div class="eyebrow">Nova medição</div><div class="formgrid"><label class="flabel"><span class="tiny muted">Data</span><input id="bw-date" class="field" type="date" value="${today()}"></label>${Object.entries(BWF).map(([k, l]) => `<label class="flabel"><span class="tiny muted">${l}</span><input id="bw-${k}" class="field num" inputmode="decimal" placeholder="—"></label>`).join('')}</div><button class="btn primary" data-act="bw-add">Salvar medição</button></section>
   <section class="card stack"><div class="chips" style="margin:0;padding:0">${Object.entries(BWF).map(([k, l]) => `<button class="chip" data-act="bwm" data-m="${k}" aria-pressed="${mt === k}">${l.split(' ')[0]}</button>`).join('')}</div>
     ${pts.length ? `<div><div class="display h1 num">${fmtN(pts[pts.length - 1].v)}<span style="font-size:20px"> ${unit}</span></div><div class="small muted">${pts.length > 1 ? `${pts[pts.length - 1].v - pts[0].v >= 0 ? '+' : '−'}${fmtN(Math.abs(Math.round((pts[pts.length - 1].v - pts[0].v) * 10) / 10))} ${unit} desde ${fmtD(pts[0].date)}` : 'primeira medição'}</div></div>${lineChart(pts, unit)}` : `<div class="empty" style="background:var(--s2);border:0"><b>Sem medições de ${BWF[mt].split(' ')[0].toLowerCase()}</b>Para acompanhar definição, a cintura costuma dizer mais que a balança.</div>`}
     ${list.length ? `<div class="tablewrap"><table class="hist"><thead><tr><th>Data</th>${Object.values(BWF).map(l => `<th>${l.split(' ')[0]}</th>`).join('')}<th></th></tr></thead><tbody>${list.slice().reverse().map((x, i) => `<tr><td>${fmtD(x.date)}</td>${Object.keys(BWF).map(k => `<td>${x[k] != null ? fmtN(x[k]) : '–'}</td>`).join('')}<td><button class="link muted" style="min-height:32px;padding:0 4px" data-act="bw-del" data-i="${list.length - 1 - i}" aria-label="Apagar medição">${I.x.replace('<svg', '<svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2"')}</button></td></tr>`).join('')}</tbody></table></div>` : ''}</section>`;
@@ -769,6 +771,7 @@ function vProfile(){
     <div class="small muted">Peso atual: ${lastBw ? `<b style="color:var(--ink)">${fmtN(lastBw.kg)} kg</b> em ${fmtD(lastBw.date)}` : 'sem registro'} · <button class="link" style="min-height:0;padding:0" data-act="go-body">Registrar medidas</button></div>
     <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Saúde', 'Saúde']])}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Experiência</div>${seg('level', [['Iniciante', 'Iniciante'], ['Intermediário', 'Intermediário'], ['Avançado', 'Avançado']])}</div></section>
+  <section>${planSummaryRow('profile')}</section>
   <section class="card stack"><div class="eyebrow">Treino</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Meta de treinos por semana</div>${pseg('goal', [0, 2, 3, 4, 5, 6], v => v ? v : 'Auto')}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Descanso padrão (exercícios novos e treino livre)</div>${pseg('rest', [60, 90, 120, 180], v => fmtRest(v))}</div>

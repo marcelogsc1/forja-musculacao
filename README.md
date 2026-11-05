@@ -1,6 +1,6 @@
 # Forja · app de treino
 
-Registro de treinos de musculação com rotinas editáveis e dias da semana, biblioteca de 64 programas e treinos, assistente "Montar meu programa", 210 exercícios com ilustrações realistas, instrução detalhada (preparação, execução, erros comuns e dica) e mapa muscular, progresso de cargas, calendário e medidas corporais.
+Registro de treinos de musculação com rotinas editáveis e dias da semana, biblioteca de 64 programas e treinos, assistente "Montar meu programa", 210 exercícios com ilustrações realistas, instrução detalhada (preparação, execução, erros comuns e dica) e mapa muscular, progresso de cargas, calendário, medidas corporais e assistente de objetivo (metabolismo basal, calorias, macros e check-in semanal que ajusta o plano pelo seu peso real).
 
 O mesmo código vira três coisas:
 
@@ -24,6 +24,7 @@ www/                      o app (HTML, CSS e JS puros, sem etapa de build)
   js/store.js             DADOS: registros, IndexedDB, fila de envio, sincronização, conta (Firebase)
   js/app.js               telas, treino ao vivo, teclado numérico, descanso
   js/explore.js           biblioteca de programas e assistente
+  js/nutrition.js         assistente de objetivo: calorias, macros, % de gordura e check-in semanal
   js/programs.js          programas e gerador de treinos
   js/catalog.js           210 exercícios
   js/instructions.js      instrução detalhada de cada exercício
