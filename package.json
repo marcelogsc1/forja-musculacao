@@ -1,6 +1,6 @@
 {
   "name": "forja-app",
-  "version": "4.5.0",
+  "version": "4.6.0",
   "private": true,
   "description": "Forja: app de treino de musculação (web, PWA e Android via Capacitor)",
   "scripts": {

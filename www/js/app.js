@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.5.0';
+const APP_VERSION = '4.6.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -264,6 +264,7 @@ function vHome(){
     h += `<div class="track ${n <= 5 ? 'fit' : ''}" style="--n:${n}" role="group" aria-label="Treinos da rotina">${r.workouts.map((x, j) => `<button class="tk" style="--pc:${col(x.cor)}" data-act="home-sel" data-wid="${x.id}" aria-pressed="${x === shown}"><span class="n"><em>${sched ? (days4(x) || '—') : pad2(j + 1)}</em><i class="${doneW.has(x.id) ? 'on' : ''}" title="${doneW.has(x.id) ? 'Feito nesta semana' : ''}"></i></span><b>${esc(x.nome)}</b></button>`).join('')}</div>`;
     if (!sched) h += `<button class="sched-hint" data-act="days" data-rid="${r.id}">${I.cal || ''}<span>Defina os dias da semana de cada treino e o app mostra o certo para hoje.</span>${I.chev}</button>`;
   }
+  { const pc = r ? planSummaryRow('home') : ''; if (pc) h += `<section>${pc}</section>`; }
   if (Platform.canInstall() && !installHidden()) h += installCard(true);
   if (!ST.profile.name) h += `<section><button class="lastrow" data-act="profile"><span class="avatar">${I.user}</span><div class="grow"><div class="eyebrow">Perfil</div><b>Complete seu perfil</b><div class="small muted" style="margin-top:2px">Nome, objetivo e meta semanal personalizam o app.</div></div>${I.chev}</button></section>`;
   const left = Math.max(0, goal - weekSess.length); const daysLeft = 7 - ((now.getDay() + 6) % 7) - (trainedToday ? 1 : 0);
@@ -271,7 +272,6 @@ function vHome(){
   h += `<section class="card wk"><div class="wk-top"><div><div class="eyebrow">Meta da semana</div><div class="wk-n"><b>${weekSess.length}</b><span>/${goal}</span></div></div><p class="wk-hint">${hint}</p></div>
     <div class="wk-bars">${days.map(d => { const k = isoDate(d); const l = byDate[k] || []; const pw = !l.length && k >= td ? scheduledOn(r, d) : null; const cls = [k === td ? 'today' : '', l.length ? 'on' : '', l.length > 1 ? 'two' : '', k > td ? 'fut' : '', pw ? 'plan' : ''].join(' '); return `<div class="wb ${cls}" style="--pc:${l.length ? col(l[0].cor) : pw ? col(pw.cor) : 'transparent'};--pc2:${l[1] ? col(l[1].cor) : 'transparent'}" title="${l.length ? l.map(s => esc(s.wname)).join(', ') : pw ? 'Planejado: ' + esc(pw.nome) : ''}"><i></i>${'STQQSSD'[(d.getDay() + 6) % 7]}</div>`; }).join('')}</div></section>
   <section class="strip"><div class="ac"><b>${streak}</b><span>${streak === 1 ? 'semana seguida' : 'semanas seguidas'}</span></div><div><b>${monthCount}</b><span>${monthCount === 1 ? 'treino' : 'treinos'} em ${MESL[now.getMonth()].toLowerCase()}</span></div><div><b>${weekVol >= 10000 ? fmtN(Math.round(weekVol / 100) / 10) : fmtInt(weekVol)}<small>${weekVol >= 10000 ? 't' : 'kg'}</small></b><span>volume na semana</span></div></section>`;
-  if (ST.prefs.plan) h += `<section>${planSummaryRow('home')}</section>`;
   const last = D[0];
   if (last){
     const prs = sessionPRs(last); const m = sessMins(last);
@@ -760,6 +760,7 @@ function vProfile(){
   const pseg = (k, opts, fmt = x => x) => `<div class="seg">${opts.map(v => `<button data-act="pref" data-k="${k}" data-v="${v}" aria-pressed="${String(P[k]) === String(v)}">${fmt(v)}</button>`).join('')}</div>`;
   const tog = (k, label, sub) => `<button class="toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="grow"><b>${label}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span><i></i></button>`;
   return `<section class="profile-hero"><div class="avatar xl">${initials() || I.user}</div><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
+  <section>${planSummaryRow('profile')}</section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
         <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'verify' ? '<button class="btn primary block" data-act="check-verified">Já confirmei meu e-mail</button><button class="btn ghost block" data-act="resend-verify">Reenviar e-mail de confirmação</button><button class="link muted" data-act="logout">Sair desta conta</button>' : Store.mode === 'api' ? '<button class="btn ghost block" data-act="logout">Sair da conta</button>' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
   ${installCard()}
@@ -771,7 +772,6 @@ function vProfile(){
     <div class="small muted">Peso atual: ${lastBw ? `<b style="color:var(--ink)">${fmtN(lastBw.kg)} kg</b> em ${fmtD(lastBw.date)}` : 'sem registro'} · <button class="link" style="min-height:0;padding:0" data-act="go-body">Registrar medidas</button></div>
     <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Saúde', 'Saúde']])}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Experiência</div>${seg('level', [['Iniciante', 'Iniciante'], ['Intermediário', 'Intermediário'], ['Avançado', 'Avançado']])}</div></section>
-  <section>${planSummaryRow('profile')}</section>
   <section class="card stack"><div class="eyebrow">Treino</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Meta de treinos por semana</div>${pseg('goal', [0, 2, 3, 4, 5, 6], v => v ? v : 'Auto')}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Descanso padrão (exercícios novos e treino livre)</div>${pseg('rest', [60, 90, 120, 180], v => fmtRest(v))}</div>
