@@ -99,19 +99,21 @@ function vTemplate(p){
 }
 
 // ---------- assistente ----------
-const BLD0 = {goal: 'hipertrofia', dias: 4, local: 'academia', nivel: 'Intermediário', dur: 60, foco: '', div: 'auto'};
+const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto'};
+const FOCO_MAX = 3;
+const focosTxt = fs => { const n = fs.map(k => FOCOS[k].n.toLowerCase()); return n.length > 1 ? n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1] : n[0] || ''; };
 function bldKeys(b){
   if (b.goal === 'condicionamento') return ['CI', 'CI2', 'CI3', 'CI', 'CI2', 'CI3'].slice(0, b.dias);
-  if (b.foco === 'gluteos' && (b.dias === 3 || b.dias === 4)) return SPLITS['glute' + b.dias];
+  if ((b.focos || []).includes('gluteos') && (b.div || 'auto') === 'auto' && (b.dias === 3 || b.dias === 4)) return SPLITS['glute' + b.dias];
   if (b.dias === 3 && b.div === 'ppl') return SPLITS.ppl3;
   if (b.dias === 4 && b.div === 'fb') return ['FA', 'FB', 'FC', 'FA'];
   return SPLITS[b.dias];
 }
 function builderTpl(){
-  const b = UI.bld || (UI.bld = {...BLD0}); const o = {...b, keys: bldKeys(b), foco: b.foco || undefined};
+  const b = UI.bld || (UI.bld = {...BLD0}); const o = {...b, keys: bldKeys(b), focos: b.focos || [], foco: undefined};
   const nm = `${{hipertrofia: 'Hipertrofia', forca: 'Força', definicao: 'Definição', condicionamento: 'Condicionamento', saude: 'Saúde'}[b.goal]} sob medida ${b.dias}x`;
-  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.foco ? ', prioridade para ' + FOCOS[b.foco].n.toLowerCase() : ''}. Montado pelo assistente do Forja.`,
-    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.foco ? [b.foco] : [], tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: genProgram(o)};
+  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.`,
+    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: genProgram(o)};
 }
 /* Assistente em passos: uma pergunta por tela, cada passo é uma página da pilha
    (o voltar do celular e o do topo voltam uma pergunta). No fim, o programa recomendado
@@ -132,10 +134,10 @@ const bldDiasSub = (b, n) => b.goal === 'condicionamento' ? `${n} circuitos` : s
 function bldAlts(b){
   // outras divisões possíveis para os mesmos dias
   const divs = []; const cur = bldKeys(b).join();
-  const tries = b.dias === 3 ? ['auto', 'ppl'] : b.dias === 4 ? ['auto', 'fb'] : [];
-  if (b.goal !== 'condicionamento') tries.forEach(d => { const k = bldKeys({...b, div: d, foco: b.foco === 'gluteos' ? '' : b.foco}); if (k.join() !== cur) divs.push({div: d, nofoco: b.foco === 'gluteos', label: splitLabel(k)}); });
+  const tries = b.dias === 3 ? ['auto', 'ppl', 'std'] : b.dias === 4 ? ['auto', 'fb', 'std'] : []; const seen = new Set([cur]);
+  if (b.goal !== 'condicionamento') tries.forEach(d => { const k = bldKeys({...b, div: d}); if (!seen.has(k.join())){ seen.add(k.join()); divs.push({div: d, label: splitLabel(k)}); } });
   // programas da biblioteca compatíveis com as respostas
-  const sc = t => (t.freq === b.dias ? 4 : Math.abs(t.freq - b.dias) === 1 ? 1 : -9) + (t.nivel === b.nivel ? 2 : 0) + (b.foco && (t.foco || []).includes(b.foco) ? 3 : 0) + (t.dur <= b.dur ? 1 : 0);
+  const sc = t => (t.freq === b.dias ? 4 : Math.abs(t.freq - b.dias) === 1 ? 1 : -9) + (t.nivel === b.nivel ? 2 : 0) + 3 * b.focos.filter(f => (t.foco || []).includes(f)).length + (t.dur <= b.dur ? 1 : 0);
   const lib = tplFilter({goal: b.goal, local: b.local, tipo: 'programa'}).map(t => [sc(t), t]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0]).slice(0, 4).map(x => x[1]);
   return {divs, lib};
 }
@@ -144,19 +146,30 @@ const bqChoice = (k, v, cur, title, sub, lead = '') => `<button class="choice" d
 function vBuilderStep(b, step){
   const i = BSTEPS.indexOf(step); let q = '', body = '';
   if (step === 'goal'){ q = 'Qual é o seu objetivo agora?'; body = `<div class="stack" style="gap:10px">${Object.entries(GOALS).map(([k, n]) => bqChoice('goal', k, b.goal, esc(n), GOAL_SUB[k])).join('')}</div>`; }
-  else if (step === 'dias'){ q = 'Quantos dias por semana você consegue treinar?'; body = `<div class="bq-days">${[2, 3, 4, 5, 6].map(n => `<button class="bq-day" data-act="bld-set" data-k="dias" data-v="${n}" aria-pressed="${b.dias === n}"><b class="mono">${n}</b><span>dias</span></button>`).join('')}</div>
-    <div class="card bq-note"><div class="eyebrow">Com ${b.dias} dias</div><b>${bldDiasSub(b, b.dias)}</b><p>Prefira o número que você mantém nas semanas corridas. Constância rende mais que um plano ambicioso abandonado.</p></div>
-    <button class="btn primary block" style="margin-top:18px" data-act="bld-next" data-step="dias">Continuar</button>`; }
+  else if (step === 'dias'){
+    const ok = b.dias >= 2 && b.dias <= 6;
+    q = b.wd ? 'Em quais dias você vai treinar?' : 'Quantos dias por semana você consegue treinar?';
+    body = (b.wd ? `<div class="bq-wd" role="group" aria-label="Dias da semana">${WEEK.map(d => `<button class="bq-wday" data-act="bld-wd" data-d="${d}" aria-pressed="${b.wd.includes(d)}"><b>${DIA3[d].slice(0, 3)}</b></button>`).join('')}</div>
+      <button class="link bq-sw" data-act="bld-wdmode" data-v="0">Não tenho dias fixos</button>`
+      : `<div class="bq-days">${[2, 3, 4, 5, 6].map(n => `<button class="bq-day" data-act="bld-set" data-k="dias" data-v="${n}" aria-pressed="${b.dias === n}"><b class="mono">${n}</b><span>dias</span></button>`).join('')}</div>
+      <button class="link bq-sw" data-act="bld-wdmode" data-v="1">Escolher os dias da semana</button>`)
+    + `<div class="card bq-note"><div class="eyebrow">${ok ? `${b.dias} dias por semana` : b.dias < 2 ? 'Escolha pelo menos 2 dias' : '7 dias por semana'}</div><b>${ok ? bldDiasSub(b, b.dias) : b.dias < 2 ? 'O assistente monta de 2 a 6 treinos' : 'Deixe pelo menos um dia livre'}</b>
+      <p>${ok ? (b.wd ? 'Os treinos já ficam marcados nesses dias e o Início mostra o treino certo de cada dia.' : 'Sem dias fixos, o app segue a sequência dos treinos. Dá para marcar os dias depois.') : 'O assistente monta programas de 2 a 6 treinos por semana.'} Prefira o que você mantém nas semanas corridas.</p></div>
+      <button class="btn primary block" style="margin-top:18px" data-act="bld-next" data-step="dias" ${ok ? '' : 'disabled'}>Continuar</button>`; }
   else if (step === 'local'){ q = 'Onde você vai treinar?'; body = `<div class="stack" style="gap:10px">${Object.entries(LOCAIS).filter(([k]) => k !== 'cardio').map(([k, l]) => bqChoice('local', k, b.local, esc(l.n), l.d || 'Máquinas, polias, barras e halteres')).join('')}</div>`; }
   else if (step === 'nivel'){ q = 'Como está a sua experiência?'; body = `<div class="stack" style="gap:10px">${NIVEIS.map(n => bqChoice('nivel', n, b.nivel, n, NIVEL_SUB[n])).join('')}</div>
     <div class="og" style="margin-top:22px"><span class="eyebrow">Tempo por treino</span><div class="seg">${[30, 45, 60, 75].map(m => `<button data-act="bld-set" data-k="dur" data-v="${m}" aria-pressed="${b.dur === m}">${m} min</button>`).join('')}</div></div>
     <button class="btn primary block" style="margin-top:22px" data-act="bld-next" data-step="nivel">Continuar</button>`; }
-  else if (step === 'foco'){ q = 'Quer dar prioridade a algum músculo?'; body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. O programa ganha volume extra para ele, sem deixar o resto de lado.</p><div class="list">${[['', 'Não, quero equilíbrio', 'Todos os grupos com o mesmo peso']].concat(Object.entries(FOCOS).map(([k, f]) => [k, f.n, ''])).map(([k, n, sub]) => `<button class="li frow bq-foco" data-act="bld-pick" data-k="foco" data-v="${k}" aria-pressed="${(b.foco || '') === k}"><span class="fthumb">${k ? bodyThumb(FOCOS[k].reg, FOCO_BACK[k]) : bodyThumb([], 0)}</span><div class="grow"><b>${esc(n)}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</div><i class="tick">${I.check}</i></button>`).join('')}</div>`; }
+  else if (step === 'foco'){ q = 'Quer dar prioridade a algum músculo?'; const fs = b.focos;
+    body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. Escolha até ${FOCO_MAX}: eles ganham volume extra e entram mais cedo nos treinos, sem deixar o resto de lado.</p><div class="list">
+      <button class="li frow bq-foco" data-act="bld-foco" data-v="" aria-pressed="${!fs.length}"><span class="fthumb">${bodyThumb([], 0)}</span><div class="grow"><b>Não, quero equilíbrio</b><span class="sub">Todos os grupos com o mesmo peso</span></div><i class="tick">${I.check}</i></button>
+      ${Object.entries(FOCOS).map(([k, f]) => { const on = fs.includes(k); const full = !on && fs.length >= FOCO_MAX; return `<button class="li frow bq-foco multi" data-act="bld-foco" data-v="${k}" aria-pressed="${on}" ${full ? 'data-full="1"' : ''}><span class="fthumb">${bodyThumb(f.reg, FOCO_BACK[k])}</span><div class="grow"><b>${esc(f.n)}</b>${on ? `<span class="sub">${fs.indexOf(k) === 0 && fs.length > 1 ? 'Prioridade principal' : 'Prioridade'}</span>` : ''}</div><i class="tick">${on && fs.length > 1 ? `<span class="mono">${fs.indexOf(k) + 1}</span>` : I.check}</i></button>`; }).join('')}</div>
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="foco">${fs.length ? `Ver meu programa · ${fs.length} ${fs.length === 1 ? 'prioridade' : 'prioridades'}` : 'Ver meu programa'}</button></div>`; }
   return `<section class="bq">${bldProgress(i)}<h1 class="display h2 bq-q">${q}</h1>${body}</section>`;
 }
 function vBuilderResult(b){
   const t = builderTpl(); const keys = bldKeys(b); const al = UI.bldAlt ? bldAlts(b) : null;
-  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.foco ? FOCOS[b.foco].n : 'Sem prioridade']];
+  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade']];
   return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
     <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
     <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
@@ -165,7 +178,7 @@ function vBuilderResult(b){
   <section class="stack" style="gap:10px"><button class="btn primary block" data-act="add-template" data-tid="_bld">${I.plus}Salvar programa</button>
     ${al ? '' : '<button class="link bq-more" data-act="bld-alt">Ver outras opções</button>'}</section>
   ${al ? `<section><div class="sec-head"><span class="eyebrow">Outras opções para você</span><button class="link" data-act="bld-alt">Ocultar</button></div>
-    ${al.divs.length ? `<div class="stack" style="gap:10px;margin-bottom:12px">${al.divs.map(d => `<button class="choice" data-act="bld-div" data-v="${d.div}" data-nofoco="${d.nofoco ? 1 : ''}"><span class="grow"><b>${esc(d.label)}</b><span>Mesmos ${b.dias} dias, outra divisão${d.nofoco ? ', sem o foco em glúteos' : ''}. ${splitWhy(bldKeys({...b, div: d.div, foco: d.nofoco ? '' : b.foco}), b.dias)}</span></span>${I.chev}</button>`).join('')}</div>` : ''}
+    ${al.divs.length ? `<div class="stack" style="gap:10px;margin-bottom:12px">${al.divs.map(d => `<button class="choice" data-act="bld-div" data-v="${d.div}" ><span class="grow"><b>${esc(d.label)}</b><span>Mesmos ${b.dias} dias, outra divisão. ${splitWhy(bldKeys({...b, div: d.div}), b.dias)}</span></span>${I.chev}</button>`).join('')}</div>` : ''}
     ${al.lib.length ? `<div class="stack">${al.lib.map(pcard).join('')}</div>` : (al.divs.length ? '' : '<div class="empty"><b>Sem outras opções</b>Mude uma das respostas acima para ver mais programas.</div>')}</section>` : ''}
   <p class="tiny muted" style="margin:16px 4px 0">O assistente segue as recomendações usadas no seu plano: 10 a 20 séries semanais por músculo, cada um treinado cerca de 2x por semana, e escolhe o melhor exercício disponível para o seu equipamento.</p>`;
 }
@@ -173,6 +186,7 @@ PAGES.builder = {title: () => 'Montar meu programa', view: p => {
   const b = UI.bld || (UI.bld = {...BLD0, nivel: NIVEIS.includes(ST.profile.level) ? ST.profile.level : BLD0.nivel});
   return p.step && p.step !== 'res' ? vBuilderStep(b, p.step) : p.step === 'res' ? vBuilderResult(b) : vBuilderStep(b, 'goal');
 }};
+const bldWdTxt = wd => wd.slice().sort((x, y) => WEEK.indexOf(x) - WEEK.indexOf(y)).map(d => DIA3[d]).join(' · ');
 const bldNext = step => { const i = BSTEPS.indexOf(step); push({type: 'builder', step: i < BSTEPS.length - 1 ? BSTEPS[i + 1] : 'res'}); };
 // ---------- ações ----------
 A.rtab = el => { UI.rtab = el.dataset.t; render(); };
@@ -188,13 +202,17 @@ A['bld-set'] = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k ===
 /* escolher avança sozinho depois de um instante, para a marcação aparecer */
 A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
 A['bld-next'] = el => bldNext(el.dataset.step);
+A['bld-wd'] = el => { const d = +el.dataset.d; const b = UI.bld; b.wd = b.wd.includes(d) ? b.wd.filter(x => x !== d) : [...b.wd, d]; b.dias = b.wd.length; b.div = 'auto'; render(); Platform.haptic('light'); };
+A['bld-wdmode'] = el => { const b = UI.bld; if (el.dataset.v === '1'){ b.dias = Math.min(6, Math.max(2, b.dias)); b.wd = defaultDays(b.dias); } else { b.wd = null; b.dias = Math.min(6, Math.max(2, b.dias)); } render(); };
+A['bld-foco'] = el => { const b = UI.bld; const k = el.dataset.v; if (!k) b.focos = []; else if (b.focos.includes(k)) b.focos = b.focos.filter(x => x !== k); else if (b.focos.length >= FOCO_MAX){ toast(`Até ${FOCO_MAX} músculos. Com mais, a prioridade se dilui e os treinos ficam longos.`); return; } else b.focos = [...b.focos, k]; b.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); };
 A['bld-go'] = el => { const i = UI.stack.findIndex(p => p.type === 'builder' && p.step === el.dataset.step); if (i >= 0){ UI.stack = UI.stack.slice(0, i + 1); render(); window.scrollTo({top: 0}); } };
 A['bld-alt'] = () => { UI.bldAlt = !UI.bldAlt; render(); if (UI.bldAlt) setTimeout(() => $('.bq-more, .bq-res ~ section .sec-head')?.scrollIntoView({behavior: 'smooth', block: 'start'}), 30); };
-A['bld-div'] = el => { UI.bld.div = el.dataset.v; if (el.dataset.nofoco) UI.bld.foco = ''; UI.bldAlt = false; render(); window.scrollTo({top: 0, behavior: 'smooth'}); toast('Divisão trocada'); };
+A['bld-div'] = el => { UI.bld.div = el.dataset.v; UI.bldAlt = false; render(); window.scrollTo({top: 0, behavior: 'smooth'}); toast('Divisão trocada'); };
 A['add-template'] = el => {
   const t = effTpl(tplById(el.dataset.tid)); if (!t) return;
-  const r = routineFromTemplate(t); ST.routines.push(r); if (!activeRoutine()) ST.active = r.id; saveState();
-  UI.tab = 'rotinas'; UI.rtab = 'minhas'; UI.stack = [{type: 'routine', rid: r.id}]; render(); window.scrollTo({top: 0}); Platform.haptic('success'); if (r.workouts.length) openDaysSheet(r.id, true); else toast(`${t.nome} salvo nas suas rotinas`);
+  const r = routineFromTemplate(t); const wd = t.id === '_bld' && UI.bld && UI.bld.wd && UI.bld.wd.length === r.workouts.length ? UI.bld.wd : null; if (wd) setDays(r, wd);
+  ST.routines.push(r); if (!activeRoutine()) ST.active = r.id; saveState();
+  UI.tab = 'rotinas'; UI.rtab = 'minhas'; UI.stack = [{type: 'routine', rid: r.id}]; render(); window.scrollTo({top: 0}); Platform.haptic('success'); if (wd) toast(`${t.nome} salvo, com treinos em ${bldWdTxt(wd)}.`); else if (r.workouts.length) openDaysSheet(r.id, true); else toast(`${t.nome} salvo nas suas rotinas`);
 };
 A['add-tpl-workout'] = el => {
   const t = effTpl(tplById(el.dataset.tid)); const r = activeRoutine(); if (!t || !r) return;

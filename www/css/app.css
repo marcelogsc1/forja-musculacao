@@ -957,3 +957,13 @@ div.s-row{cursor:default}
 .en-mg b small{font-size:13px;color:var(--muted)}
 .en-mg em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}
 .en-foot{display:block;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ac);font-weight:600}
+/* múltipla escolha no assistente (v4.10) */
+.bq-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.bq-wday{aspect-ratio:1/1.15;border-radius:16px;background:var(--s1);border:1px solid var(--line2);color:var(--ink);display:grid;place-items:center;text-transform:capitalize;transition:background .15s,border-color .15s}
+.bq-wday b{font-size:14px;font-weight:600}
+.bq-wday[aria-pressed="true"]{background:var(--ember);border-color:var(--ember);color:var(--ember-ink)}
+.bq-sw{display:block;margin:12px auto 0;color:var(--muted);font-size:13.5px;text-decoration:underline;text-underline-offset:3px}
+.bq-foco .tick .mono{font-size:12px;font-weight:600;color:var(--ember-ink)}
+.bq-foco[data-full]{opacity:.45}
+.bq-foco.multi .tick{border-radius:8px}
+.bq-foot{margin-top:18px}

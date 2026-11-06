@@ -120,13 +120,15 @@ function genProgram(o){
   const eq = (LOCAIS[o.local] || LOCAIS.academia).eq; const sch = SCHEMES[o.goal] || SCHEMES.hipertrofia;
   const keys = o.keys || SPLITS[o.split || o.dias] || SPLITS[3];
   const n = DUR_N[o.dur] || 6; const beginner = o.nivel === 'Iniciante'; const circuit = o.goal === 'condicionamento';
-  const fo = FOCOS[o.foco];
+  /* um ou mais músculos prioritários (o primeiro escolhido entra mais cedo no treino) */
+  const fos = (o.focos || (o.foco ? [o.foco] : [])).filter(k => FOCOS[k]);
   const workouts = keys.map((k, wi) => {
-    const d = DAYS[k]; let slots = [...d.s];
-    if (fo && FOCUS_DAY[o.foco].includes(d.k)){ const at = fo.small ? Math.min(3, slots.length) : 1; slots.splice(at, 0, ...fo.slots); slots = [...new Set(slots)]; }
+    const d = DAYS[k]; let slots = [...d.s]; let extra = 0;
+    fos.slice().reverse().forEach(fk => { const fo = FOCOS[fk]; if (!FOCUS_DAY[fk].includes(d.k)) return; const at = fo.small ? Math.min(3, slots.length) : 1; slots.splice(at, 0, ...fo.slots); extra++; });
+    slots = [...new Set(slots)]; extra = Math.min(1, extra);
     const used = new Set(); const items = [];
     for (const s of slots){
-      if (items.length >= n + (fo ? 1 : 0)) break;
+      if (items.length >= n + extra) break;
       const ex = pickEx(s, eq, used, beginner && o.local === 'academia', o.local); if (!ex) continue; used.add(ex);
       const role = SLOTS[s].r === 'circ' ? 'comp' : SLOTS[s].r === 'cardio' ? 'comp' : SLOTS[s].r;
       let [sets, rmin, rmax, rest] = sch[role] || sch.comp;
