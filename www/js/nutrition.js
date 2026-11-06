@@ -15,7 +15,8 @@
    Gasto do dia (v4.6), em partes, em vez dos fatores de atividade "sedentário/moderado/..." que misturam rotina e treino:
    - Base da rotina: basal × 1,4, o limite inferior da faixa "sedentário ou leve" medida com água duplamente marcada
      (FAO/OMS/UNU 2004: 1,40 a 1,69). Começa no lado conservador; o check-in sobe se for preciso.
-   - Passos acima de 5.000 por dia (limite de estilo de vida sedentário, Tudor-Locke et al. 2013): caminhada a ~5 km/h,
+   - Caminhada intencional informada em minutos por dia (pergunta principal), ou, opcionalmente,
+     passos acima de 5.000 por dia (limite de estilo de vida sedentário, Tudor-Locke et al. 2013): caminhada a ~5 km/h,
      3,8 MET (Compendium 2024, código 17190), passada média de 0,75 m, descontado o gasto de ficar sentado (1,3 MET, 11582).
    - Trabalho: diferença entre o MET da função e ficar sentado, 8 h × 5 dias (Compendium 2024: 11600 = 1,8; 11610 = 3,3; 11615 = 4,5).
    - Treino: minutos reais do histórico × MET da musculação (Compendium 2024: 02054 = 3,5; 02052 = 5,0; 02055 = 5,8),
@@ -32,6 +33,8 @@ const JOBS = [
   {v: 'heavy', m: 4.5, t: 'Braçal', s: 'Obra, carga e descarga, mudanças, campo.'},
   {v: 'none', m: 1.3, t: 'Não trabalho fora', s: 'Em casa a maior parte do dia.'},
 ];
+/* Caminhada intencional por dia (deslocamentos, mercado, cachorro): mais fácil de responder que passos */
+const WALK = [{v: 5, t: 'Quase nada'}, {v: 15, t: '10 a 20 min'}, {v: 30, t: '20 a 40 min'}, {v: 50, t: '40 a 60 min'}, {v: 80, t: 'Mais de 1 hora'}];
 const STEPS = [{v: 4000, t: 'Menos de 5 mil'}, {v: 6250, t: '5 a 7,5 mil'}, {v: 8750, t: '7,5 a 10 mil'}, {v: 11250, t: '10 a 12,5 mil'}, {v: 14000, t: 'Mais de 12,5 mil'}];
 const TTYPES = [
   {v: 3.5, t: 'Musculação tradicional', s: 'Vários exercícios, 8 a 15 repetições, descanso normal.'},
@@ -90,7 +93,8 @@ function trainStats(){
 /* Gasto do dia em partes (ver cabeçalho). Devolve kcal por parte. */
 function expend(bmr, kg, i){
   const hr = bmr / 24; const base = bmr * BASE_PAL;
-  const extra = Math.max(0, (i.steps || 0) - STEP_FLOOR); const walkH = extra * STRIDE / 1000 / WALK_KMH;
+  /* passos (opcional, mais preciso) têm prioridade; sem passos, vale o tempo de caminhada informado */
+  const walkH = i.steps ? Math.max(0, i.steps - STEP_FLOOR) * STRIDE / 1000 / WALK_KMH : (i.walk || 0) / 60;
   const steps = (WALK_MET - BG_MET) * walkH * hr;
   const job = (JOBS.find(j => j.v === i.job) || JOBS[0]); const work = (job.m - BG_MET) * WORK_H * hr;
   const train = Math.max(0, (i.tMet || 3.5) - BG_MET) * ((i.tSess || 0) * (i.tMin || 0) / 60 / 7) * hr * COMP;
@@ -147,7 +151,7 @@ function planInput(pl){
   const pf = ST.profile || {}; const lw = lastWeight(); const h = parseNum(pf.height);
   const sex = pf.sex === 'Masculino' || pf.sex === 'M' ? 'M' : pf.sex === 'Feminino' || pf.sex === 'F' ? 'F' : null;
   const nb = navyBF(sex, h); const bf = pl.bfMode === 'navy' && nb ? nb.v : pl.bfMode === 'manual' ? pl.bf : null;
-  const ts = trainStats(); return {goal: pl.goal, sex, age: ageFrom(pf.birth), h, kg: lw ? lw.kg : null, bf, act: pl.act, job: pl.job, steps: pl.steps, tSess: pl.tSess ?? ts.sess, tMin: pl.tMin ?? ts.min, tMet: pl.tMet || 3.5, cal: pl.cal || null, rate: pl.rate || 0.5, gain: pl.gain || 10, target: pl.target || null, adj: pl.adj || 0, meals: pl.meals || 4};
+  const ts = trainStats(); return {goal: pl.goal, sex, age: ageFrom(pf.birth), h, kg: lw ? lw.kg : null, bf, act: pl.act, job: pl.job, steps: pl.steps, walk: pl.walk, tSess: pl.tSess ?? ts.sess, tMin: pl.tMin ?? ts.min, tMet: pl.tMet || 3.5, cal: pl.cal || null, rate: pl.rate || 0.5, gain: pl.gain || 10, target: pl.target || null, adj: pl.adj || 0, meals: pl.meals || 4};
 }
 /* Check-in: tendência do peso desde o início do plano (regressão linear) comparada com o ritmo esperado */
 function planCheck(pl, res){
@@ -198,7 +202,7 @@ function pwInit(){
   const pl = ST.prefs.plan || {}; const pf = ST.profile || {}; const lw = lastWeight(); const ts = trainStats();
   const g = pl.goal || (pf.goal === 'Definição' ? 'cut' : pf.goal === 'Hipertrofia' ? 'gain' : null);
   UI.pw = {step: 0, goal: g, sex: sexOf(pf), birth: pf.birth || '', h: pf.height || '', kg: lw ? fmtN(lw.kg) : '', bfMode: pl.bfMode || 'auto', bf: pl.bf != null ? fmtN(pl.bf) : '',
-    job: pl.job || null, steps: pl.steps || null, tSess: pl.tSess ?? ts.sess, tMin: pl.tMin ?? ts.min, tMet: pl.tMet || 3.5, rate: pl.rate || null, gain: pl.gain || (pf.level === 'Iniciante' ? 20 : 10), target: pl.target ? fmtN(pl.target) : '', meals: pl.meals || 4};
+    job: pl.job || null, steps: pl.steps || null, walk: pl.walk ?? null, stepsOpen: !!pl.steps, tSess: pl.tSess ?? ts.sess, tMin: pl.tMin ?? ts.min, tMet: pl.tMet || 3.5, rate: pl.rate || null, gain: pl.gain || (pf.level === 'Iniciante' ? 20 : 10), target: pl.target ? fmtN(pl.target) : '', meals: pl.meals || 4};
 }
 function pwSteps(){ return UI.pw.goal === 'maint' ? ['goal', 'body', 'day', 'train'] : ['goal', 'body', 'day', 'train', 'pace']; }
 function planWizard(){
@@ -225,8 +229,10 @@ function planWizard(){
   } else if (st === 'day'){
     q = 'Fora da academia'; hint = 'O treino vem no próximo passo. Aqui conta só a rotina: trabalho e quanto você anda.';
     body = `<div class="pw-f"><span class="pw-l">Trabalho ou estudo</span>${JOBS.map(j => choice('pw-job', j.v, w.job, j.t, j.s)).join('')}</div>
-      <div class="pw-f" style="margin-top:8px"><span class="pw-l">Passos por dia <small>(média; veja no app de saúde do celular)</small></span>${chips('pw-steps', STEPS.map(s => [s.v, s.t]), w.steps)}</div>`;
-    canNext = !!(w.job && w.steps);
+      <div class="pw-f" style="margin-top:8px"><span class="pw-l">Quanto você caminha por dia, somando tudo?</span><span class="tiny muted" style="margin-top:-4px">Ida ao trabalho ou ao ponto, mercado, passear com o cachorro. Andar dentro de casa ou do escritório já está na conta.</span>${chips('pw-walk', WALK.map(s => [s.v, s.t]), w.steps ? '' : w.walk)}</div>
+      <div class="pw-more ${w.stepsOpen ? 'open' : ''}"><button class="pw-more-t" data-act="pw-steps-tog" aria-expanded="${!!w.stepsOpen}"><span>Sabe quantos passos dá por dia? <em>opcional, mais preciso</em></span>${I.down}</button>
+        ${w.stepsOpen ? `<div class="pw-more-b"><span class="tiny muted">Média da última semana no app de saúde do celular ou no relógio. Se informar, substitui a caminhada.</span>${chips('pw-steps', STEPS.map(s => [s.v, s.t]), w.steps)}${w.steps ? '<button class="link muted" style="padding:0;min-height:32px" data-act="pw-steps" data-v="0">Não usar passos</button>' : ''}</div>` : ''}</div>`;
+    canNext = !!(w.job && (w.walk != null || w.steps));
   } else if (st === 'train'){
     const ts = trainStats();
     q = 'Seu treino'; hint = ts.fromHist ? `Preenchido com o seu histórico: ${ts.n} ${ts.n === 1 ? 'treino' : 'treinos'} nas últimas 4 semanas, ${ts.min} min em média.` : 'Quantas vezes por semana e quanto tempo dura, em média.';
@@ -248,7 +254,7 @@ function planWizard(){
     <div class="pw-body">${body}</div>
     <div class="pw-foot">${k > 0 ? `<button class="btn ghost" data-act="pw-back" aria-label="Voltar">${I.back}</button>` : ST.prefs.plan ? '<button class="btn ghost" data-act="pw-cancel">Cancelar</button>' : ''}<button class="btn primary grow" data-act="pw-next" ${canNext ? '' : 'disabled'}>${last ? 'Ver meu plano' : 'Continuar'}</button></div></section>`;
 }
-function pwInputs(){ const w = UI.pw; const h = parseNum(w.h); const nb = navyBF(w.sex, h); return {goal: w.goal, sex: w.sex, age: ageFrom(w.birth), h, kg: parseNum(w.kg), bf: w.bfMode === 'navy' && nb ? nb.v : w.bfMode === 'manual' ? parseNum(w.bf) : null, job: w.job, steps: w.steps, tSess: w.tSess, tMin: w.tMin, tMet: w.tMet, rate: w.rate || 0.5, gain: w.gain, target: parseNum(w.target), meals: w.meals}; }
+function pwInputs(){ const w = UI.pw; const h = parseNum(w.h); const nb = navyBF(w.sex, h); return {goal: w.goal, sex: w.sex, age: ageFrom(w.birth), h, kg: parseNum(w.kg), bf: w.bfMode === 'navy' && nb ? nb.v : w.bfMode === 'manual' ? parseNum(w.bf) : null, job: w.job, steps: w.steps || null, walk: w.walk, tSess: w.tSess, tMin: w.tMin, tMet: w.tMet, rate: w.rate || 0.5, gain: w.gain, target: parseNum(w.target), meals: w.meals}; }
 function pwKeep(){ document.querySelectorAll('[data-pw]').forEach(i => { UI.pw[i.dataset.pw] = i.value; }); }
 function pwSave(){
   const w = UI.pw; const old = ST.prefs.plan || {}; const kg = parseNum(w.kg);
@@ -256,7 +262,7 @@ function pwSave(){
   const lw = lastWeight(); if (kg && (!lw || Math.abs(lw.kg - kg) > 0.001)){ const td = today(); const e = (ST.bw || []).find(x => x.date === td); if (e) e.kg = kg; else ST.bw = (ST.bw || []).concat({date: td, kg}); }
   const same = old.goal === w.goal && old.rate === w.rate && old.gain === w.gain;
   const nb = navyBF(w.sex, parseNum(w.h)); const ts = trainStats();
-  ST.prefs.plan = {goal: w.goal, job: w.job, steps: w.steps, tSess: ts.fromHist && w.tSess === ts.sess ? null : w.tSess, tMin: ts.fromHist && w.tMin === ts.min ? null : w.tMin, tMet: w.tMet, rate: w.rate || 0.5, gain: w.gain, target: parseNum(w.target), bfMode: w.bfMode === 'navy' && !nb ? 'auto' : w.bfMode, bf: w.bfMode === 'manual' ? parseNum(w.bf) : null, cal: old.cal || null, meals: w.meals || 4, adj: same ? (old.adj || 0) : 0, start: same && old.start ? old.start : today(), startKg: same && old.startKg ? old.startKg : kg, ck: same ? old.ck || null : null, log: same ? old.log || [] : []};
+  ST.prefs.plan = {goal: w.goal, job: w.job, steps: w.steps || null, walk: w.walk ?? null, tSess: ts.fromHist && w.tSess === ts.sess ? null : w.tSess, tMin: ts.fromHist && w.tMin === ts.min ? null : w.tMin, tMet: w.tMet, rate: w.rate || 0.5, gain: w.gain, target: parseNum(w.target), bfMode: w.bfMode === 'navy' && !nb ? 'auto' : w.bfMode, bf: w.bfMode === 'manual' ? parseNum(w.bf) : null, cal: old.cal || null, meals: w.meals || 4, adj: same ? (old.adj || 0) : 0, start: same && old.start ? old.start : today(), startKg: same && old.startKg ? old.startKg : kg, ck: same ? old.ck || null : null, log: same ? old.log || [] : []};
   UI.pw = null; saveState(); render(); window.scrollTo({top: 0}); Platform.haptic('success');
 }
 function calSheet(){
@@ -277,7 +283,7 @@ function planDash(){
   }
   const g = OBJ[pl.goal]; const ck = planCheck(pl, res); const lw = lastWeight();
   const kP = res.p * 4, kF = res.f * 9, kC = res.c * 4, kT = kP + kF + kC || 1;
-  let h = res.legacy ? `<button class="sched-hint" style="margin-top:14px" data-act="plan-edit">${I.target}<span><b>Novo cálculo disponível.</b> Agora o gasto considera seu trabalho, seus passos e o tempo real de treino. Toque para revisar em 1 minuto.</span>${I.chev}</button>` : '';
+  let h = res.legacy ? `<button class="sched-hint" style="margin-top:14px" data-act="plan-edit">${I.target}<span><b>Novo cálculo disponível.</b> Agora o gasto considera seu trabalho, quanto você caminha e o tempo real de treino. Toque para revisar em 1 minuto.</span>${I.chev}</button>` : '';
   h += `<section class="hero plan-hero" style="--pc:${pl.goal === 'cut' ? 'var(--c7)' : pl.goal === 'gain' ? 'var(--ember)' : 'var(--c5)'};margin-top:14px">${glow()}
     <div class="hero-top"><span class="hero-lbl">Plano · ${g.t}</span><button class="hero-rt link" style="min-height:0;padding:0" data-act="plan-edit">Editar</button></div>
     <div class="plan-k"><b class="mono">${fmtK(res.kcal)}</b><span>kcal por dia</span></div>
@@ -312,7 +318,7 @@ function planDash(){
   // como calculamos
   const P = res.parts; const job = JOBS.find(j => j.v === inp.job);
   const gasto = res.calib ? `<li><b>Gasto do dia: ${fmtK(res.tdeeR)} kcal</b><span>Calibrado: ${fmtK(pl.cal.kcal)} kcal comidas ${pl.cal.wk ? `com o peso ${pl.cal.wk < 0 ? 'caindo' : 'subindo'} ${fmtN(Math.abs(pl.cal.wk))} kg/semana (${sgn(-pl.cal.wk)}${fmtK(Math.abs(pl.cal.wk) * KCAL_KG / 7)} kcal/dia)` : 'com o peso estável'}.</span></li>`
-    : P ? `<li><b>Gasto do dia: ${fmtK(res.tdeeR)} kcal</b><span class="how-parts"><i>Rotina básica (basal × 1,4)</i><em class="mono">${fmtK(P.base)}</em><i>Passos acima de 5 mil</i><em class="mono">+${fmtK(P.steps)}</em><i>Trabalho ${job ? `(${job.t.toLowerCase()})` : ''}</i><em class="mono">+${fmtK(P.work)}</em><i>Treino (${inp.tSess}× de ${inp.tMin} min, ${fmtN(inp.tMet)} MET, 72%)</i><em class="mono">+${fmtK(P.train)}</em></span></li>`
+    : P ? `<li><b>Gasto do dia: ${fmtK(res.tdeeR)} kcal</b><span class="how-parts"><i>Rotina básica (basal × 1,4)</i><em class="mono">${fmtK(P.base)}</em><i>${inp.steps ? 'Passos acima de 5 mil' : `Caminhada (${(WALK.find(x => x.v === inp.walk) || {}).t || 'informada'})`}</i><em class="mono">+${fmtK(P.steps)}</em><i>Trabalho ${job ? `(${job.t.toLowerCase()})` : ''}</i><em class="mono">+${fmtK(P.work)}</em><i>Treino (${inp.tSess}× de ${inp.tMin} min, ${fmtN(inp.tMet)} MET, 72%)</i><em class="mono">+${fmtK(P.train)}</em></span></li>`
     : `<li><b>Gasto do dia: ${fmtK(res.tdeeR)} kcal</b><span>Basal × ${fmtN(inp.act)} (cálculo antigo; revise o plano para usar o novo).</span></li>`;
   h += `<details class="card how"><summary><span class="eyebrow">Como calculamos</span>${I.down}</summary>
     <ol class="how-l">
@@ -336,7 +342,9 @@ A['pw-goal'] = el => { UI.pw.goal = el.dataset.v; render(); };
 A['pw-sex'] = el => { pwKeep(); UI.pw.sex = el.dataset.v; render(); };
 A['pw-bf'] = el => { pwKeep(); UI.pw.bfMode = el.dataset.v; render(); if (el.dataset.v === 'manual') setTimeout(() => $('#pw-bf')?.focus(), 30); };
 A['pw-job'] = el => { UI.pw.job = el.dataset.v; render(); };
-A['pw-steps'] = el => { UI.pw.steps = +el.dataset.v; render(); };
+A['pw-steps'] = el => { UI.pw.steps = +el.dataset.v || null; render(); };
+A['pw-walk'] = el => { UI.pw.walk = +el.dataset.v; UI.pw.steps = null; render(); };
+A['pw-steps-tog'] = () => { UI.pw.stepsOpen = !UI.pw.stepsOpen; render(); };
 A['pw-tsess'] = el => { UI.pw.tSess = +el.dataset.v; render(); };
 A['pw-tmin'] = el => { UI.pw.tMin = +el.dataset.v; render(); };
 A['pw-tmet'] = el => { UI.pw.tMet = +el.dataset.v; render(); };

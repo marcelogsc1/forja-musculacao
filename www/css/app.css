@@ -711,3 +711,79 @@ details.how[open] summary svg{transform:rotate(180deg)}
 .how-parts{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:6px}
 .how-parts i{font-style:normal}
 .how-parts em{font-style:normal;color:var(--ink2);text-align:right}
+
+/* ===== Identidade animada dos treinos (v4.7) ===== */
+.hero > .art{position:absolute;z-index:-1;right:8px;top:10px;height:min(236px,78%);width:auto;aspect-ratio:2/3;pointer-events:none;color:color-mix(in srgb,var(--pc) 80%,var(--ink));opacity:.45;overflow:visible}
+.art *{fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;transform-box:view-box}
+.art text{fill:currentColor;stroke:none;font-family:var(--f-mono);font-weight:500}
+.art .m-guide{stroke-dasharray:2 7;opacity:.35;stroke-width:2}
+.art .m-floor{opacity:.3;stroke-width:2}
+.art .m-dot{fill:currentColor;stroke:none}
+/* puxar: corda descendo como se fosse puxada, pegada dando trancos */
+.m-rope{animation:m-rope .9s linear infinite}
+@keyframes m-rope{to{transform:translateY(24px)}}
+.m-grip{animation:m-tug 1.8s cubic-bezier(.6,0,.3,1) infinite}
+@keyframes m-tug{0%,100%{transform:translateY(0)}40%{transform:translateY(12px)}55%{transform:translateY(9px)}}
+.m-chev{animation:m-fade 1.8s ease-in-out infinite}
+@keyframes m-fade{0%,100%{opacity:.15}45%{opacity:.8}}
+/* empurrar: bloco avança com rastro de velocidade */
+.m-roll{animation:m-shove 2.2s cubic-bezier(.5,0,.2,1) infinite}
+@keyframes m-shove{0%,100%{transform:translateX(-8px)}45%,60%{transform:translateX(14px)}}
+.m-plate{transform-origin:108px 126px;animation:m-rollr 2.2s cubic-bezier(.5,0,.2,1) infinite}
+@keyframes m-rollr{0%,100%{transform:rotate(-20deg)}45%,60%{transform:rotate(30deg)}}
+.m-speed line{stroke-dasharray:14 70;animation:m-dash 1s linear infinite;animation-delay:var(--d);opacity:.6}
+@keyframes m-dash{from{stroke-dashoffset:84}to{stroke-dashoffset:0}}
+/* perna: barra descendo e subindo como agachamento */
+.m-squat{animation:m-squat 3s cubic-bezier(.45,0,.25,1) infinite}
+@keyframes m-squat{0%,12%{transform:translateY(0)}50%,58%{transform:translateY(118px)}100%{transform:translateY(0)}}
+/* glúteo: quadril sobe com a barra */
+.m-thrust{animation:m-thrust 2.6s cubic-bezier(.45,0,.25,1) infinite;transform-origin:100px 206px}
+@keyframes m-thrust{0%,100%{transform:translateY(46px) scaleY(.75)}45%,60%{transform:translateY(0) scaleY(1)}}
+/* superior e braços: rosca */
+.m-curl{transform-origin:var(--o);animation:m-curl 2.4s cubic-bezier(.45,0,.25,1) infinite}
+.m-curl.b{animation-delay:-1.2s}
+@keyframes m-curl{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-112deg)}}
+/* ombros: elevação lateral espelhada */
+.m-raise{transform-origin:var(--o);animation:m-raiseL 2.4s cubic-bezier(.45,0,.25,1) infinite}
+.m-raise.r{animation-name:m-raiseR}
+@keyframes m-raiseL{0%,100%{transform:rotate(0)}50%{transform:rotate(38deg)}}
+@keyframes m-raiseR{0%,100%{transform:rotate(0)}50%{transform:rotate(-38deg)}}
+/* core: giroscópio */
+.m-gyro ellipse{transform-origin:100px 120px;animation:m-spin 6s linear infinite}
+.m-gyro .b{animation-duration:9s;animation-direction:reverse;transform:rotate(60deg)}
+.m-gyro .c{animation-duration:12s;transform:rotate(120deg)}
+@keyframes m-spin{to{transform:rotate(360deg)}}
+.m-gyro .b{animation-name:m-spin60}.m-gyro .c{animation-name:m-spin120}
+@keyframes m-spin60{from{transform:rotate(60deg)}to{transform:rotate(-300deg)}}
+@keyframes m-spin120{from{transform:rotate(120deg)}to{transform:rotate(480deg)}}
+/* cardio: eletrocardiograma */
+.m-ecg{stroke-dasharray:38 62;animation:m-ecg 1.6s linear infinite}
+@keyframes m-ecg{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+/* corpo inteiro: kettlebell em balanço */
+.m-swing{transform-origin:var(--o);animation:m-swing 2.2s ease-in-out infinite}
+@keyframes m-swing{0%,100%{transform:rotate(-34deg)}50%{transform:rotate(34deg)}}
+/* descanso: lua e zzz */
+.m-moon{opacity:.8}
+.m-z{animation:m-z 2.7s ease-in-out infinite;animation-delay:var(--d);opacity:0}
+@keyframes m-z{0%{opacity:0;transform:translate(0,0)}25%{opacity:.9}100%{opacity:0;transform:translate(-14px,-46px)}}
+/* concluído: check e brilhos */
+.m-check{stroke-width:5;stroke-dasharray:100;animation:m-draw .9s cubic-bezier(.6,0,.2,1) both}
+@keyframes m-draw{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+.m-spark{animation:m-spark 2.4s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes m-spark{0%,100%{opacity:.15;transform:scale(.6) rotate(0)}50%{opacity:.9;transform:scale(1) rotate(45deg)}}
+.hero.is-done > .art,.hero.celebrate > .art{color:var(--good);opacity:.6}
+.hero.is-rest > .art{color:var(--ink2);opacity:.45}
+.hero.celebrate > .art{left:50%;right:auto;transform:translateX(-50%);opacity:.28}
+/* nome com entrada letra a letra quando o treino muda */
+.hero-name .w{display:inline-block;white-space:nowrap}
+.hero-name.kin .ch{display:inline-block;animation:k-in .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * 35ms)}
+@keyframes k-in{from{opacity:0;transform:translateY(.35em) skewY(6deg)}to{opacity:1;transform:none}}
+.hero-tag{margin:10px 0 0;font-size:15px;color:var(--ink);font-weight:500;letter-spacing:-.01em;max-width:62%}
+.hero-tag + .hero-focus{margin-top:4px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.art *,.hero-name .ch{animation:none!important}.m-z{opacity:.6}}
+.pw-more{border:1px solid var(--line);border-radius:18px;margin-top:6px}
+.pw-more-t{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:52px;padding:0 16px;background:transparent;border:0;color:var(--ink2);text-align:left;font-size:14px;font-weight:500}
+.pw-more-t em{font-style:normal;color:var(--muted);font-weight:400;font-size:12.5px;margin-left:4px}
+.pw-more-t svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2.2;transition:transform .2s;flex:none}
+.pw-more.open .pw-more-t svg{transform:rotate(180deg)}
+.pw-more-b{display:flex;flex-direction:column;gap:10px;padding:0 16px 16px}

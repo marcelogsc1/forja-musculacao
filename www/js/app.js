@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.6.0';
+const APP_VERSION = '4.7.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -196,7 +196,12 @@ function focusLine(w){
 function relDay(iso){ const n = Math.round((new Date(today() + 'T12:00') - new Date(iso + 'T12:00')) / 864e5); return n <= 0 ? 'hoje' : n === 1 ? 'ontem' : n < 7 ? `há ${n} dias` : fmtD(iso); }
 const sessMins = s => s.dur != null ? s.dur : s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : null;
 /* nome em destaque: o tamanho acompanha a palavra mais longa para nunca estourar o cartão */
-function heroName(name, tag = 'h2'){ const ws = String(name).trim().split(/\s+/); const k = Math.max(4, ...ws.map(x => x.length), Math.ceil(String(name).length / 2.3)); return `<${tag} class="cond hero-name" style="--k:${k}">${esc(name)}</${tag}>`; }
+function heroName(name, tag = 'h2', key = ''){
+  const s = String(name).trim(); const ws = s.split(/\s+/); const k = Math.max(4, ...ws.map(x => x.length), Math.ceil(s.length / 2.3));
+  const anim = key && KIN[key] !== s && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); if (key) KIN[key] = s;
+  let n = 0; const inner = ws.map(w => `<span class="w">${[...w].map(ch => `<span class="ch" style="--i:${n++}">${esc(ch)}</span>`).join('')}</span>`).join(' ');
+  return `<${tag} class="cond hero-name${anim ? ' kin' : ''}" style="--k:${k}" aria-label="${esc(s)}"><span aria-hidden="true">${inner}</span></${tag}>`;
+}
 /* rede de segurança: se uma palavra ainda for larga demais para o cartão (fonte não carregada, nome incomum), reduz até caber */
 function fitNames(){ document.querySelectorAll('.hero-name').forEach(el => { let fs = parseFloat(getComputedStyle(el).fontSize); let n = 0; while (el.scrollWidth > el.clientWidth + 1 && fs > 28 && n++ < 30){ fs -= 4; el.style.fontSize = fs + 'px'; } }); }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => typeof render === 'function' && booted && canRerender() && render());
@@ -218,32 +223,33 @@ function vHome(){
   const line = open ? 'Treino em andamento.' : trainedToday ? 'Tá pago.' : plan.kind === 'rest' ? 'Hoje é descanso.' : f ? `Hoje é ${f}.` : r ? 'Monte o primeiro treino.' : 'Vamos montar seu treino.';
   const first = ST.profile.name ? `, ${esc(ST.profile.name.split(' ')[0])}` : '';
   let h = `<section class="greet"><div class="eyebrow">${DIAS[now.getDay()]} · semana ${isoWeek(now)}</div><h1>${greet()}${first}.</h1><p class="${trainedToday ? 'paid' : ''}">${line}</p></section>`;
-  const workoutCard = (w, lbl) => `<section class="hero home-hero" style="--pc:${col(w.cor)}">${glow()}<div class="hero-top"><span class="hero-lbl">${lbl}</span><span class="hero-rt">${esc(r.nome)}</span></div>
-      ${heroName(w.nome)}
+  const workoutCard = (w, lbl) => { const ty = wkType(w.items, w.nome); return `<section class="hero home-hero" style="--pc:${col(w.cor)}">${glow()}${motionArt(ty)}<div class="hero-top"><span class="hero-lbl">${lbl}</span><span class="hero-rt">${esc(r.nome)}</span></div>
+      ${heroName(w.nome, 'h2', 'home')}
+      <p class="hero-tag">${tagline(ty)}</p>
       ${w.items.length ? `<p class="hero-focus">${esc(groupsOf(w.items))}</p>` : ''}
       <div class="hero-stats"><div><b>${pad2(w.items.length)}</b><span>exercícios</span></div><div><b>${pad2(wSets(w))}</b><span>séries</span></div><div><b>${w.items.length ? wMins(w) : 0}′</b><span>estimados</span></div></div>
-      <div class="hero-act"><button class="btn primary" data-act="start" data-rid="${r.id}" data-wid="${w.id}" ${w.items.length ? '' : 'disabled'}>${I.play}Começar</button><button class="btn ghost" data-act="open-workout" data-rid="${r.id}" data-wid="${w.id}">Ver treino</button></div></section>`;
+      <div class="hero-act"><button class="btn primary" data-act="start" data-rid="${r.id}" data-wid="${w.id}" ${w.items.length ? '' : 'disabled'}>${I.play}Começar</button><button class="btn ghost" data-act="open-workout" data-rid="${r.id}" data-wid="${w.id}">Ver treino</button></div></section>`; };
   const afterTxt = a => a && a.w ? (a.d ? `Próximo: ${a.k <= 2 ? whenLabel(a.k) : DIAS[a.d.getDay()]}, ${esc(a.w.nome)}` : `Próximo da sequência: ${esc(a.w.nome)}`) : '';
   if (open){
     const st = stats(open); const total = open.items.reduce((a, e) => a + e.sets.length, 0); const exDone = open.items.filter(e => e.sets.length && e.sets.every(x => x.ok)).length;
-    h += `<section class="hero home-hero" style="--pc:${col(open.cor)}">${glow()}<div class="hero-top"><span class="hero-lbl live">Em andamento</span><span class="hero-rt mono">${fmtClock((Date.now() - new Date(open.startedAt)) / 1000)}</span></div>
-      ${heroName(open.wname)}
+    h += `<section class="hero home-hero" style="--pc:${col(open.cor)}">${glow()}${motionArt(wkType(open.items, open.wname))}<div class="hero-top"><span class="hero-lbl live">Em andamento</span><span class="hero-rt mono">${fmtClock((Date.now() - new Date(open.startedAt)) / 1000)}</span></div>
+      ${heroName(open.wname, 'h2', 'home')}
       <div class="hero-stats"><div><b>${pad2(st.sets)}<small class="muted">/${pad2(total)}</small></b><span>séries feitas</span></div><div><b>${pad2(exDone)}<small class="muted">/${pad2(open.items.length)}</small></b><span>exercícios</span></div><div><b>${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}<small class="muted">${st.vol >= 10000 ? 't' : 'kg'}</small></b><span>volume</span></div></div>
       <div class="hero-act"><button class="btn primary" data-act="open-session">${I.play}Continuar treino</button></div></section>`;
   } else if (picked){
     h += workoutCard(picked, `Treino · ${pad2(r.workouts.indexOf(picked) + 1)}/${pad2(r.workouts.length)}`);
   } else if (plan.kind === 'done'){
     const s = plan.s; const st = stats(s); const m = sessMins(s); const prs = sessionPRs(s);
-    h += `<section class="hero home-hero is-done" style="--pc:var(--good)">${glow()}<div class="hero-top"><span class="hero-lbl">${I.check}Concluído hoje</span>${prs.length ? `<span class="pill good" style="margin-left:auto">${I.trophy}${prs.length} ${prs.length === 1 ? 'PR' : 'PRs'}</span>` : ''}</div>
-      ${heroName(s.wname)}
-      <p class="hero-focus">${afterTxt(plan.after) || 'Bom descanso.'}</p>
+    h += `<section class="hero home-hero is-done" style="--pc:var(--good)">${glow()}${motionArt('done')}<div class="hero-top"><span class="hero-lbl">${I.check}Concluído hoje</span>${prs.length ? `<span class="pill good" style="margin-left:auto">${I.trophy}${prs.length} ${prs.length === 1 ? 'PR' : 'PRs'}</span>` : ''}</div>
+      ${heroName(s.wname, 'h2', 'home')}
+      <p class="hero-tag">${tagline('done')}</p><p class="hero-focus">${afterTxt(plan.after) || 'Bom descanso.'}</p>
       <div class="hero-stats"><div><b>${m != null ? m : '–'}′</b><span>duração</span></div><div><b>${pad2(st.sets)}</b><span>séries</span></div><div><b>${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}<small class="muted">${st.vol >= 10000 ? 't' : 'kg'}</small></b><span>volume</span></div></div>
       <div class="hero-act"><button class="btn ghost" style="flex:1" data-act="open-past" data-sid="${s.id}">Ver resumo do treino</button></div></section>`;
   } else if (plan.kind === 'rest'){
     const a = plan.after;
-    h += `<section class="hero home-hero is-rest" style="--pc:var(--muted)">${glow()}<div class="hero-top"><span class="hero-lbl">Descanso · ${DIA3[now.getDay()]}</span><span class="hero-rt">${esc(r.nome)}</span></div>
-      ${heroName('Descanso')}
-      <p class="hero-focus">${a ? `${afterTxt(a)}.` : ''} Recuperar também faz parte do treino.</p>
+    h += `<section class="hero home-hero is-rest" style="--pc:var(--muted)">${glow()}${motionArt('rest')}<div class="hero-top"><span class="hero-lbl">Descanso · ${DIA3[now.getDay()]}</span><span class="hero-rt">${esc(r.nome)}</span></div>
+      ${heroName('Descanso', 'h2', 'home')}
+      <p class="hero-tag">${tagline('rest')}</p>${a ? `<p class="hero-focus">${afterTxt(a)}.</p>` : ''}
       <div class="hero-act"><button class="btn ghost" style="flex:1" data-act="fab">Treinar mesmo assim</button>${a ? `<button class="btn ghost" data-act="open-workout" data-rid="${r.id}" data-wid="${a.w.id}">Ver ${esc(a.w.nome)}</button>` : ''}</div></section>`;
   } else if (plan.kind === 'today'){
     h += workoutCard(plan.w, `Hoje · ${DIA3[now.getDay()]}`);
@@ -251,7 +257,7 @@ function vHome(){
     h += workoutCard(plan.w, `Próximo · ${pad2(r.workouts.indexOf(plan.w) + 1)}/${pad2(r.workouts.length)}`);
   } else if (!r){
     h += `<section class="hero home-hero" style="--pc:var(--ember)">${glow()}<div class="hero-top"><span class="hero-lbl">Primeiro passo</span></div>
-      ${heroName('Comece aqui')}
+      ${heroName('Comece aqui', 'h2', 'home')}
       <p class="hero-focus">Escolha um dos programas prontos ou monte um sob medida para seus dias, seu local e seu objetivo. Leva um minuto.</p>
       <div class="hero-act"><button class="btn primary" data-act="go-explore">Ver programas</button><button class="btn ghost" data-act="open-builder">Montar o meu</button></div></section>`;
   } else {
@@ -318,8 +324,8 @@ function vRoutine(p){
 function vWorkout(p){
   const r = routineById(p.rid); const w = r && r.workouts.find(x => x.id === p.wid); if (!w) return '';
   const i = r.workouts.indexOf(w); const m = musclesOf(w.items); const ed = !!p.edit; const open = openSession();
-  let h = `<section class="hero" style="--pc:${col(w.cor)};margin-top:14px">${glow()}<div class="hero-top"><span class="hero-lbl">Treino · ${pad2(i + 1)}/${pad2(r.workouts.length)}</span><span class="hero-rt">${esc(r.nome)}</span></div>
-    ${ed ? `<input id="wname" class="field" style="margin-top:18px;font-size:20px;font-weight:600" value="${esc(w.nome)}" maxlength="30" aria-label="Nome do treino" data-act="wname" data-rid="${r.id}" data-wid="${w.id}">` : heroName(w.nome, 'h1')}
+  let h = `<section class="hero" style="--pc:${col(w.cor)};margin-top:14px">${glow()}${motionArt(wkType(w.items, w.nome))}<div class="hero-top"><span class="hero-lbl">Treino · ${pad2(i + 1)}/${pad2(r.workouts.length)}</span><span class="hero-rt">${esc(r.nome)}</span></div>
+    ${ed ? `<input id="wname" class="field" style="margin-top:18px;font-size:20px;font-weight:600" value="${esc(w.nome)}" maxlength="30" aria-label="Nome do treino" data-act="wname" data-rid="${r.id}" data-wid="${w.id}">` : heroName(w.nome, 'h1', 'wk-' + w.id)}
     ${w.items.length ? `<p class="hero-focus">${esc(groupsOf(w.items))}</p>` : ''}
     <div class="hero-stats"><div><b>${pad2(w.items.length)}</b><span>exercícios</span></div><div><b>${pad2(wSets(w))}</b><span>séries</span></div><div><b>${w.items.length ? wMins(w) : 0}′</b><span>estimados</span></div></div>
     ${w.items.length ? `<p class="tiny muted" style="margin:14px 0 0">Equipamentos: ${esc(equipOf(w.items))}</p>` : ''}</section>`;
@@ -494,7 +500,7 @@ function warmups(e){
 function vPast(p){
   const s = SESS.find(x => x.id === p.sid); if (!s) return '';
   const st = stats(s); const prs = sessionPRs(s); const mins = s.dur != null ? s.dur : s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : null;
-  let h = p.fresh ? `<section class="hero celebrate" style="--pc:${col(s.cor)};margin-top:14px">${glow()}<div class="hero-top" style="justify-content:center"><span class="hero-lbl">Treino concluído · ${fmtD(s.date)}</span></div>${heroName(s.wname, 'h1')}<p class="ink2" style="margin:8px 0 0">${st.sets ? `Mais um tijolo na construção. ${prs.length ? 'E com recorde novo.' : 'Bom trabalho.'}` : 'Registro salvo.'}</p></section>`
+  let h = p.fresh ? `<section class="hero celebrate" style="--pc:${col(s.cor)};margin-top:14px">${glow()}${motionArt('done')}<div class="hero-top" style="justify-content:center"><span class="hero-lbl">Treino concluído · ${fmtD(s.date)}</span></div>${heroName(s.wname, 'h1', 'done-' + s.id)}<p class="hero-tag" style="max-width:none">${tagline('done')}</p><p class="ink2" style="margin:8px 0 0">${st.sets ? `Mais um tijolo na construção. ${prs.length ? 'E com recorde novo.' : 'Bom trabalho.'}` : 'Registro salvo.'}</p></section>`
     : `<section class="row" style="gap:14px;margin-top:20px"><span class="plate" style="--pc:${col(s.cor)};width:52px;height:52px;font-size:20px">${esc((s.wname || '?').slice(0, 1))}</span><div class="grow"><div class="eyebrow">${fmtDLong(s.date)}</div><h1 class="display h2" style="margin-top:4px">${esc(s.wname)}</h1></div></section>`;
   h += `<section class="stats"><div class="stat"><b class="num">${mins != null ? mins : '–'}</b><span>minutos</span></div><div class="stat"><b class="num">${st.sets}</b><span>séries</span></div><div class="stat ember"><b class="num">${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}</b><span>${st.vol >= 10000 ? 'toneladas' : 'kg de volume'}</span></div></section>`;
   if (prs.length) h += `<section class="card"><div class="eyebrow" style="margin-bottom:4px">Recordes neste treino</div>${prs.map(x => `<div class="pr"><span class="trophy">${I.trophy}</span><div class="grow"><b style="font-size:15px">${esc(exName(x.ex))}</b><div class="small muted num">${fmtN(x.kg)} kg × ${x.reps} · 1RM est. ${fmtN(Math.round(x.v * 10) / 10)} kg</div></div></div>`).join('')}</section>`;
@@ -735,7 +741,7 @@ function openStartSheet(date){
   const r = activeRoutine(); const w = suggested(r); const todayW = !retro && hasSchedule(r) && scheduledOn(r, new Date()) === w;
   UI.sheet = {kind: 'start'};
   openSheet(`${sheetHead(retro ? `Registrar treino · ${fmtDLong(date)}` : 'Começar treino', retro ? 'Qual treino você fez?' : 'O que vamos treinar?')}<div class="stack" style="margin-top:16px">
-    ${w ? `<button class="hero" style="--pc:${col(w.cor)};text-align:left;width:100%;padding:18px" data-act="${act}" ${dd} data-rid="${r.id}" data-wid="${w.id}">${glow()}<div class="hero-top"><span class="hero-lbl">${retro ? 'Sugestão' : todayW ? `Treino de hoje · ${DIA3[new Date().getDay()]}` : hasSchedule(r) ? 'Próximo da agenda' : 'Próximo da sequência'}</span></div>${heroName(w.nome, 'div')}<div class="meta mono" style="margin-top:12px;font-size:12px"><span><b>${pad2(w.items.length)}</b> exercícios</span><span><b>${wMins(w)}′</b> estimados</span></div></button>` : ''}
+    ${w ? `<button class="hero" style="--pc:${col(w.cor)};text-align:left;width:100%;padding:18px" data-act="${act}" ${dd} data-rid="${r.id}" data-wid="${w.id}">${glow()}${motionArt(wkType(w.items, w.nome))}<div class="hero-top"><span class="hero-lbl">${retro ? 'Sugestão' : todayW ? `Treino de hoje · ${DIA3[new Date().getDay()]}` : hasSchedule(r) ? 'Próximo da agenda' : 'Próximo da sequência'}</span></div>${heroName(w.nome, 'div')}<div class="meta mono" style="margin-top:12px;font-size:12px"><span><b>${pad2(w.items.length)}</b> exercícios</span><span><b>${wMins(w)}′</b> estimados</span></div></button>` : ''}
     ${ST.routines.map(rr => { const ws = rr.workouts.filter(x => x !== w); return ws.length ? `<div class="eyebrow" style="margin-top:4px">${rr === r ? 'Outro treino de ' : ''}${esc(rr.nome)}</div><div class="list" style="background:var(--s2)">${ws.map(x => `<button class="li noimg" data-act="${act}" ${dd} data-rid="${rr.id}" data-wid="${x.id}"><span class="plate" style="--pc:${col(x.cor)}">${rr.workouts.indexOf(x) + 1}</span><div class="grow"><b>${esc(x.nome)}</b><span class="sub">${x.items.length} exercícios · ~${wMins(x)} min</span></div>${I.chev}</button>`).join('')}</div>` : ''; }).join('')}
     <button class="btn ghost block" data-act="${act}" ${dd} data-rid="free">${I.plus}Treino livre (montar ${retro ? 'os exercícios' : 'na hora'})</button></div>`);
 }

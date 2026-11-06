@@ -25,6 +25,7 @@ www/                      o app (HTML, CSS e JS puros, sem etapa de build)
   js/app.js               telas, treino ao vivo, teclado numérico, descanso
   js/explore.js           biblioteca de programas e assistente
   js/nutrition.js         assistente de objetivo: calorias, macros, % de gordura e check-in semanal
+  js/motion.js            identidade animada de cada treino (tipo, ilustração em SVG e frase do dia)
   js/programs.js          programas e gerador de treinos
   js/catalog.js           210 exercícios
   js/instructions.js      instrução detalhada de cada exercício
