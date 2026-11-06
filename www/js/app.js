@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.8.0';
+const APP_VERSION = '4.9.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -7,7 +7,9 @@ const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '',
 const PAGES = {};
 /* Conta nova começa vazia: nenhuma rotina pré-carregada (o usuário escolhe um programa ou monta o seu). */
 function freshState(){ return { v: 4, routines: [], active: null, custom: {}, media: {}, bw: [], prefs: {...DEFAULT_PREFS}, profile: {createdAt: new Date().toISOString()} }; }
-function fixState(){ ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
+/* nomes antigos gerados pelo app, com tradução entre parênteses; nomes escritos pelo usuário não são tocados */
+const OLD_WNAMES = {'Push (empurrar)': 'Push', 'Pull (puxar)': 'Pull', 'Legs (pernas)': 'Legs', 'Pull (Terra)': 'Pull A', 'Push (Supino)': 'Push A', 'Pull (Remada)': 'Pull B', 'Push (Desenvolvimento)': 'Push B'};
+function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
 function getEx(id){ return CAT[id] || ST.custom[id] || {n: 'Exercício removido', m: 'peito', p: 'custom', e: 'outros', pri: [], sec: [], d: []}; }
 const exName = id => getEx(id).n;
 const routineById = id => ST.routines.find(r => r.id === id);
@@ -19,6 +21,7 @@ function normSession(s){
   if (s.routine === undefined) s.routine = 'r-hip5';
   if (!s.workout && s.day) s.workout = s.day;
   if (!s.wname) s.wname = s.dayName || 'Treino';
+  if (OLD_WNAMES[s.wname]) s.wname = OLD_WNAMES[s.wname];
   if (s.cor == null){ const w = findWorkout(s.routine, s.workout); s.cor = w ? w.cor : 0; }
   s.items = s.items || [];
   s.items.forEach(e => { if (!e.sets) e.sets = []; e.sets.forEach(x => { if (x.w && !x.t) x.t = 'w'; if (!x.t) x.t = 'n'; }); });
@@ -763,9 +766,8 @@ function vProfile(){
   const acct = Store.mode === 'verify' ? `Conta <b>${esc(Auth.user?.email || '')}</b> criada. Falta confirmar o e-mail: abra o link que enviamos (confira também o spam). Até lá, tudo fica salvo neste aparelho e sobe para a conta assim que você confirmar.` : Store.mode === 'api' ? `Conectado como <b>${esc(Auth.user?.email || Auth.user?.name || 'usuário')}</b>. Seus treinos ficam salvos na sua conta e sincronizam entre aparelhos.` : Store.mode === 'cloud' ? 'Seus dados estão salvos na sua conta do Claude e sincronizam entre aparelhos.' : Store.authExpired ? 'Sua sessão expirou. Entre de novo para voltar a sincronizar.' : 'Seus dados estão salvos só neste aparelho. Crie uma conta para guardar na nuvem e usar em outros aparelhos.';
   const field = (id, label, val, attrs = '') => `<label class="flabel"><span class="tiny muted">${label}</span><input id="pf-${id}" class="field" value="${esc(val ?? '')}" data-act="pf" data-k="${id}" ${attrs}></label>`;
   const seg = (k, opts) => `<div class="seg wrapseg">${opts.map(([v, l]) => `<button data-act="pf-set" data-k="${k}" data-v="${v}" aria-pressed="${String(pf[k] || '') === String(v)}">${l}</button>`).join('')}</div>`;
-  const pseg = (k, opts, fmt = x => x) => `<div class="seg">${opts.map(v => `<button data-act="pref" data-k="${k}" data-v="${v}" aria-pressed="${String(P[k]) === String(v)}">${fmt(v)}</button>`).join('')}</div>`;
-  const tog = (k, label, sub) => `<button class="toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="grow"><b>${label}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span><i></i></button>`;
   return `<section class="profile-hero"><div class="avatar xl">${initials() || I.user}</div><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
+  <section><button class="set-btn" data-act="open-settings"><span class="s-ic">${I.gear}</span><span class="grow"><b>Configurações</b><span class="sub">Treino, aparência, animações e dados</span></span>${I.chev}</button></section>
   <section>${planSummaryRow('profile')}</section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
         <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'verify' ? '<button class="btn primary block" data-act="check-verified">Já confirmei meu e-mail</button><button class="btn ghost block" data-act="resend-verify">Reenviar e-mail de confirmação</button><button class="link muted" data-act="logout">Sair desta conta</button>' : Store.mode === 'api' ? '<button class="btn ghost block" data-act="logout">Sair da conta</button>' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
@@ -778,22 +780,52 @@ function vProfile(){
     <div class="small muted">Peso atual: ${lastBw ? `<b style="color:var(--ink)">${fmtN(lastBw.kg)} kg</b> em ${fmtD(lastBw.date)}` : 'sem registro'} · <button class="link" style="min-height:0;padding:0" data-act="go-body">Registrar medidas</button></div>
     <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Saúde', 'Saúde']])}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Experiência</div>${seg('level', [['Iniciante', 'Iniciante'], ['Intermediário', 'Intermediário'], ['Avançado', 'Avançado']])}</div></section>
-  <section class="card stack"><div class="eyebrow">Treino</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Meta de treinos por semana</div>${pseg('goal', [0, 2, 3, 4, 5, 6], v => v ? v : 'Auto')}</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Descanso padrão (exercícios novos e treino livre)</div>${pseg('rest', [60, 90, 120, 180], v => fmtRest(v))}</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Botões + e − do teclado de carga</div>${pseg('inc', [1, 2, 2.5, 5], v => fmtN(v) + ' kg')}</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Peso da barra (calculadora de anilhas)</div>${pseg('bar', [10, 15, 20], v => v + ' kg')}</div>
-    ${tog('sound', 'Som no fim do descanso', 'Toca três bipes curtos')}${tog('awake', 'Manter a tela ligada no treino', 'Evita que o celular apague entre as séries')}</section>
-  <section class="card stack"><div class="eyebrow">Aparência</div>${pseg('theme', ['dark', 'light', 'system'], v => ({dark: 'Escuro', light: 'Claro', system: 'Sistema'})[v])}
-    <button class="p-row" data-act="motion-open">${motionPreview(motionMode())}<span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${I.chev}</button></section>
-  <section class="card stack"><div class="eyebrow">Seus dados</div>
-    ${Store.adapter?.downloads || !Platform.isArtifact ? '<button class="btn ghost block" data-act="export">Exportar backup (JSON)</button>' : ''}
-    <label class="btn ghost block" for="import-in" style="cursor:pointer">Importar backup</label><input id="import-in" type="file" accept="application/json,.json" hidden data-act="import">
-    <button class="btn danger block" data-act="ask-wipe">Apagar todos os dados ${Store.mode === 'api' ? 'deste aparelho' : ''}</button>
-    ${Store.mode === 'api' ? '<button class="btn danger block" data-act="ask-delete-account">Excluir minha conta</button>' : ''}
-    ${!Platform.isArtifact ? '<a class="link" style="text-align:center" href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>' : ''}</section>
-  <p class="tiny muted" style="text-align:center;margin-top:18px">Forja ${APP_VERSION} · ilustração anatômica: react-native-body-highlighter (MIT) · fotos: Free Exercise DB</p>`;
+  <p class="tiny muted" style="text-align:center;margin-top:18px">Forja ${APP_VERSION}</p>`;
 }
+/* ================= configurações ================= */
+const SI = {
+  sun: svg('M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'),
+  bell: svg('M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0'),
+  phone: svg('M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2'),
+  plate: svg('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'),
+  bar: svg('M2 12h20M5 8v8M8 6v12M16 6v12M19 8v8'),
+  img: svg('M4 4h16v16H4zM4 16l5-5 4 4 3-3 4 4M15 9a1 1 0 1 0 0-.01'),
+  spark: svg('M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z'),
+  dl: svg('M12 3v12M7 10l5 5 5-5M4 21h16'),
+  ul: svg('M12 21V9M7 14l5-5 5 5M4 3h16'),
+  out: svg('M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l-5-5 5-5M5 12h11'),
+  doc: svg('M6 2h9l5 5v15H6zM14 2v6h6M9 13h8M9 17h6'),
+};
+const PREF_OPTS = {
+  goal: {t: 'Meta semanal', o: [0, 2, 3, 4, 5, 6], f: v => v ? `${v} treinos` : 'Automática', s: 'Treinos por semana. Automática segue a agenda'},
+  rest: {t: 'Descanso padrão', o: [60, 90, 120, 180], f: v => fmtRest(v), s: 'Para exercícios novos e treino livre'},
+  inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
+  bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
+  theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
+  pics: {t: 'Imagens dos exercícios', o: ['fig', 'foto'], f: v => ({fig: 'Ilustração', foto: 'Foto real'})[v] || 'Ilustração'},
+};
+function vSettings(){
+  const P = ST.prefs;
+  const row = (k, ic) => { const d = PREF_OPTS[k]; return `<button class="s-row" data-act="set-pick" data-k="${k}"><span class="s-ic">${ic}</span><span class="grow"><b>${d.t}</b>${d.s ? `<span class="sub">${d.s}</span>` : ''}</span><em>${esc(d.f(P[k]))}</em>${I.chev}</button>`; };
+  const tg = (k, ic, t, sub) => `<button class="s-row toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b><span class="sub">${sub}</span></span><i></i></button>`;
+  const act = (a, ic, t, sub = '', cls = '', extra = '') => `<button class="s-row ${cls}" data-act="${a}" ${extra}><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span>${cls ? '' : I.chev}</button>`;
+  const picsOk = !window.FORJA_FIG && !window.FORJA_NOPHOTO;
+  return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}</div></section>
+  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}
+    <button class="s-row" data-act="motion-open"><span class="s-ic">${SI.spark}</span><span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${motionPreview(motionMode())}${I.chev}</button>
+    ${picsOk ? row('pics', SI.img) : ''}</div></section>
+  <section class="s-group"><div class="eyebrow">Objetivo e corpo</div><div class="list">${act('plan-open', I.flame, 'Assistente de objetivo', ST.prefs.plan ? 'Calorias, proteína e ritmo do seu plano' : 'Calcule calorias e proteína para o seu objetivo')}${act('go-body', I.note, 'Peso e medidas', 'Registros do corpo e gráficos')}</div></section>
+  <section class="s-group"><div class="eyebrow">Seus dados</div><div class="list">
+    ${Store.adapter?.downloads || !Platform.isArtifact ? act('export', SI.dl, 'Exportar backup', 'Arquivo JSON com treinos, rotinas e medidas') : ''}
+    <label class="s-row" for="import-in"><span class="s-ic">${SI.ul}</span><span class="grow"><b>Importar backup</b><span class="sub">Restaura um arquivo exportado antes</span></span>${I.chev}</label><input id="import-in" type="file" accept="application/json,.json" hidden data-act="import">
+    ${Store.mode === 'api' ? act('logout', SI.out, 'Sair da conta', Auth.user?.email ? esc(Auth.user.email) : '') : ''}
+    ${act('ask-wipe', I.trash, `Apagar todos os dados${Store.mode === 'api' ? ' deste aparelho' : ''}`, '', 'danger')}
+    ${Store.mode === 'api' ? act('ask-delete-account', I.trash, 'Excluir minha conta', 'Apaga a conta e tudo que está na nuvem', 'danger') : ''}</div></section>
+  <section class="s-group"><div class="eyebrow">Sobre</div><div class="list">
+    ${!Platform.isArtifact ? `<a class="s-row" href="privacidade.html" target="_blank" rel="noopener"><span class="s-ic">${SI.doc}</span><span class="grow"><b>Política de privacidade</b></span>${I.chev}</a>` : ''}
+    <div class="s-row"><span class="s-ic">${I.info}</span><span class="grow"><b>Versão</b><span class="sub">Ilustração anatômica: react-native-body-highlighter (MIT) · fotos: Free Exercise DB</span></span><em>${APP_VERSION}</em></div></div></section>`;
+}
+PAGES.settings = {title: () => 'Configurações', view: () => vSettings()};
 /* ================= tela de entrada ================= */
 function vAuth(p){
   const st = UI.auth || (UI.auth = {mode: 'login', show: false}); const m = st.mode;
@@ -867,6 +899,9 @@ A['menu-pick'] = el => { const it = UI.sheet.items[+el.dataset.i]; closeSheet();
 A.profile = () => { push({type: 'profile'}); if (Auth.kind === 'firebase' && Store.mode === 'api') Auth.reloadUser().then(() => { if (curPage()?.type === 'profile' && canRerender()) render(); }); };
 A.pref = el => { const k = el.dataset.k; let v = el.dataset.v; if (k !== 'theme') v = +v; ST.prefs[k] = v; saveState(); applyTheme(); render(); };
 A['pref-tog'] = el => { const k = el.dataset.k; ST.prefs[k] = !ST.prefs[k]; saveState(); render(); if (k === 'sound' && ST.prefs.sound){ Platform.unlockAudio(); Platform.alarm(); } };
+A['open-settings'] = () => push({type: 'settings'});
+A['set-pick'] = el => { const k = el.dataset.k; const d = PREF_OPTS[k];
+  menuSheet('Configurações', d.t, d.o.map(v => ({label: d.f(v), icon: String(ST.prefs[k]) === String(v) ? I.check : '<span class="mi-sp"></span>', run: () => { ST.prefs[k] = v; saveState(); applyTheme(); render(); }}))); };
 A['pf-set'] = el => { const k = el.dataset.k; ST.profile[k] = ST.profile[k] === el.dataset.v ? '' : el.dataset.v; saveState(); render(); };
 A['go-body'] = () => { UI.progTab = 'corpo'; goTab('progresso'); };
 A.login = () => openLogin('login');

@@ -190,12 +190,39 @@ function planSummaryRow(where){
   const res = planCalc(planInput(pl));
   if (!res.ok) return `<button class="lastrow" data-act="plan-open"><span class="plan-ic">${I.target}</span><div class="grow"><div class="eyebrow">Seu plano</div><b>Complete seus dados</b></div>${I.chev}</button>`;
   const ck = planCheck(pl, res); const due = ck.state === 'adjust' && ck.due;
-  if (where === 'body') return `<button class="lastrow plan-row" data-act="plan-open"><span class="plan-ic">${I.target}</span><div class="grow"><div class="eyebrow">Plano · ${OBJ[pl.goal].t}</div><b class="mono">${fmtK(res.kcal)} <em>kcal</em> · ${res.p} <em>g proteína</em></b></div>${due ? '<span class="pill warn">Check-in</span>' : ''}${I.chev}</button>`;
+  if (where === 'body') return energyPanel(pl, res, 'body');
   const kP = res.p * 4, kF = res.f * 9, kC = res.c * 4, kT = kP + kF + kC || 1;
   return `<button class="plan-card" data-act="plan-open"><div class="row between"><span class="eyebrow">Nutrição de hoje · ${OBJ[pl.goal].t}</span>${due ? '<span class="pill warn">Check-in pronto</span>' : ck.state === 'early' ? '' : '<span class="pill good">No ritmo</span>'}</div>
     <div class="pc-k"><b class="mono">${fmtK(res.kcal)}</b><span>kcal</span></div>
     <div class="macro-bar"><i style="--w:${kP / kT * 100}%;--mc:var(--c1)"></i><i style="--w:${kC / kT * 100}%;--mc:var(--c2)"></i><i style="--w:${kF / kT * 100}%;--mc:var(--c0)"></i></div>
     <div class="pc-m"><span style="--mc:var(--c1)"><b class="mono">${res.p}g</b> proteína</span><span style="--mc:var(--c2)"><b class="mono">${res.c}g</b> carbo</span><span style="--mc:var(--c0)"><b class="mono">${res.f}g</b> gordura</span></div></button>`;
+}
+/* Quadro de energia: deixa explícito o que é basal, o que é gasto do dia e quanto comer.
+   mode 'body' = versão de Corpo (abre o plano ao tocar); 'dash' = topo da página do plano. */
+function energyPanel(pl, res, mode){
+  const g = OBJ[pl.goal]; const ac = pl.goal === 'cut' ? 'var(--c7)' : pl.goal === 'gain' ? 'var(--ember)' : 'var(--c5)';
+  const bmr = r10(res.bmr), tdee = res.tdeeR, kcal = res.kcal; const max = Math.max(tdee, kcal) * 1.08;
+  const pct = v => (v / max * 100).toFixed(1) + '%';
+  const wkAbs = fmtN(Math.round(Math.abs(res.wk || 0) * 100) / 100);
+  const metaSub = pl.goal === 'cut' ? `${fmtK(Math.abs(res.delta))} kcal abaixo do gasto, para perder cerca de ${wkAbs} kg por semana`
+    : pl.goal === 'gain' ? `${fmtK(Math.abs(res.delta))} kcal acima do gasto, para ganhar cerca de ${wkAbs} kg por semana`
+    : res.delta ? `${sgn(res.delta)}${fmtK(Math.abs(res.delta))} kcal em relação ao gasto, pelos ajustes do check-in` : 'Igual ao gasto, para manter o peso';
+  const kP = res.p * 4, kF = res.f * 9, kC = res.c * 4, kT = kP + kF + kC || 1; const kg = planInput(pl).kg;
+  const mac = [['Proteína', res.p, kP, 'var(--c1)'], ['Carboidratos', res.c, kC, 'var(--c2)'], ['Gorduras', res.f, kF, 'var(--c0)']];
+  const ck = planCheck(pl, res); const due = ck.state === 'adjust' && ck.due;
+  return `<section class="en-card${mode === 'body' ? ' is-tap' : ''}" style="--ac:${ac}" ${mode === 'body' ? 'data-act="plan-open" role="button" tabindex="0"' : ''}>
+    <div class="row between"><span class="eyebrow">Seu plano · ${g.t}</span>${due ? '<span class="pill warn">Check-in pronto</span>' : mode === 'dash' ? '<button class="link" style="min-height:0;padding:0" data-act="plan-edit">Editar</button>' : I.chev}</div>
+    <p class="en-lead">Coma cerca de</p><div class="en-k"><b class="mono">${fmtK(kcal)}</b><span>kcal por dia</span></div>
+    <div class="en-bar" role="img" aria-label="Basal ${fmtK(bmr)} kcal, gasto do dia ${fmtK(tdee)} kcal, meta ${fmtK(kcal)} kcal">
+      <i class="en-b" style="width:${pct(bmr)}"></i><i class="en-t" style="left:${pct(bmr)};width:calc(${pct(tdee)} - ${pct(bmr)})"></i><i class="en-m" style="left:${pct(kcal)}"></i></div>
+    <dl class="en-rows">
+      <div><dt><i class="dot en-db"></i>Metabolismo basal</dt><dd class="mono">${fmtK(bmr)} <small>kcal</small></dd><p>O que o corpo gasta em repouso total, só para se manter vivo.</p></div>
+      <div><dt><i class="dot en-dt"></i>${res.calib ? 'Gasto do dia (calibrado)' : 'Gasto total do dia'}</dt><dd class="mono">${res.calib ? '' : '~'}${fmtK(tdee)} <small>kcal</small></dd><p>${res.calib ? 'Calculado pelo que você comia e pela variação do seu peso.' : `Basal mais rotina, caminhadas e treino. Pode variar entre ${fmtK(res.lo)} e ${fmtK(res.hi)}.`}</p></div>
+      <div class="en-meta"><dt><i class="dot en-dm"></i>Meta de consumo</dt><dd class="mono">${fmtK(kcal)} <small>kcal</small></dd><p>${metaSub}.${res.floor ? ' Limitada para não ficar abaixo do basal.' : ''}</p></div>
+    </dl>
+    <div class="en-mac"><div class="macro-bar">${mac.map(m => `<i style="--w:${m[2] / kT * 100}%;--mc:${m[3]}"></i>`).join('')}</div>
+      <div class="en-mg">${mac.map(([n, gr, kc, c]) => `<div style="--mc:${c}"><span>${n}</span><b class="mono">${gr}<small> g</small></b><em>${fmtK(kc)} kcal${kg ? ` · ${fmtN(Math.round(gr / kg * 10) / 10)} g/kg` : ''}</em></div>`).join('')}</div></div>
+    ${mode === 'body' ? '<span class="en-foot">Ver plano completo, check-in e como calculamos</span>' : ''}</section>`;
 }
 PAGES.plano = {title: () => 'Seu objetivo', view: () => (!ST.prefs.plan || UI.pw) ? planWizard() : planDash()};
 function pwInit(){
@@ -284,12 +311,7 @@ function planDash(){
   const g = OBJ[pl.goal]; const ck = planCheck(pl, res); const lw = lastWeight();
   const kP = res.p * 4, kF = res.f * 9, kC = res.c * 4, kT = kP + kF + kC || 1;
   let h = res.legacy ? `<button class="sched-hint" style="margin-top:14px" data-act="plan-edit">${I.target}<span><b>Novo cálculo disponível.</b> Agora o gasto considera seu trabalho, quanto você caminha e o tempo real de treino. Toque para revisar em 1 minuto.</span>${I.chev}</button>` : '';
-  h += `<section class="hero plan-hero" style="--pc:${pl.goal === 'cut' ? 'var(--c7)' : pl.goal === 'gain' ? 'var(--ember)' : 'var(--c5)'};margin-top:14px">${glow()}
-    <div class="hero-top"><span class="hero-lbl">Plano · ${g.t}</span><button class="hero-rt link" style="min-height:0;padding:0" data-act="plan-edit">Editar</button></div>
-    <div class="plan-k"><b class="mono">${fmtK(res.kcal)}</b><span>kcal por dia</span></div>
-    <p class="hero-focus">${res.calib ? 'Gasto real, pela sua experiência' : 'Gasto estimado'} <b class="mono">${fmtK(res.tdeeR)}</b>${res.delta ? ` · ${res.delta < 0 ? 'déficit' : 'superávit'} de <b class="mono">${fmtK(Math.abs(res.delta))}</b>` : ''}${pl.adj ? ` · ajuste dos check-ins ${sgn(pl.adj)}${fmtK(Math.abs(pl.adj))}` : ''}</p>
-    <div class="macro-bar" role="img" aria-label="Distribuição das calorias"><i style="--w:${kP / kT * 100}%;--mc:var(--c1)"></i><i style="--w:${kC / kT * 100}%;--mc:var(--c2)"></i><i style="--w:${kF / kT * 100}%;--mc:var(--c0)"></i></div>
-    <div class="hero-stats macros"><div style="--mc:var(--c1)"><b>${res.p}<small>g</small></b><span>proteína</span></div><div style="--mc:var(--c2)"><b>${res.c}<small>g</small></b><span>carboidratos</span></div><div style="--mc:var(--c0)"><b>${res.f}<small>g</small></b><span>gorduras</span></div></div></section>`;
+  h += `<div style="margin-top:14px">${energyPanel(pl, res, 'dash')}</div>`;
   res.warn.forEach(t => { h += `<div class="pw-warn" style="margin-top:12px">${t}</div>`; });
   // margem e calibração
   if (!res.calib) h += `<section class="card range"><div class="row between"><span class="eyebrow">Margem da estimativa</span><span class="mono small muted">±10%</span></div>

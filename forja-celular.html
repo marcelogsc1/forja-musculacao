@@ -888,6 +888,99 @@ details.how[open] summary svg{transform:rotate(180deg)}
 .pw-more.open .pw-more-t svg{transform:rotate(180deg)}
 .pw-more-b{display:flex;flex-direction:column;gap:10px;padding:0 16px 16px}
 
+/* ===== Assistente "Montar meu programa" em passos (v4.9) ===== */
+.bq{margin-top:10px}
+.bq-prog{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.bq-prog i{height:4px;border-radius:4px;background:var(--s3);transition:background .25s}
+.bq-prog i.done{background:color-mix(in srgb,var(--ember) 55%,var(--s3))}
+.bq-prog i.on{background:var(--ember)}
+.bq-q{margin:8px 0 20px;text-wrap:balance}
+.bq-days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.bq-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:88px;border-radius:20px;background:var(--s1);border:1px solid var(--line2);color:var(--ink);transition:border-color .15s,background .15s}
+.bq-day b{font-size:32px;font-weight:500;letter-spacing:-.04em;line-height:1}
+.bq-day span{font-size:12px;color:var(--muted)}
+.bq-day[aria-pressed="true"]{background:var(--ember);border-color:var(--ember);color:var(--ember-ink)}
+.bq-day[aria-pressed="true"] span{color:color-mix(in srgb,var(--ember-ink) 80%,transparent)}
+.bq-note{margin-top:14px}
+.bq-note b{display:block;margin-top:6px;font-size:18px;font-weight:600;letter-spacing:-.02em}
+.bq-note p{margin:6px 0 0;font-size:13.5px;color:var(--muted);line-height:1.45}
+.bq-foco .tick{width:24px;height:24px;flex:none;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line2);display:grid;place-items:center}
+.bq-foco .tick svg{width:13px;height:13px;stroke:var(--ember-ink);fill:none;stroke-width:3.4;opacity:0}
+.bq-foco[aria-pressed="true"] .tick{background:var(--ember);box-shadow:none}
+.bq-foco[aria-pressed="true"] .tick svg{opacity:1}
+.bq-res{margin-top:12px}
+.bq-ans{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.bq-ans .chip{min-height:34px;font-size:13px}
+.bq-w > summary{display:flex;align-items:center;gap:12px;padding:12px 14px;list-style:none;cursor:pointer;min-height:64px}
+.bq-w > summary::-webkit-details-marker{display:none}
+.bq-w > summary b{display:block;font-size:15.5px;font-weight:600}
+.bq-w > summary .sub{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.bq-w > summary > svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2.2;flex:none;transition:transform .2s;transform:rotate(90deg)}
+.bq-w[open] > summary > svg{transform:rotate(-90deg)}
+.bq-w > .list{border-radius:0;background:transparent;border:0;border-top:1px solid var(--line)}
+.bq-week > .bq-w + .bq-w{border-top:1px solid var(--line)}
+.bq-more{display:block;margin:4px auto 0;color:var(--muted);font-size:14px;text-decoration:underline;text-underline-offset:3px}
+
+/* ===== Configurações (v4.9) ===== */
+.set-btn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;color:var(--ink);background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:14px 16px;min-height:68px}
+.set-btn b{display:block;font-size:16px;font-weight:600;letter-spacing:-.015em}
+.set-btn .sub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.set-btn > svg,.s-row > svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2.2;flex:none}
+.s-ic{width:36px;height:36px;flex:none;border-radius:11px;display:grid;place-items:center;background:var(--s2);color:var(--ink2)}
+.s-ic svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.set-btn .s-ic{background:var(--ember-soft);color:var(--ember)}
+.s-group{margin-top:22px}
+.s-group > .eyebrow{margin:0 4px 10px}
+.s-row{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:10px 14px;background:transparent;border:0;color:var(--ink);text-align:left;text-decoration:none;cursor:pointer}
+.s-row + .s-row,.s-row + input + .s-row{border-top:1px solid var(--line)}
+.s-row b{display:block;font-size:15px;font-weight:550;letter-spacing:-.01em}
+.s-row .sub{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.35}
+.s-row em{font-style:normal;font-size:14px;color:var(--ink2);white-space:nowrap;flex:none}
+.s-row.danger b,.s-row.danger .s-ic{color:var(--bad,#E5484D)}
+.s-row.danger .s-ic{background:color-mix(in srgb,var(--bad,#E5484D) 12%,transparent)}
+div.s-row{cursor:default}
+.s-row.toggle{padding:10px 14px}
+.s-row .mp{width:76px;height:44px;border-radius:12px;padding:0 4px}
+.s-row .mp .hero-name,.s-row .mp .hero-row > .hero-name{font-size:18px}
+.s-row .mp .eq-tile{width:34px;height:34px;border-radius:9px}
+.s-row .mp .eq-tile svg{width:30px;height:30px}
+.s-row .mp .eq-badge,.s-row .mp .eq-badge svg{width:38px;height:38px}
+.mi-sp{display:inline-block;width:22px;flex:none}
+
+/* ===== Quadro de energia do plano (v4.9) ===== */
+.en-card{--ac:var(--ember);position:relative;display:block;background:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--ac) 14%,transparent),transparent 60%),var(--s1);border:1px solid var(--line);border-radius:26px;padding:20px;color:var(--ink)}
+.en-card.is-tap{cursor:pointer}
+.en-card > .row > svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2.2}
+.en-lead{margin:16px 0 0;font-size:14px;color:var(--ink2)}
+.en-k{display:flex;align-items:baseline;gap:8px;margin-top:2px;flex-wrap:wrap}
+.en-k b{font-size:clamp(48px,15vw,68px);font-weight:500;letter-spacing:-.06em;line-height:.95}
+.en-k span{font-size:14px;color:var(--muted)}
+.en-bar{position:relative;height:14px;margin-top:20px;border-radius:7px;background:var(--s2)}
+.en-bar i{position:absolute;top:0;bottom:0}
+.en-b{left:0;border-radius:7px 0 0 7px;background:color-mix(in srgb,var(--ink) 34%,transparent)}
+.en-t{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink) 18%,transparent) 0 4px,color-mix(in srgb,var(--ink) 9%,transparent) 4px 8px);border-radius:0 7px 7px 0}
+.en-m{width:3px;margin-left:-1.5px;top:-6px!important;bottom:-6px!important;border-radius:2px;background:var(--ac);box-shadow:0 0 0 3px var(--s1)}
+.en-rows{margin:16px 0 0;display:flex;flex-direction:column}
+.en-rows > div{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.en-rows dt{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600}
+.en-rows dd{margin:0;font-size:17px;font-weight:500;letter-spacing:-.02em;text-align:right}
+.en-rows dd small{font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:400;letter-spacing:0}
+.en-rows p{grid-column:1 / -1;margin:0 0 0 18px;font-size:12.5px;line-height:1.4;color:var(--muted)}
+.en-rows .dot{width:10px;height:10px;border-radius:3px;flex:none}
+.en-db{background:color-mix(in srgb,var(--ink) 34%,transparent)}
+.en-dt{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink) 30%,transparent) 0 2px,color-mix(in srgb,var(--ink) 12%,transparent) 2px 4px)}
+.en-dm{width:4px!important;height:14px!important;border-radius:2px!important;margin:0 3px;background:var(--ac)}
+.en-meta dd{color:var(--ac)}
+.en-mac{padding-top:14px;border-top:1px solid var(--line)}
+.en-mac .macro-bar{margin-top:0}
+.en-mg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.en-mg span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+.en-mg span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--mc);flex:none}
+.en-mg b{display:block;margin-top:4px;font-size:22px;font-weight:500;letter-spacing:-.03em}
+.en-mg b small{font-size:13px;color:var(--muted)}
+.en-mg em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}
+.en-foot{display:block;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ac);font-weight:600}
+
 </style>
 </head>
 <body>
@@ -2174,9 +2267,9 @@ const DAYS = {
   UB: {n: 'Superiores B', k: 'U', s: ['pressI', 'pullV2', 'rowH2', 'fly', 'lat', 'bi2', 'tri2', 'rear']},
   LA: {n: 'Inferiores A', k: 'L', s: ['squat', 'hinge', 'squat2', 'legcurl', 'calf', 'core', 'legext']},
   LB: {n: 'Inferiores B', k: 'L', s: ['dead', 'glute', 'lunge', 'legext', 'legcurl', 'calf', 'core2']},
-  PU: {n: 'Push (empurrar)', k: 'P', s: ['pressH', 'pressI', 'ohp', 'fly', 'lat', 'tri', 'tri2']},
-  PL: {n: 'Pull (puxar)', k: 'B', s: ['pullV', 'rowH', 'rowH2', 'rear', 'bi', 'bi2', 'shrug']},
-  LG: {n: 'Legs (pernas)', k: 'L', s: ['squat', 'hinge', 'squat2', 'legcurl', 'legext', 'calf', 'core']},
+  PU: {n: 'Push', k: 'P', s: ['pressH', 'pressI', 'ohp', 'fly', 'lat', 'tri', 'tri2']},
+  PL: {n: 'Pull', k: 'B', s: ['pullV', 'rowH', 'rowH2', 'rear', 'bi', 'bi2', 'shrug']},
+  LG: {n: 'Legs', k: 'L', s: ['squat', 'hinge', 'squat2', 'legcurl', 'legext', 'calf', 'core']},
   PU2: {n: 'Push B', k: 'P', s: ['pressI', 'ohp', 'pressH2', 'dip', 'lat', 'tri3', 'tri2']},
   PL2: {n: 'Pull B', k: 'B', s: ['rowH2', 'pullV2', 'rowH', 'rear', 'bi2', 'bi3', 'shrug']},
   LG2: {n: 'Legs B', k: 'L', s: ['dead', 'squat2', 'lunge', 'legcurl', 'glute', 'calf', 'core2']},
@@ -2305,11 +2398,11 @@ const HAND = [
     {nome: 'Upper B', cor: 2, items: [Y('supino-incl-barra', 4, 6, 8, 180), Y('serrote', 4, 6, 8, 120), Y('supino-reto-halter', 3, 10, 12, 120), Y('barra-supinada', 3, 10, 12, 90), Y('triceps-frances-cabo', 2, 12, 15, 60), Y('rosca-halter', 2, 12, 15, 60)]}]},
   {id: 'c-ppl-reddit', nome: 'PPL Iniciante Linear 6x', goal: ['hipertrofia', 'forca'], local: ['academia'], nivel: 'Iniciante', freq: 6, dur: 60, tag: ['PUSH', 'PULL', 'LEGS'], art: 'face-pull',
    desc: 'O PPL popularizado no Reddit (Metallicadpa). Último set do básico é AMRAP (o máximo de reps com boa técnica). Aumente a carga dos básicos a cada treino concluído.', workouts: [
-    {nome: 'Pull (Terra)', cor: 3, items: [Y('levantamento-terra', 1, 5, 5, 180, 'Série única AMRAP: faça o máximo com boa técnica.'), Y('puxada-aberta', 3, 8, 12, 90), Y('remada-baixa', 3, 8, 12, 90), Y('face-pull', 5, 15, 20, 60), Y('rosca-martelo', 4, 8, 12, 60), Y('rosca-halter', 4, 8, 12, 60)]},
-    {nome: 'Push (Supino)', cor: 0, items: [Y('supino-reto-barra', 5, 5, 5, 180, '4x5 e a última série AMRAP.'), Y('desenv-barra', 3, 8, 12, 120), Y('supino-incl-halter', 3, 8, 12, 90), Y('triceps-corda', 3, 8, 12, 60), Y('triceps-frances-halter', 3, 8, 12, 60), Y('elev-lateral-halter', 6, 15, 20, 45)]},
-    {nome: 'Legs', cor: 1, items: [Y('agachamento', 3, 5, 5, 180, '2x5 e a última série AMRAP.'), Y('stiff-barra', 3, 8, 12, 120), Y('leg-press', 3, 8, 12, 120), Y('cadeira-flexora', 3, 8, 12, 90), Y('pant-pe', 5, 8, 12, 60)]},
-    {nome: 'Pull (Remada)', cor: 4, items: [Y('remada-curvada', 5, 5, 5, 150, '4x5 e a última série AMRAP.'), Y('puxada-aberta', 3, 8, 12, 90), Y('remada-baixa', 3, 8, 12, 90), Y('face-pull', 5, 15, 20, 60), Y('rosca-martelo', 4, 8, 12, 60), Y('rosca-halter', 4, 8, 12, 60)]},
-    {nome: 'Push (Desenvolvimento)', cor: 2, items: [Y('desenv-barra', 5, 5, 5, 150, '4x5 e a última série AMRAP.'), Y('supino-reto-barra', 3, 8, 12, 120), Y('supino-incl-halter', 3, 8, 12, 90), Y('triceps-corda', 3, 8, 12, 60), Y('triceps-frances-halter', 3, 8, 12, 60), Y('elev-lateral-halter', 6, 15, 20, 45)]},
+    {nome: 'Pull A', cor: 3, items: [Y('levantamento-terra', 1, 5, 5, 180, 'Série única AMRAP: faça o máximo com boa técnica.'), Y('puxada-aberta', 3, 8, 12, 90), Y('remada-baixa', 3, 8, 12, 90), Y('face-pull', 5, 15, 20, 60), Y('rosca-martelo', 4, 8, 12, 60), Y('rosca-halter', 4, 8, 12, 60)]},
+    {nome: 'Push A', cor: 0, items: [Y('supino-reto-barra', 5, 5, 5, 180, '4x5 e a última série AMRAP.'), Y('desenv-barra', 3, 8, 12, 120), Y('supino-incl-halter', 3, 8, 12, 90), Y('triceps-corda', 3, 8, 12, 60), Y('triceps-frances-halter', 3, 8, 12, 60), Y('elev-lateral-halter', 6, 15, 20, 45)]},
+    {nome: 'Legs A', cor: 1, items: [Y('agachamento', 3, 5, 5, 180, '2x5 e a última série AMRAP.'), Y('stiff-barra', 3, 8, 12, 120), Y('leg-press', 3, 8, 12, 120), Y('cadeira-flexora', 3, 8, 12, 90), Y('pant-pe', 5, 8, 12, 60)]},
+    {nome: 'Pull B', cor: 4, items: [Y('remada-curvada', 5, 5, 5, 150, '4x5 e a última série AMRAP.'), Y('puxada-aberta', 3, 8, 12, 90), Y('remada-baixa', 3, 8, 12, 90), Y('face-pull', 5, 15, 20, 60), Y('rosca-martelo', 4, 8, 12, 60), Y('rosca-halter', 4, 8, 12, 60)]},
+    {nome: 'Push B', cor: 2, items: [Y('desenv-barra', 5, 5, 5, 150, '4x5 e a última série AMRAP.'), Y('supino-reto-barra', 3, 8, 12, 120), Y('supino-incl-halter', 3, 8, 12, 90), Y('triceps-corda', 3, 8, 12, 60), Y('triceps-frances-halter', 3, 8, 12, 60), Y('elev-lateral-halter', 6, 15, 20, 45)]},
     {nome: 'Legs B', cor: 5, items: [Y('agachamento', 3, 5, 5, 180, '2x5 e a última série AMRAP.'), Y('stiff-barra', 3, 8, 12, 120), Y('leg-press', 3, 8, 12, 120), Y('cadeira-flexora', 3, 8, 12, 90), Y('pant-pe', 5, 8, 12, 60)]}]},
   {id: 'c-gzclp', nome: 'GZCLP Força Linear', goal: ['forca'], local: ['academia'], nivel: 'Iniciante', freq: 3, dur: 60, tag: ['GZCLP', 'FORÇA'], art: 'agachamento',
    desc: 'Quatro treinos alternados em 3 dias por semana. T1: 5x3 (último AMRAP), T2: 3x10, T3: 3x15 (último AMRAP). Quando falhar, siga para o próximo estágio (6x2, 10x1). Conforme o wiki do r/Fitness.', workouts: [
@@ -3011,7 +3104,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.8.0';
+const APP_VERSION = '4.9.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -3019,7 +3112,9 @@ const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '',
 const PAGES = {};
 /* Conta nova começa vazia: nenhuma rotina pré-carregada (o usuário escolhe um programa ou monta o seu). */
 function freshState(){ return { v: 4, routines: [], active: null, custom: {}, media: {}, bw: [], prefs: {...DEFAULT_PREFS}, profile: {createdAt: new Date().toISOString()} }; }
-function fixState(){ ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
+/* nomes antigos gerados pelo app, com tradução entre parênteses; nomes escritos pelo usuário não são tocados */
+const OLD_WNAMES = {'Push (empurrar)': 'Push', 'Pull (puxar)': 'Pull', 'Legs (pernas)': 'Legs', 'Pull (Terra)': 'Pull A', 'Push (Supino)': 'Push A', 'Pull (Remada)': 'Pull B', 'Push (Desenvolvimento)': 'Push B'};
+function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
 function getEx(id){ return CAT[id] || ST.custom[id] || {n: 'Exercício removido', m: 'peito', p: 'custom', e: 'outros', pri: [], sec: [], d: []}; }
 const exName = id => getEx(id).n;
 const routineById = id => ST.routines.find(r => r.id === id);
@@ -3031,6 +3126,7 @@ function normSession(s){
   if (s.routine === undefined) s.routine = 'r-hip5';
   if (!s.workout && s.day) s.workout = s.day;
   if (!s.wname) s.wname = s.dayName || 'Treino';
+  if (OLD_WNAMES[s.wname]) s.wname = OLD_WNAMES[s.wname];
   if (s.cor == null){ const w = findWorkout(s.routine, s.workout); s.cor = w ? w.cor : 0; }
   s.items = s.items || [];
   s.items.forEach(e => { if (!e.sets) e.sets = []; e.sets.forEach(x => { if (x.w && !x.t) x.t = 'w'; if (!x.t) x.t = 'n'; }); });
@@ -3775,9 +3871,8 @@ function vProfile(){
   const acct = Store.mode === 'verify' ? `Conta <b>${esc(Auth.user?.email || '')}</b> criada. Falta confirmar o e-mail: abra o link que enviamos (confira também o spam). Até lá, tudo fica salvo neste aparelho e sobe para a conta assim que você confirmar.` : Store.mode === 'api' ? `Conectado como <b>${esc(Auth.user?.email || Auth.user?.name || 'usuário')}</b>. Seus treinos ficam salvos na sua conta e sincronizam entre aparelhos.` : Store.mode === 'cloud' ? 'Seus dados estão salvos na sua conta do Claude e sincronizam entre aparelhos.' : Store.authExpired ? 'Sua sessão expirou. Entre de novo para voltar a sincronizar.' : 'Seus dados estão salvos só neste aparelho. Crie uma conta para guardar na nuvem e usar em outros aparelhos.';
   const field = (id, label, val, attrs = '') => `<label class="flabel"><span class="tiny muted">${label}</span><input id="pf-${id}" class="field" value="${esc(val ?? '')}" data-act="pf" data-k="${id}" ${attrs}></label>`;
   const seg = (k, opts) => `<div class="seg wrapseg">${opts.map(([v, l]) => `<button data-act="pf-set" data-k="${k}" data-v="${v}" aria-pressed="${String(pf[k] || '') === String(v)}">${l}</button>`).join('')}</div>`;
-  const pseg = (k, opts, fmt = x => x) => `<div class="seg">${opts.map(v => `<button data-act="pref" data-k="${k}" data-v="${v}" aria-pressed="${String(P[k]) === String(v)}">${fmt(v)}</button>`).join('')}</div>`;
-  const tog = (k, label, sub) => `<button class="toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="grow"><b>${label}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span><i></i></button>`;
   return `<section class="profile-hero"><div class="avatar xl">${initials() || I.user}</div><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
+  <section><button class="set-btn" data-act="open-settings"><span class="s-ic">${I.gear}</span><span class="grow"><b>Configurações</b><span class="sub">Treino, aparência, animações e dados</span></span>${I.chev}</button></section>
   <section>${planSummaryRow('profile')}</section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
         <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'verify' ? '<button class="btn primary block" data-act="check-verified">Já confirmei meu e-mail</button><button class="btn ghost block" data-act="resend-verify">Reenviar e-mail de confirmação</button><button class="link muted" data-act="logout">Sair desta conta</button>' : Store.mode === 'api' ? '<button class="btn ghost block" data-act="logout">Sair da conta</button>' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
@@ -3790,22 +3885,52 @@ function vProfile(){
     <div class="small muted">Peso atual: ${lastBw ? `<b style="color:var(--ink)">${fmtN(lastBw.kg)} kg</b> em ${fmtD(lastBw.date)}` : 'sem registro'} · <button class="link" style="min-height:0;padding:0" data-act="go-body">Registrar medidas</button></div>
     <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Saúde', 'Saúde']])}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Experiência</div>${seg('level', [['Iniciante', 'Iniciante'], ['Intermediário', 'Intermediário'], ['Avançado', 'Avançado']])}</div></section>
-  <section class="card stack"><div class="eyebrow">Treino</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Meta de treinos por semana</div>${pseg('goal', [0, 2, 3, 4, 5, 6], v => v ? v : 'Auto')}</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Descanso padrão (exercícios novos e treino livre)</div>${pseg('rest', [60, 90, 120, 180], v => fmtRest(v))}</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Botões + e − do teclado de carga</div>${pseg('inc', [1, 2, 2.5, 5], v => fmtN(v) + ' kg')}</div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Peso da barra (calculadora de anilhas)</div>${pseg('bar', [10, 15, 20], v => v + ' kg')}</div>
-    ${tog('sound', 'Som no fim do descanso', 'Toca três bipes curtos')}${tog('awake', 'Manter a tela ligada no treino', 'Evita que o celular apague entre as séries')}</section>
-  <section class="card stack"><div class="eyebrow">Aparência</div>${pseg('theme', ['dark', 'light', 'system'], v => ({dark: 'Escuro', light: 'Claro', system: 'Sistema'})[v])}
-    <button class="p-row" data-act="motion-open">${motionPreview(motionMode())}<span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${I.chev}</button></section>
-  <section class="card stack"><div class="eyebrow">Seus dados</div>
-    ${Store.adapter?.downloads || !Platform.isArtifact ? '<button class="btn ghost block" data-act="export">Exportar backup (JSON)</button>' : ''}
-    <label class="btn ghost block" for="import-in" style="cursor:pointer">Importar backup</label><input id="import-in" type="file" accept="application/json,.json" hidden data-act="import">
-    <button class="btn danger block" data-act="ask-wipe">Apagar todos os dados ${Store.mode === 'api' ? 'deste aparelho' : ''}</button>
-    ${Store.mode === 'api' ? '<button class="btn danger block" data-act="ask-delete-account">Excluir minha conta</button>' : ''}
-    ${!Platform.isArtifact ? '<a class="link" style="text-align:center" href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>' : ''}</section>
-  <p class="tiny muted" style="text-align:center;margin-top:18px">Forja ${APP_VERSION} · ilustração anatômica: react-native-body-highlighter (MIT) · fotos: Free Exercise DB</p>`;
+  <p class="tiny muted" style="text-align:center;margin-top:18px">Forja ${APP_VERSION}</p>`;
 }
+/* ================= configurações ================= */
+const SI = {
+  sun: svg('M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'),
+  bell: svg('M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9zM10 20a2 2 0 0 0 4 0'),
+  phone: svg('M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2'),
+  plate: svg('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'),
+  bar: svg('M2 12h20M5 8v8M8 6v12M16 6v12M19 8v8'),
+  img: svg('M4 4h16v16H4zM4 16l5-5 4 4 3-3 4 4M15 9a1 1 0 1 0 0-.01'),
+  spark: svg('M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z'),
+  dl: svg('M12 3v12M7 10l5 5 5-5M4 21h16'),
+  ul: svg('M12 21V9M7 14l5-5 5 5M4 3h16'),
+  out: svg('M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l-5-5 5-5M5 12h11'),
+  doc: svg('M6 2h9l5 5v15H6zM14 2v6h6M9 13h8M9 17h6'),
+};
+const PREF_OPTS = {
+  goal: {t: 'Meta semanal', o: [0, 2, 3, 4, 5, 6], f: v => v ? `${v} treinos` : 'Automática', s: 'Treinos por semana. Automática segue a agenda'},
+  rest: {t: 'Descanso padrão', o: [60, 90, 120, 180], f: v => fmtRest(v), s: 'Para exercícios novos e treino livre'},
+  inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
+  bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
+  theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
+  pics: {t: 'Imagens dos exercícios', o: ['fig', 'foto'], f: v => ({fig: 'Ilustração', foto: 'Foto real'})[v] || 'Ilustração'},
+};
+function vSettings(){
+  const P = ST.prefs;
+  const row = (k, ic) => { const d = PREF_OPTS[k]; return `<button class="s-row" data-act="set-pick" data-k="${k}"><span class="s-ic">${ic}</span><span class="grow"><b>${d.t}</b>${d.s ? `<span class="sub">${d.s}</span>` : ''}</span><em>${esc(d.f(P[k]))}</em>${I.chev}</button>`; };
+  const tg = (k, ic, t, sub) => `<button class="s-row toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b><span class="sub">${sub}</span></span><i></i></button>`;
+  const act = (a, ic, t, sub = '', cls = '', extra = '') => `<button class="s-row ${cls}" data-act="${a}" ${extra}><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span>${cls ? '' : I.chev}</button>`;
+  const picsOk = !window.FORJA_FIG && !window.FORJA_NOPHOTO;
+  return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}</div></section>
+  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}
+    <button class="s-row" data-act="motion-open"><span class="s-ic">${SI.spark}</span><span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${motionPreview(motionMode())}${I.chev}</button>
+    ${picsOk ? row('pics', SI.img) : ''}</div></section>
+  <section class="s-group"><div class="eyebrow">Objetivo e corpo</div><div class="list">${act('plan-open', I.flame, 'Assistente de objetivo', ST.prefs.plan ? 'Calorias, proteína e ritmo do seu plano' : 'Calcule calorias e proteína para o seu objetivo')}${act('go-body', I.note, 'Peso e medidas', 'Registros do corpo e gráficos')}</div></section>
+  <section class="s-group"><div class="eyebrow">Seus dados</div><div class="list">
+    ${Store.adapter?.downloads || !Platform.isArtifact ? act('export', SI.dl, 'Exportar backup', 'Arquivo JSON com treinos, rotinas e medidas') : ''}
+    <label class="s-row" for="import-in"><span class="s-ic">${SI.ul}</span><span class="grow"><b>Importar backup</b><span class="sub">Restaura um arquivo exportado antes</span></span>${I.chev}</label><input id="import-in" type="file" accept="application/json,.json" hidden data-act="import">
+    ${Store.mode === 'api' ? act('logout', SI.out, 'Sair da conta', Auth.user?.email ? esc(Auth.user.email) : '') : ''}
+    ${act('ask-wipe', I.trash, `Apagar todos os dados${Store.mode === 'api' ? ' deste aparelho' : ''}`, '', 'danger')}
+    ${Store.mode === 'api' ? act('ask-delete-account', I.trash, 'Excluir minha conta', 'Apaga a conta e tudo que está na nuvem', 'danger') : ''}</div></section>
+  <section class="s-group"><div class="eyebrow">Sobre</div><div class="list">
+    ${!Platform.isArtifact ? `<a class="s-row" href="privacidade.html" target="_blank" rel="noopener"><span class="s-ic">${SI.doc}</span><span class="grow"><b>Política de privacidade</b></span>${I.chev}</a>` : ''}
+    <div class="s-row"><span class="s-ic">${I.info}</span><span class="grow"><b>Versão</b><span class="sub">Ilustração anatômica: react-native-body-highlighter (MIT) · fotos: Free Exercise DB</span></span><em>${APP_VERSION}</em></div></div></section>`;
+}
+PAGES.settings = {title: () => 'Configurações', view: () => vSettings()};
 /* ================= tela de entrada ================= */
 function vAuth(p){
   const st = UI.auth || (UI.auth = {mode: 'login', show: false}); const m = st.mode;
@@ -3879,6 +4004,9 @@ A['menu-pick'] = el => { const it = UI.sheet.items[+el.dataset.i]; closeSheet();
 A.profile = () => { push({type: 'profile'}); if (Auth.kind === 'firebase' && Store.mode === 'api') Auth.reloadUser().then(() => { if (curPage()?.type === 'profile' && canRerender()) render(); }); };
 A.pref = el => { const k = el.dataset.k; let v = el.dataset.v; if (k !== 'theme') v = +v; ST.prefs[k] = v; saveState(); applyTheme(); render(); };
 A['pref-tog'] = el => { const k = el.dataset.k; ST.prefs[k] = !ST.prefs[k]; saveState(); render(); if (k === 'sound' && ST.prefs.sound){ Platform.unlockAudio(); Platform.alarm(); } };
+A['open-settings'] = () => push({type: 'settings'});
+A['set-pick'] = el => { const k = el.dataset.k; const d = PREF_OPTS[k];
+  menuSheet('Configurações', d.t, d.o.map(v => ({label: d.f(v), icon: String(ST.prefs[k]) === String(v) ? I.check : '<span class="mi-sp"></span>', run: () => { ST.prefs[k] = v; saveState(); applyTheme(); render(); }}))); };
 A['pf-set'] = el => { const k = el.dataset.k; ST.profile[k] = ST.profile[k] === el.dataset.v ? '' : el.dataset.v; saveState(); render(); };
 A['go-body'] = () => { UI.progTab = 'corpo'; goTab('progresso'); };
 A.login = () => openLogin('login');
@@ -4149,7 +4277,7 @@ function vExplore(){
   const feat = ['t-hip5', 'g-glute4', 'c-phul', 'g-casa3', 'c-avulso-hiit'].map(tplById).filter(Boolean);
   let h = `<section class="stack" style="gap:12px;margin-top:16px"><div class="search">${svg('M11 17.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.2-4.2')}<input id="x-q" class="field" type="search" placeholder="Buscar programas e treinos" value="${esc(UI.xq || '')}" data-act="xq" autocomplete="off"></div>${xChips()}</section>`;
   if (xActive()) return h + `<section id="x-results" style="margin-top:14px">${xResults()}</section>`;
-  h += `<section><button class="builder-cta" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Objetivo, dias, local, tempo e músculo prioritário. O Forja monta os treinos.</span></span><span class="bc-chips"><i>Objetivo</i><i class="hot">Dias</i><i>Local</i><i>Foco</i></span></button></section>
+  h += `<section><button class="builder-cta" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Cinco perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>5 perguntas</i><i class="hot">1 minuto</i></span></button></section>
   <section><div class="sec-head"><span class="eyebrow">Em destaque</span><span class="tiny muted">${TEMPLATES.length} programas e treinos</span></div><div class="hscroll">${feat.map(pslide).join('')}</div></section>
   <section><div class="sec-head"><span class="eyebrow">Onde você treina</span></div><div class="ltiles">${Object.entries(LOCAIS).map(([k, l]) => `<button class="ltile" data-act="open-xlist" data-f='{"local":"${k}"}' data-title="${esc(l.n)}">${coverArt({goal: ['hipertrofia'], art: l.art, nome: l.n}, '', {eb: '', meta: `${tplFilter({local: k}).length} opções`, chips: []})}</button>`).join('')}</div></section>
   <section><div class="sec-head"><span class="eyebrow">Foco muscular</span></div><div class="list">${Object.entries(FOCOS).map(([k, fo]) => `<button class="li frow" data-act="open-xlist" data-f='{"foco":"${k}"}' data-title="${esc(fo.n)}"><span class="fthumb">${bodyThumb(fo.reg, FOCO_BACK[k])}</span><div class="grow"><b>${esc(fo.n)}</b><span class="sub">${tplFilter({foco: k}).length} programas e treinos</span></div>${I.chev}</button>`).join('')}</div></section>`;
@@ -4196,24 +4324,67 @@ function builderTpl(){
   return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.foco ? ', prioridade para ' + FOCOS[b.foco].n.toLowerCase() : ''}. Montado pelo assistente do Forja.`,
     goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.foco ? [b.foco] : [], tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: genProgram(o)};
 }
-PAGES.builder = {title: () => 'Montar meu programa', view: () => {
-  const b = UI.bld || (UI.bld = {...BLD0}); const t = builderTpl();
-  return `<section style="margin-top:8px"><h1 class="display h1">Sob medida</h1><p class="ink2" style="margin:8px 0 0">Escolha as opções e veja os treinos mudarem abaixo. Depois é só salvar e editar o que quiser.</p></section>
-  <section class="card stack" style="gap:16px">
-    ${optGroup('Objetivo', 'goal', Object.entries(GOALS), b.goal, 'bld')}
-    ${optGroup('Dias por semana', 'dias', [2, 3, 4, 5, 6].map(n => [n, n + ' dias']), b.dias, 'bld')}
-    ${b.dias === 3 && b.goal !== 'condicionamento' && b.foco !== 'gluteos' ? optGroup('Divisão', 'div', [['auto', 'Corpo inteiro'], ['ppl', 'Push Pull Legs']], b.div === 'ppl' ? 'ppl' : 'auto', 'bld') : ''}
-    ${b.dias === 4 && b.goal !== 'condicionamento' && b.foco !== 'gluteos' ? optGroup('Divisão', 'div', [['auto', 'Superiores e inferiores'], ['fb', 'Corpo inteiro']], b.div === 'fb' ? 'fb' : 'auto', 'bld') : ''}
-    ${optGroup('Onde você treina', 'local', Object.entries(LOCAIS).filter(([k]) => k !== 'cardio').map(([k, l]) => [k, l.n]), b.local, 'bld')}
-    ${optGroup('Nível', 'nivel', NIVEIS.map(n => [n, n]), b.nivel, 'bld')}
-    ${optGroup('Tempo por treino', 'dur', [[30, '30 min'], [45, '45 min'], [60, '60 min'], [75, '75 min']], b.dur, 'bld')}
-    ${optGroup('Músculo prioritário (opcional)', 'foco', [['', 'Nenhum'], ...Object.entries(FOCOS).map(([k, f]) => [k, f.n])], b.foco, 'bld')}
-  </section>
-  <section><button class="btn primary block" data-act="add-template" data-tid="_bld">${I.plus}Salvar programa</button></section>
-  ${t.workouts.map((w, i) => `<section><div class="row" style="margin-bottom:10px"><span class="plate" style="--pc:${col(w.cor)}">${i + 1}</span><div class="grow"><h2 class="display h3">${esc(w.nome)}</h2><span class="tiny muted">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></div></div><div class="list">${w.items.map(exRow).join('')}</div></section>`).join('')}
+/* Assistente em passos: uma pergunta por tela, cada passo é uma página da pilha
+   (o voltar do celular e o do topo voltam uma pergunta). No fim, o programa recomendado
+   e, discretamente, outras opções compatíveis com as respostas. */
+const BSTEPS = ['goal', 'dias', 'local', 'nivel', 'foco'];
+const GOAL_SUB = {hipertrofia: 'Aumentar a massa muscular, com volume e repetições moderadas.', forca: 'Levantar mais peso nos básicos. Poucas repetições e descansos longos.', definicao: 'Perder gordura mantendo os músculos. Bi-sets e cardio no fim.', condicionamento: 'Fôlego e gasto calórico. Circuitos quase sem descanso.', saude: 'Começar ou voltar a treinar com segurança e constância.'};
+const NIVEL_SUB = {Iniciante: 'Começando agora ou voltando depois de uma pausa longa.', 'Intermediário': 'Treina com regularidade e já conhece os exercícios básicos.', 'Avançado': 'Treina há anos e precisa de mais volume para evoluir.'};
+function splitLabel(keys){ const ks = keys.join(); return /CI/.test(ks) ? 'Circuitos' : /GA/.test(ks) ? 'Glúteos em foco' : /^PU,PL,LG,PU2/.test(ks) ? 'Push Pull Legs 2x' : /^PU,PL,LG$/.test(ks) ? 'Push Pull Legs' : /^UA,LA,PU/.test(ks) ? 'Upper Lower + Push Pull Legs' : /^UA,LA/.test(ks) ? 'Superiores e inferiores' : 'Corpo inteiro'; }
+function splitWhy(keys, dias){ const l = splitLabel(keys);
+  return l === 'Push Pull Legs' ? 'Cada treino foca um movimento: empurrar, puxar e pernas. Cada músculo é treinado 1 vez por semana, com mais volume por treino.'
+    : l === 'Corpo inteiro' ? `O corpo todo em cada treino, então cada músculo é trabalhado ${dias >= 3 ? 'de 2 a 3' : '2'} vezes por semana com poucos dias de academia.`
+    : l === 'Superiores e inferiores' ? 'Alterna parte de cima e pernas. Cada músculo é treinado 2 vezes por semana, com treinos de duração moderada.'
+    : l === 'Upper Lower + Push Pull Legs' ? 'Dois dias de superiores e inferiores e três de empurrar, puxar e pernas: cada músculo cerca de 2 vezes por semana.'
+    : l === 'Push Pull Legs 2x' ? 'Empurrar, puxar e pernas duas vezes na semana. Cada músculo 2 vezes, com bastante volume.'
+    : l === 'Glúteos em foco' ? 'Dias de inferiores com glúteos em primeiro lugar, intercalados com treinos de superiores.'
+    : 'Exercícios em sequência com descanso só no fim da volta, para manter o coração acelerado.'; }
+const bldDiasSub = (b, n) => b.goal === 'condicionamento' ? `${n} circuitos` : splitLabel(bldKeys({...b, dias: n, div: 'auto'}));
+function bldAlts(b){
+  // outras divisões possíveis para os mesmos dias
+  const divs = []; const cur = bldKeys(b).join();
+  const tries = b.dias === 3 ? ['auto', 'ppl'] : b.dias === 4 ? ['auto', 'fb'] : [];
+  if (b.goal !== 'condicionamento') tries.forEach(d => { const k = bldKeys({...b, div: d, foco: b.foco === 'gluteos' ? '' : b.foco}); if (k.join() !== cur) divs.push({div: d, nofoco: b.foco === 'gluteos', label: splitLabel(k)}); });
+  // programas da biblioteca compatíveis com as respostas
+  const sc = t => (t.freq === b.dias ? 4 : Math.abs(t.freq - b.dias) === 1 ? 1 : -9) + (t.nivel === b.nivel ? 2 : 0) + (b.foco && (t.foco || []).includes(b.foco) ? 3 : 0) + (t.dur <= b.dur ? 1 : 0);
+  const lib = tplFilter({goal: b.goal, local: b.local, tipo: 'programa'}).map(t => [sc(t), t]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0]).slice(0, 4).map(x => x[1]);
+  return {divs, lib};
+}
+function bldProgress(i){ return `<div class="bq-prog" aria-label="Passo ${i + 1} de ${BSTEPS.length}">${BSTEPS.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'on' : ''}"></i>`).join('')}</div><div class="eyebrow" style="margin-top:14px">Passo ${i + 1} de ${BSTEPS.length}</div>`; }
+const bqChoice = (k, v, cur, title, sub, lead = '') => `<button class="choice" data-act="bld-pick" data-k="${k}" data-v="${esc(v)}" aria-pressed="${String(cur) === String(v)}">${lead}<span class="grow"><b>${title}</b>${sub ? `<span>${sub}</span>` : ''}</span><i class="tick">${I.check}</i></button>`;
+function vBuilderStep(b, step){
+  const i = BSTEPS.indexOf(step); let q = '', body = '';
+  if (step === 'goal'){ q = 'Qual é o seu objetivo agora?'; body = `<div class="stack" style="gap:10px">${Object.entries(GOALS).map(([k, n]) => bqChoice('goal', k, b.goal, esc(n), GOAL_SUB[k])).join('')}</div>`; }
+  else if (step === 'dias'){ q = 'Quantos dias por semana você consegue treinar?'; body = `<div class="bq-days">${[2, 3, 4, 5, 6].map(n => `<button class="bq-day" data-act="bld-set" data-k="dias" data-v="${n}" aria-pressed="${b.dias === n}"><b class="mono">${n}</b><span>dias</span></button>`).join('')}</div>
+    <div class="card bq-note"><div class="eyebrow">Com ${b.dias} dias</div><b>${bldDiasSub(b, b.dias)}</b><p>Prefira o número que você mantém nas semanas corridas. Constância rende mais que um plano ambicioso abandonado.</p></div>
+    <button class="btn primary block" style="margin-top:18px" data-act="bld-next" data-step="dias">Continuar</button>`; }
+  else if (step === 'local'){ q = 'Onde você vai treinar?'; body = `<div class="stack" style="gap:10px">${Object.entries(LOCAIS).filter(([k]) => k !== 'cardio').map(([k, l]) => bqChoice('local', k, b.local, esc(l.n), l.d || 'Máquinas, polias, barras e halteres')).join('')}</div>`; }
+  else if (step === 'nivel'){ q = 'Como está a sua experiência?'; body = `<div class="stack" style="gap:10px">${NIVEIS.map(n => bqChoice('nivel', n, b.nivel, n, NIVEL_SUB[n])).join('')}</div>
+    <div class="og" style="margin-top:22px"><span class="eyebrow">Tempo por treino</span><div class="seg">${[30, 45, 60, 75].map(m => `<button data-act="bld-set" data-k="dur" data-v="${m}" aria-pressed="${b.dur === m}">${m} min</button>`).join('')}</div></div>
+    <button class="btn primary block" style="margin-top:22px" data-act="bld-next" data-step="nivel">Continuar</button>`; }
+  else if (step === 'foco'){ q = 'Quer dar prioridade a algum músculo?'; body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. O programa ganha volume extra para ele, sem deixar o resto de lado.</p><div class="list">${[['', 'Não, quero equilíbrio', 'Todos os grupos com o mesmo peso']].concat(Object.entries(FOCOS).map(([k, f]) => [k, f.n, ''])).map(([k, n, sub]) => `<button class="li frow bq-foco" data-act="bld-pick" data-k="foco" data-v="${k}" aria-pressed="${(b.foco || '') === k}"><span class="fthumb">${k ? bodyThumb(FOCOS[k].reg, FOCO_BACK[k]) : bodyThumb([], 0)}</span><div class="grow"><b>${esc(n)}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</div><i class="tick">${I.check}</i></button>`).join('')}</div>`; }
+  return `<section class="bq">${bldProgress(i)}<h1 class="display h2 bq-q">${q}</h1>${body}</section>`;
+}
+function vBuilderResult(b){
+  const t = builderTpl(); const keys = bldKeys(b); const al = UI.bldAlt ? bldAlts(b) : null;
+  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.foco ? FOCOS[b.foco].n : 'Sem prioridade']];
+  return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
+    <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
+    <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
+  <section><div class="list bq-week">${t.workouts.map((w, i) => `<details class="bq-w"><summary><span class="plate" style="--pc:${col(w.cor)}">${i + 1}</span><span class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></span>${I.chev}</summary><div class="list">${w.items.map(exRow).join('')}</div></details>`).join('')}</div>
+    <p class="tiny muted" style="margin:10px 4px 0">Toque em um treino para ver os exercícios. Depois de salvar, você pode trocar qualquer um.</p></section>
+  <section class="stack" style="gap:10px"><button class="btn primary block" data-act="add-template" data-tid="_bld">${I.plus}Salvar programa</button>
+    ${al ? '' : '<button class="link bq-more" data-act="bld-alt">Ver outras opções</button>'}</section>
+  ${al ? `<section><div class="sec-head"><span class="eyebrow">Outras opções para você</span><button class="link" data-act="bld-alt">Ocultar</button></div>
+    ${al.divs.length ? `<div class="stack" style="gap:10px;margin-bottom:12px">${al.divs.map(d => `<button class="choice" data-act="bld-div" data-v="${d.div}" data-nofoco="${d.nofoco ? 1 : ''}"><span class="grow"><b>${esc(d.label)}</b><span>Mesmos ${b.dias} dias, outra divisão${d.nofoco ? ', sem o foco em glúteos' : ''}. ${splitWhy(bldKeys({...b, div: d.div, foco: d.nofoco ? '' : b.foco}), b.dias)}</span></span>${I.chev}</button>`).join('')}</div>` : ''}
+    ${al.lib.length ? `<div class="stack">${al.lib.map(pcard).join('')}</div>` : (al.divs.length ? '' : '<div class="empty"><b>Sem outras opções</b>Mude uma das respostas acima para ver mais programas.</div>')}</section>` : ''}
   <p class="tiny muted" style="margin:16px 4px 0">O assistente segue as recomendações usadas no seu plano: 10 a 20 séries semanais por músculo, cada um treinado cerca de 2x por semana, e escolhe o melhor exercício disponível para o seu equipamento.</p>`;
+}
+PAGES.builder = {title: () => 'Montar meu programa', view: p => {
+  const b = UI.bld || (UI.bld = {...BLD0, nivel: NIVEIS.includes(ST.profile.level) ? ST.profile.level : BLD0.nivel});
+  return p.step && p.step !== 'res' ? vBuilderStep(b, p.step) : p.step === 'res' ? vBuilderResult(b) : vBuilderStep(b, 'goal');
 }};
-
+const bldNext = step => { const i = BSTEPS.indexOf(step); push({type: 'builder', step: i < BSTEPS.length - 1 ? BSTEPS[i + 1] : 'res'}); };
 // ---------- ações ----------
 A.rtab = el => { UI.rtab = el.dataset.t; render(); };
 A['xf-open'] = el => { const k = el.dataset.k, d = XF_KEYS[k];
@@ -4221,9 +4392,16 @@ A['xf-open'] = el => { const k = el.dataset.k, d = XF_KEYS[k];
 A['xf-set'] = el => { UI.xf[el.dataset.k] = el.dataset.v || ''; closeSheet(); render(); };
 A['xf-clear'] = () => { UI.xf = {}; UI.xq = ''; render(); };
 A['open-xlist'] = el => { let f = {}; try { f = JSON.parse(el.dataset.f); } catch (e) {} push({type: 'xlist', f, title: el.dataset.title}); };
-A['open-builder'] = () => push({type: 'builder'});
+A['open-builder'] = () => { UI.bld = null; UI.bldAlt = false; push({type: 'builder', step: 'goal'}); };
 A['tpl-opt'] = el => { const tid = el.dataset.tid, k = el.dataset.k; const o = UI.tplOpt[tid] = UI.tplOpt[tid] || {}; o[k] = k === 'dur' ? +el.dataset.v : el.dataset.v; render(); };
 A.bld = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; render(); };
+A['bld-set'] = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; render(); Platform.haptic('light'); };
+/* escolher avança sozinho depois de um instante, para a marcação aparecer */
+A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
+A['bld-next'] = el => bldNext(el.dataset.step);
+A['bld-go'] = el => { const i = UI.stack.findIndex(p => p.type === 'builder' && p.step === el.dataset.step); if (i >= 0){ UI.stack = UI.stack.slice(0, i + 1); render(); window.scrollTo({top: 0}); } };
+A['bld-alt'] = () => { UI.bldAlt = !UI.bldAlt; render(); if (UI.bldAlt) setTimeout(() => $('.bq-more, .bq-res ~ section .sec-head')?.scrollIntoView({behavior: 'smooth', block: 'start'}), 30); };
+A['bld-div'] = el => { UI.bld.div = el.dataset.v; if (el.dataset.nofoco) UI.bld.foco = ''; UI.bldAlt = false; render(); window.scrollTo({top: 0, behavior: 'smooth'}); toast('Divisão trocada'); };
 A['add-template'] = el => {
   const t = effTpl(tplById(el.dataset.tid)); if (!t) return;
   const r = routineFromTemplate(t); ST.routines.push(r); if (!activeRoutine()) ST.active = r.id; saveState();
@@ -4429,12 +4607,39 @@ function planSummaryRow(where){
   const res = planCalc(planInput(pl));
   if (!res.ok) return `<button class="lastrow" data-act="plan-open"><span class="plan-ic">${I.target}</span><div class="grow"><div class="eyebrow">Seu plano</div><b>Complete seus dados</b></div>${I.chev}</button>`;
   const ck = planCheck(pl, res); const due = ck.state === 'adjust' && ck.due;
-  if (where === 'body') return `<button class="lastrow plan-row" data-act="plan-open"><span class="plan-ic">${I.target}</span><div class="grow"><div class="eyebrow">Plano · ${OBJ[pl.goal].t}</div><b class="mono">${fmtK(res.kcal)} <em>kcal</em> · ${res.p} <em>g proteína</em></b></div>${due ? '<span class="pill warn">Check-in</span>' : ''}${I.chev}</button>`;
+  if (where === 'body') return energyPanel(pl, res, 'body');
   const kP = res.p * 4, kF = res.f * 9, kC = res.c * 4, kT = kP + kF + kC || 1;
   return `<button class="plan-card" data-act="plan-open"><div class="row between"><span class="eyebrow">Nutrição de hoje · ${OBJ[pl.goal].t}</span>${due ? '<span class="pill warn">Check-in pronto</span>' : ck.state === 'early' ? '' : '<span class="pill good">No ritmo</span>'}</div>
     <div class="pc-k"><b class="mono">${fmtK(res.kcal)}</b><span>kcal</span></div>
     <div class="macro-bar"><i style="--w:${kP / kT * 100}%;--mc:var(--c1)"></i><i style="--w:${kC / kT * 100}%;--mc:var(--c2)"></i><i style="--w:${kF / kT * 100}%;--mc:var(--c0)"></i></div>
     <div class="pc-m"><span style="--mc:var(--c1)"><b class="mono">${res.p}g</b> proteína</span><span style="--mc:var(--c2)"><b class="mono">${res.c}g</b> carbo</span><span style="--mc:var(--c0)"><b class="mono">${res.f}g</b> gordura</span></div></button>`;
+}
+/* Quadro de energia: deixa explícito o que é basal, o que é gasto do dia e quanto comer.
+   mode 'body' = versão de Corpo (abre o plano ao tocar); 'dash' = topo da página do plano. */
+function energyPanel(pl, res, mode){
+  const g = OBJ[pl.goal]; const ac = pl.goal === 'cut' ? 'var(--c7)' : pl.goal === 'gain' ? 'var(--ember)' : 'var(--c5)';
+  const bmr = r10(res.bmr), tdee = res.tdeeR, kcal = res.kcal; const max = Math.max(tdee, kcal) * 1.08;
+  const pct = v => (v / max * 100).toFixed(1) + '%';
+  const wkAbs = fmtN(Math.round(Math.abs(res.wk || 0) * 100) / 100);
+  const metaSub = pl.goal === 'cut' ? `${fmtK(Math.abs(res.delta))} kcal abaixo do gasto, para perder cerca de ${wkAbs} kg por semana`
+    : pl.goal === 'gain' ? `${fmtK(Math.abs(res.delta))} kcal acima do gasto, para ganhar cerca de ${wkAbs} kg por semana`
+    : res.delta ? `${sgn(res.delta)}${fmtK(Math.abs(res.delta))} kcal em relação ao gasto, pelos ajustes do check-in` : 'Igual ao gasto, para manter o peso';
+  const kP = res.p * 4, kF = res.f * 9, kC = res.c * 4, kT = kP + kF + kC || 1; const kg = planInput(pl).kg;
+  const mac = [['Proteína', res.p, kP, 'var(--c1)'], ['Carboidratos', res.c, kC, 'var(--c2)'], ['Gorduras', res.f, kF, 'var(--c0)']];
+  const ck = planCheck(pl, res); const due = ck.state === 'adjust' && ck.due;
+  return `<section class="en-card${mode === 'body' ? ' is-tap' : ''}" style="--ac:${ac}" ${mode === 'body' ? 'data-act="plan-open" role="button" tabindex="0"' : ''}>
+    <div class="row between"><span class="eyebrow">Seu plano · ${g.t}</span>${due ? '<span class="pill warn">Check-in pronto</span>' : mode === 'dash' ? '<button class="link" style="min-height:0;padding:0" data-act="plan-edit">Editar</button>' : I.chev}</div>
+    <p class="en-lead">Coma cerca de</p><div class="en-k"><b class="mono">${fmtK(kcal)}</b><span>kcal por dia</span></div>
+    <div class="en-bar" role="img" aria-label="Basal ${fmtK(bmr)} kcal, gasto do dia ${fmtK(tdee)} kcal, meta ${fmtK(kcal)} kcal">
+      <i class="en-b" style="width:${pct(bmr)}"></i><i class="en-t" style="left:${pct(bmr)};width:calc(${pct(tdee)} - ${pct(bmr)})"></i><i class="en-m" style="left:${pct(kcal)}"></i></div>
+    <dl class="en-rows">
+      <div><dt><i class="dot en-db"></i>Metabolismo basal</dt><dd class="mono">${fmtK(bmr)} <small>kcal</small></dd><p>O que o corpo gasta em repouso total, só para se manter vivo.</p></div>
+      <div><dt><i class="dot en-dt"></i>${res.calib ? 'Gasto do dia (calibrado)' : 'Gasto total do dia'}</dt><dd class="mono">${res.calib ? '' : '~'}${fmtK(tdee)} <small>kcal</small></dd><p>${res.calib ? 'Calculado pelo que você comia e pela variação do seu peso.' : `Basal mais rotina, caminhadas e treino. Pode variar entre ${fmtK(res.lo)} e ${fmtK(res.hi)}.`}</p></div>
+      <div class="en-meta"><dt><i class="dot en-dm"></i>Meta de consumo</dt><dd class="mono">${fmtK(kcal)} <small>kcal</small></dd><p>${metaSub}.${res.floor ? ' Limitada para não ficar abaixo do basal.' : ''}</p></div>
+    </dl>
+    <div class="en-mac"><div class="macro-bar">${mac.map(m => `<i style="--w:${m[2] / kT * 100}%;--mc:${m[3]}"></i>`).join('')}</div>
+      <div class="en-mg">${mac.map(([n, gr, kc, c]) => `<div style="--mc:${c}"><span>${n}</span><b class="mono">${gr}<small> g</small></b><em>${fmtK(kc)} kcal${kg ? ` · ${fmtN(Math.round(gr / kg * 10) / 10)} g/kg` : ''}</em></div>`).join('')}</div></div>
+    ${mode === 'body' ? '<span class="en-foot">Ver plano completo, check-in e como calculamos</span>' : ''}</section>`;
 }
 PAGES.plano = {title: () => 'Seu objetivo', view: () => (!ST.prefs.plan || UI.pw) ? planWizard() : planDash()};
 function pwInit(){
@@ -4523,12 +4728,7 @@ function planDash(){
   const g = OBJ[pl.goal]; const ck = planCheck(pl, res); const lw = lastWeight();
   const kP = res.p * 4, kF = res.f * 9, kC = res.c * 4, kT = kP + kF + kC || 1;
   let h = res.legacy ? `<button class="sched-hint" style="margin-top:14px" data-act="plan-edit">${I.target}<span><b>Novo cálculo disponível.</b> Agora o gasto considera seu trabalho, quanto você caminha e o tempo real de treino. Toque para revisar em 1 minuto.</span>${I.chev}</button>` : '';
-  h += `<section class="hero plan-hero" style="--pc:${pl.goal === 'cut' ? 'var(--c7)' : pl.goal === 'gain' ? 'var(--ember)' : 'var(--c5)'};margin-top:14px">${glow()}
-    <div class="hero-top"><span class="hero-lbl">Plano · ${g.t}</span><button class="hero-rt link" style="min-height:0;padding:0" data-act="plan-edit">Editar</button></div>
-    <div class="plan-k"><b class="mono">${fmtK(res.kcal)}</b><span>kcal por dia</span></div>
-    <p class="hero-focus">${res.calib ? 'Gasto real, pela sua experiência' : 'Gasto estimado'} <b class="mono">${fmtK(res.tdeeR)}</b>${res.delta ? ` · ${res.delta < 0 ? 'déficit' : 'superávit'} de <b class="mono">${fmtK(Math.abs(res.delta))}</b>` : ''}${pl.adj ? ` · ajuste dos check-ins ${sgn(pl.adj)}${fmtK(Math.abs(pl.adj))}` : ''}</p>
-    <div class="macro-bar" role="img" aria-label="Distribuição das calorias"><i style="--w:${kP / kT * 100}%;--mc:var(--c1)"></i><i style="--w:${kC / kT * 100}%;--mc:var(--c2)"></i><i style="--w:${kF / kT * 100}%;--mc:var(--c0)"></i></div>
-    <div class="hero-stats macros"><div style="--mc:var(--c1)"><b>${res.p}<small>g</small></b><span>proteína</span></div><div style="--mc:var(--c2)"><b>${res.c}<small>g</small></b><span>carboidratos</span></div><div style="--mc:var(--c0)"><b>${res.f}<small>g</small></b><span>gorduras</span></div></div></section>`;
+  h += `<div style="margin-top:14px">${energyPanel(pl, res, 'dash')}</div>`;
   res.warn.forEach(t => { h += `<div class="pw-warn" style="margin-top:12px">${t}</div>`; });
   // margem e calibração
   if (!res.calib) h += `<section class="card range"><div class="row between"><span class="eyebrow">Margem da estimativa</span><span class="mono small muted">±10%</span></div>
