@@ -478,7 +478,7 @@ const Store = (() => {
   return api;
 })();
 function saveState(){ Store.saveState(); }
-function saveSession(s){ Store.saveSession(s); }
-function deleteSession(id){ Store.deleteSession(id); }
+function saveSession(s){ if (typeof doneReset === 'function') doneReset(); Store.saveSession(s); }
+function deleteSession(id){ if (typeof doneReset === 'function') doneReset(); Store.deleteSession(id); }
 function renderSync(){ const el = document.querySelector('.sync'); if (el) el.className = 'sync ' + syncClass(); }
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }

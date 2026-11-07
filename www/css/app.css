@@ -967,3 +967,6 @@ div.s-row{cursor:default}
 .bq-foco[data-full]{opacity:.45}
 .bq-foco.multi .tick{border-radius:8px}
 .bq-foot{margin-top:18px}
+.lib-list > .li{content-visibility:auto;contain-intrinsic-size:auto 68px}
+button.hint{border:0;cursor:pointer;text-align:left}
+.hint em{font-style:normal;margin-left:6px;padding-left:8px;border-left:1px solid color-mix(in srgb,currentColor 35%,transparent);text-decoration:underline;text-underline-offset:2px}
