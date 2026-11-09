@@ -378,7 +378,7 @@ A['pw-next'] = () => { pwKeep(); const steps = pwSteps(); if (UI.pw.step >= step
 A['plan-meals'] = el => { ST.prefs.plan.meals = +el.dataset.v; saveState(); render(); };
 A['plan-apply'] = el => { const pl = ST.prefs.plan; const v = +el.dataset.v; pl.adj = (pl.adj || 0) + v; pl.ck = today(); pl.log = (pl.log || []).concat({d: today(), v}).slice(-8); saveState(); render(); toast(`Plano ajustado em ${sgn(v)}${fmtK(Math.abs(v))} kcal por dia.`); Platform.haptic('success'); };
 A['plan-skip'] = () => { const pl = ST.prefs.plan; pl.ck = today(); saveState(); render(); toast('Plano mantido. Novo check-in em 7 dias.'); };
-A['plan-weigh'] = () => { UI.progTab = 'corpo'; UI.bwMetric = 'kg'; goTab('progresso'); setTimeout(() => { const i = $('#bw-kg'); if (i){ i.scrollIntoView({block: 'center'}); i.focus(); } }, 60); };
+A['plan-weigh'] = () => { UI.progTab = 'corpo'; goTab('progresso'); openBwSheet(null, 'kg'); };
 A['plan-del'] = () => confirmSheet({title: 'Apagar o plano?', text: 'As metas de calorias e proteína e os ajustes dos check-ins serão apagados. Seu peso e suas medidas continuam salvos.', ok: 'Apagar', danger: true, onOk: () => { delete ST.prefs.plan; saveState(); UI.stack.pop(); render(); toast('Plano apagado'); }});
 A['cal-open'] = () => calSheet();
 A['cal-w'] = el => { document.querySelectorAll('#cal-w button').forEach(b => b.setAttribute('aria-pressed', b === el)); UI.sheet.wk = +el.dataset.v; };

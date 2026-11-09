@@ -994,6 +994,54 @@ div.s-row{cursor:default}
 button.hint{border:0;cursor:pointer;text-align:left}
 .hint em{font-style:normal;margin-left:6px;padding-left:8px;border-left:1px solid color-mix(in srgb,currentColor 35%,transparent);text-decoration:underline;text-underline-offset:2px}
 
+/* ===== Medidas do corpo (v4.12) ===== */
+.bm-head{display:flex;align-items:center;gap:12px;margin-top:22px}
+.bm-head .btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.4;margin-right:4px}
+.bm-seg{margin-top:14px}
+.bm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.bm-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:136px;padding:14px 14px 12px;border-radius:20px;background:var(--s1);border:1px solid var(--line);color:var(--ink);text-align:left;overflow:hidden}
+.bm-tile.wide{grid-column:1 / -1;min-height:150px}
+.bm-tile.wide .bm-v b{font-size:44px}
+.bm-tile.wide .bm-spw{left:46%;top:18px;bottom:18px;height:auto}
+.bm-l{display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:100%;font-size:12.5px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
+.bm-l em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--faint)}
+.bm-tile.wide .bm-l{width:42%}
+.bm-v{font-size:14px;color:var(--muted);margin-top:4px}
+.bm-v b{font-size:32px;font-weight:500;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.bm-dl{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;font-size:12px}
+.bm-d{display:inline-flex;align-items:center;gap:2px;font-weight:600;color:var(--ink2)}
+.bm-d svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6}
+.bm-since{color:var(--faint)}
+.bm-spw{position:absolute;left:14px;right:14px;bottom:12px;height:30px;pointer-events:none}
+.bm-tile:not(.wide) .bm-spw{position:relative;left:0;right:0;bottom:0;width:100%;margin-top:auto;padding-top:8px;height:38px}
+.bm-sp{width:100%;height:100%;overflow:visible}
+.bm-sp path{fill:none;stroke:var(--ember);stroke-width:2px;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+.bm-sp circle{fill:var(--ember)}
+.bm-dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 3px var(--s1)}
+.bm-tile:not(.wide) .bm-dot{margin-top:calc(-3.5px + 4px)}
+.bm-tile.empty-t{justify-content:space-between;background:transparent;border:1px dashed var(--line2);min-height:96px}
+.bm-add{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--muted)}
+.bm-add svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4}
+.bm-der{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:10px}
+.bm-der b{display:block;font-size:24px;font-weight:500;letter-spacing:-.03em;margin-top:4px}
+.bm-der .sub{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
+.bm-der .sub.good{color:var(--good)}
+.bm-der .sub.warn{color:var(--c2)}
+.bm-chart{margin-top:12px}
+.bm-ch{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:0;color:var(--ink);text-align:left}
+.bm-ch > svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2.2;flex:none}
+.bm-ch .bm-l{width:auto}
+.bm-hist{margin-top:14px}
+.bm-row{display:flex;align-items:center;gap:8px;padding:12px 10px 12px 16px}
+.bm-row b{display:block;font-size:15px}
+.bm-row .sub{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.bm-vals{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:13.5px;font-variant-numeric:tabular-nums}
+.bm-vals em{font-style:normal;color:var(--muted);margin-right:4px;font-size:12px}
+.bm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.bm-stats span{display:block;font-size:11.5px;color:var(--muted)}
+.bm-stats b{display:block;font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap}
+@media (max-width:360px){.bm-stats{grid-template-columns:repeat(2,1fr)}}
+
 </style>
 </head>
 <body>
@@ -3119,7 +3167,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.11.0';
+const APP_VERSION = '4.12.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -3802,16 +3850,77 @@ function progEx(){
     <div class="tablewrap"><table class="hist"><thead><tr><th>Data</th><th>Séries</th><th>Máx.</th></tr></thead><tbody>${hist.slice().reverse().map(h => `<tr><td>${fmtD(h.date)}</td><td>${h.sets.map(x => `${fmtN(x.kg)}×${x.reps}`).join(' · ')}</td><td>${fmtN(h.kg)}</td></tr>`).join('')}</tbody></table></div></section>`;
 }
 const BWF = {kg: 'Peso (kg)', cintura: 'Cintura (cm)', pescoco: 'Pescoço (cm)', quadril: 'Quadril (cm)', braco: 'Braço (cm)', peito: 'Peito (cm)', coxa: 'Coxa (cm)'};
+const BWN = k => BWF[k].split(' ')[0]; const BWU = k => k === 'kg' ? 'kg' : 'cm';
+/* série de uma medida, em ordem de data */
+const bwSeries = k => (ST.bw || []).filter(x => x[k] != null).sort((a, b) => a.date.localeCompare(b.date)).map(x => ({date: x.date, v: x[k]}));
+const r1 = v => Math.round(v * 10) / 10;
+function bwDelta(pts){ if (pts.length < 2) return null; const a = pts[0], b = pts[pts.length - 1]; return {d: r1(b.v - a.v), from: a.date}; }
+const deltaTxt = (dl, unit) => dl ? `<span class="bm-d ${dl.d > 0 ? 'up' : dl.d < 0 ? 'down' : ''}">${dl.d > 0 ? I.up : dl.d < 0 ? I.down : ''}${dl.d ? (dl.d > 0 ? '+' : '−') + fmtN(Math.abs(dl.d)) + ' ' + unit : 'sem mudança'}</span><span class="bm-since">desde ${fmtD(dl.from)}</span>` : '<span class="bm-since">primeira medição</span>';
+function sparkline(pts){
+  if (pts.length < 2) return `<svg class="bm-sp" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"><circle cx="50" cy="14" r="2.6"/></svg>`;
+  const vs = pts.map(p => p.v); let lo = Math.min(...vs), hi = Math.max(...vs); if (hi === lo){ hi += 1; lo -= 1; }
+  const t0 = +new Date(pts[0].date), t1 = +new Date(pts[pts.length - 1].date) || t0 + 1; const span = Math.max(1, t1 - t0);
+  const xy = pts.map(p => [((+new Date(p.date) - t0) / span) * 96 + 2, 25 - ((p.v - lo) / (hi - lo)) * 22]);
+  const d = xy.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('');
+  const L = xy[xy.length - 1];
+  return `<svg class="bm-sp" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"><path d="${d}"/></svg><i class="bm-dot" style="left:${L[0]}%;top:${(L[1] / 28 * 100).toFixed(1)}%"></i>`;
+}
+/* indicadores calculados a partir das medidas */
+function bwDerived(){
+  const pf = ST.profile || {}; const h = parseNum(pf.height); const out = [];
+  const w = bwSeries('cintura'); const sex = typeof sexOf === 'function' ? sexOf(pf) : null;
+  if (h && w.length){ const v = w[w.length - 1].v / h; out.push({k: 'rcest', t: 'Relação cintura/altura', v: fmtN(Math.round(v * 100) / 100), sub: v < .5 ? 'Abaixo de 0,5: faixa recomendada' : 'Acima de 0,5: vale reduzir a cintura', ok: v < .5}); }
+  const nb = typeof navyBF === 'function' && sex && h ? navyBF(sex, h) : null;
+  if (nb) out.push({k: 'bf', t: 'Gordura estimada', v: fmtN(nb.v) + '%', sub: 'Fórmula da Marinha dos EUA, com cintura, pescoço' + (sex === 'F' ? ', quadril' : '') + ' e altura'});
+  return out;
+}
 function progBody(){
   const planRow = `<section>${planSummaryRow('body')}</section>`;
-  const list = (ST.bw || []).slice().sort((a, b) => a.date.localeCompare(b.date)); const mt = UI.bwMetric; const unit = mt === 'kg' ? 'kg' : 'cm';
-  const pts = list.filter(x => x[mt] != null).map(x => ({date: x.date, v: x[mt]}));
-  return `${planRow}<section class="card stack"><div class="eyebrow">Nova medição</div><div class="formgrid"><label class="flabel"><span class="tiny muted">Data</span><input id="bw-date" class="field" type="date" value="${today()}"></label>${Object.entries(BWF).map(([k, l]) => `<label class="flabel"><span class="tiny muted">${l}</span><input id="bw-${k}" class="field num" inputmode="decimal" placeholder="—"></label>`).join('')}</div><button class="btn primary" data-act="bw-add">Salvar medição</button></section>
-  <section class="card stack"><div class="chips" style="margin:0;padding:0">${Object.entries(BWF).map(([k, l]) => `<button class="chip" data-act="bwm" data-m="${k}" aria-pressed="${mt === k}">${l.split(' ')[0]}</button>`).join('')}</div>
-    ${pts.length ? `<div><div class="display h1 num">${fmtN(pts[pts.length - 1].v)}<span style="font-size:20px"> ${unit}</span></div><div class="small muted">${pts.length > 1 ? `${pts[pts.length - 1].v - pts[0].v >= 0 ? '+' : '−'}${fmtN(Math.abs(Math.round((pts[pts.length - 1].v - pts[0].v) * 10) / 10))} ${unit} desde ${fmtD(pts[0].date)}` : 'primeira medição'}</div></div>${lineChart(pts, unit)}` : `<div class="empty" style="background:var(--s2);border:0"><b>Sem medições de ${BWF[mt].split(' ')[0].toLowerCase()}</b>Para acompanhar definição, a cintura costuma dizer mais que a balança.</div>`}
-    ${list.length ? `<div class="tablewrap"><table class="hist"><thead><tr><th>Data</th>${Object.values(BWF).map(l => `<th>${l.split(' ')[0]}</th>`).join('')}<th></th></tr></thead><tbody>${list.slice().reverse().map((x, i) => `<tr><td>${fmtD(x.date)}</td>${Object.keys(BWF).map(k => `<td>${x[k] != null ? fmtN(x[k]) : '–'}</td>`).join('')}<td><button class="link muted" style="min-height:32px;padding:0 4px" data-act="bw-del" data-i="${list.length - 1 - i}" aria-label="Apagar medição">${I.x.replace('<svg', '<svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2"')}</button></td></tr>`).join('')}</tbody></table></div>` : ''}</section>`;
+  const list = (ST.bw || []).slice().sort((a, b) => a.date.localeCompare(b.date)); const view = UI.bwView || 'resumo';
+  const last = list[list.length - 1]; const keys = Object.keys(BWF); const has = keys.filter(k => bwSeries(k).length);
+  const head = `<section class="bm-head"><div class="grow"><div class="eyebrow">Medidas do corpo</div><div class="small muted" style="margin-top:4px">${last ? `Última medição ${relDay(last.date).toLowerCase()} · ${list.length} ${list.length === 1 ? 'registro' : 'registros'}` : 'Nenhuma medição ainda'}</div></div><button class="btn primary sm" data-act="bw-open">${I.plus}Registrar</button></section>`;
+  if (!list.length) return `${planRow}${head}<section class="empty"><b>Comece pelo peso e pela cintura</b>Para acompanhar definição, a cintura costuma dizer mais que a balança. As demais medidas são opcionais.<button class="btn primary" style="margin-top:14px" data-act="bw-open">Registrar primeira medição</button></section>`;
+  const seg = `<div class="seg bm-seg">${[['resumo', 'Resumo'], ['graficos', 'Gráficos'], ['historico', 'Histórico']].map(([v, l]) => `<button data-act="bw-view" data-v="${v}" aria-pressed="${view === v}">${l}</button>`).join('')}</div>`;
+  let body = '';
+  if (view === 'resumo'){
+    const tiles = keys.map(k => { const pts = bwSeries(k); if (!pts.length) return `<button class="bm-tile empty-t" data-act="bw-open" data-f="${k}"><span class="bm-l">${BWN(k)}</span><span class="bm-add">${I.plus}Adicionar</span></button>`;
+      const lastp = pts[pts.length - 1]; return `<button class="bm-tile${k === 'kg' ? ' wide' : ''}" data-act="bw-metric" data-m="${k}"><span class="bm-l">${BWN(k)}<em>${relDay(lastp.date).toLowerCase()}</em></span><span class="bm-v"><b class="num">${fmtN(lastp.v)}</b> ${BWU(k)}</span><span class="bm-dl">${deltaTxt(bwDelta(pts), BWU(k))}</span><span class="bm-spw">${sparkline(pts)}</span></button>`; }).join('');
+    const der = bwDerived();
+    body = `<section class="bm-grid">${tiles}</section>${der.length ? `<section class="card bm-der">${der.map(d => `<div><span class="bm-l">${d.t}</span><b class="num">${d.v}</b><span class="sub ${d.ok === true ? 'good' : d.ok === false ? 'warn' : ''}">${d.sub}</span></div>`).join('')}</section>` : ''}
+      <p class="tiny muted" style="margin:10px 4px 0">Toque numa medida para ver o gráfico e o histórico dela.</p>`;
+  } else if (view === 'graficos'){
+    body = has.map(k => { const pts = bwSeries(k); const lp = pts[pts.length - 1]; return `<section class="card stack bm-chart"><button class="bm-ch" data-act="bw-metric" data-m="${k}"><span class="grow"><span class="bm-l">${BWN(k)}</span><span class="bm-v"><b class="num">${fmtN(lp.v)}</b> ${BWU(k)}</span><span class="bm-dl">${deltaTxt(bwDelta(pts), BWU(k))}</span></span>${I.chev}</button>${pts.length > 1 ? lineChart(pts, BWU(k)) : '<p class="tiny muted" style="margin:0">O gráfico aparece a partir da segunda medição.</p>'}</section>`; }).join('');
+  } else {
+    body = `<section class="list bm-hist">${list.slice().reverse().map(x => { const ks = keys.filter(k => x[k] != null); return `<div class="li bm-row"><div class="grow"><b>${fmtD(x.date)}</b><span class="bm-vals">${ks.map(k => `<span><em>${BWN(k)}</em>${fmtN(x[k])}</span>`).join('')}</span></div><button class="icon sm" data-act="bw-edit" data-d="${x.date}" aria-label="Editar medição de ${fmtD(x.date)}">${I.edit || I.note}</button><button class="icon sm" data-act="bw-del-day" data-d="${x.date}" aria-label="Apagar medição de ${fmtD(x.date)}">${I.trash}</button></div>`; }).join('')}</section>`;
+  }
+  return `${planRow}${head}${seg}${body}`;
 }
-
+/* página de uma medida: gráfico grande, números e cada registro */
+function vBodyMetric(p){
+  const k = p.m; const pts = bwSeries(k); const u = BWU(k);
+  if (!pts.length) return `<div class="empty"><b>Sem registros de ${BWN(k).toLowerCase()}</b><button class="btn primary" style="margin-top:12px" data-act="bw-open" data-f="${k}">Registrar</button></div>`;
+  const lp = pts[pts.length - 1]; const vs = pts.map(x => x.v);
+  const ago = d => { const lim = isoDate(addDays(new Date(), -d)); const base = pts.filter(x => x.date <= lim).pop(); return base && base !== lp ? r1(lp.v - base.v) : null; };
+  const stat = (t, v) => `<div><span>${t}</span><b class="num">${v}</b></div>`;
+  const ch = v => v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + fmtN(Math.abs(v)) + ' ' + u;
+  return `<section style="margin-top:8px"><div class="display h1 num">${fmtN(lp.v)}<span style="font-size:20px"> ${u}</span></div><div class="bm-dl" style="margin-top:4px">${deltaTxt(bwDelta(pts), u)}</div></section>
+  <section class="card stack">${pts.length > 1 ? lineChart(pts, u) : '<p class="tiny muted" style="margin:0">O gráfico aparece a partir da segunda medição.</p>'}
+    <div class="bm-stats">${stat('30 dias', ch(ago(30)))}${stat('90 dias', ch(ago(90)))}${stat('Mínimo', fmtN(Math.min(...vs)) + ' ' + u)}${stat('Máximo', fmtN(Math.max(...vs)) + ' ' + u)}</div></section>
+  <section><div class="sec-head"><span class="eyebrow">Registros</span><button class="link" data-act="bw-open" data-f="${k}">Registrar</button></div>
+    <div class="list">${pts.slice().reverse().map((x, i, arr) => { const prev = arr[i + 1]; const d = prev ? r1(x.v - prev.v) : null; return `<div class="li bm-row"><div class="grow"><b class="num">${fmtN(x.v)} ${u}</b><span class="sub">${fmtD(x.date)}${d != null ? ` · ${d > 0 ? '+' : d < 0 ? '−' : ''}${fmtN(Math.abs(d))} desde a anterior` : ''}</span></div><button class="icon sm" data-act="bw-del-val" data-d="${x.date}" data-m="${k}" aria-label="Apagar ${BWN(k).toLowerCase()} de ${fmtD(x.date)}">${I.trash}</button></div>`; }).join('')}</div></section>`;
+}
+PAGES.bmetric = {title: p => BWN(p.m), view: p => vBodyMetric(p)};
+/* registrar ou editar medidas de um dia (mesmo dia: soma às medidas já salvas, não apaga as outras) */
+function openBwSheet(date, focus){
+  const d = date || today(); const cur = (ST.bw || []).find(x => x.date === d) || {};
+  UI.sheet = {kind: 'bw'};
+  openSheet(`${sheetHead('Medidas do corpo', date ? 'Editar medição' : 'Nova medição')}
+    <p class="small muted" style="margin:10px 0 0">Preencha só o que mediu. Medidas do mesmo dia são somadas ao registro existente.</p>
+    <div class="formgrid" style="margin-top:14px"><label class="flabel" style="grid-column:1/-1"><span class="tiny muted">Data</span><input id="bw-date" class="field" type="date" value="${d}" max="${today()}" ${date ? 'readonly' : ''}></label>
+    ${Object.keys(BWF).map(k => { const pts = bwSeries(k); const lp = pts[pts.length - 1]; return `<label class="flabel"><span class="tiny muted">${BWF[k]}</span><input id="bw-${k}" class="field num" inputmode="decimal" value="${cur[k] != null ? fmtN(cur[k]) : ''}" placeholder="${lp ? 'último ' + fmtN(lp.v) : '—'}"></label>`; }).join('')}</div>
+    <button class="btn primary block" style="margin-top:16px" data-act="bw-add" data-edit="${date ? 1 : ''}">Salvar medição</button>`);
+  if (focus) setTimeout(() => { const i = $('#bw-' + focus); if (i) i.focus(); }, 80);
+}
 // ================= folhas =================
 function openSheet(html){ if (!toastUndo) $('#toast').hidden = true; const w = $('#sheet'); w.innerHTML = `<div class="sheet-wrap" data-act="sheet-bg"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`; w.hidden = false; document.body.style.overflow = 'hidden'; }
 function closeSheet(){ const w = $('#sheet'); if (!w) return; w.hidden = true; w.innerHTML = ''; document.body.style.overflow = ''; UI.sheet = null; }
@@ -4161,7 +4270,16 @@ A.calsel = el => { UI.calSel = el.dataset.date; render(); };
 A.progtab = el => { UI.progTab = el.dataset.t; render(); };
 A.metric = el => { UI.progMetric = el.dataset.m; render(); };
 A.bwm = el => { UI.bwMetric = el.dataset.m; render(); };
-A['bw-add'] = () => { const date = $('#bw-date').value || today(); const e = {date}; let any = false; Object.keys(BWF).forEach(k => { const v = parseNum($('#bw-' + k).value); if (v != null){ e[k] = v; any = true; } }); if (!any){ toast('Preencha pelo menos uma medida.'); return; } ST.bw = (ST.bw || []).filter(x => x.date !== date).concat(e); saveState(); render(); toast('Medição salva'); };
+A['bw-add'] = el => { const date = $('#bw-date').value || today(); const edit = el && el.dataset && el.dataset.edit; const old = (ST.bw || []).find(x => x.date === date); const e = edit ? {date} : {...(old || {}), date}; let any = false;
+  Object.keys(BWF).forEach(k => { const raw = $('#bw-' + k).value.trim(); const v = parseNum(raw); if (v != null && v > 0){ e[k] = v; any = true; } else if (edit && raw === '') delete e[k]; });
+  if (!any && !edit){ toast('Preencha pelo menos uma medida.'); return; }
+  ST.bw = (ST.bw || []).filter(x => x.date !== date); if (Object.keys(BWF).some(k => e[k] != null)) ST.bw.push(e); saveState(); closeSheet(); render(); toast(old && !edit ? 'Medidas somadas à medição do dia' : 'Medição salva'); };
+A['bw-open'] = el => openBwSheet(null, el && el.dataset && el.dataset.f);
+A['bw-edit'] = el => openBwSheet(el.dataset.d);
+A['bw-view'] = el => { UI.bwView = el.dataset.v; render(); };
+A['bw-metric'] = el => push({type: 'bmetric', m: el.dataset.m});
+A['bw-del-day'] = el => { const it = (ST.bw || []).find(x => x.date === el.dataset.d); if (!it) return; ST.bw = ST.bw.filter(x => x !== it); saveState(); render(); toast('Medição apagada', () => { ST.bw.push(it); saveState(); render(); }); };
+A['bw-del-val'] = el => { const it = (ST.bw || []).find(x => x.date === el.dataset.d); if (!it) return; const k = el.dataset.m; const v = it[k]; delete it[k]; if (!Object.keys(BWF).some(q => it[q] != null)) ST.bw = ST.bw.filter(x => x !== it); saveState(); render(); toast(`${BWN(k)} de ${fmtD(it.date)} apagado`, () => { it[k] = v; if (!ST.bw.includes(it)) ST.bw.push(it); saveState(); render(); }); };
 A['bw-del'] = el => { const list = ST.bw.slice().sort((a, b) => a.date.localeCompare(b.date)); const it = list[+el.dataset.i]; ST.bw = ST.bw.filter(x => x !== it); saveState(); render(); toast('Medição apagada', () => { ST.bw.push(it); saveState(); render(); }); };
 A.libm = el => { UI.libM = el.dataset.m; render(); };
 A.libe = el => { UI.libE = el.dataset.e; render(); };
@@ -4847,7 +4965,7 @@ A['pw-next'] = () => { pwKeep(); const steps = pwSteps(); if (UI.pw.step >= step
 A['plan-meals'] = el => { ST.prefs.plan.meals = +el.dataset.v; saveState(); render(); };
 A['plan-apply'] = el => { const pl = ST.prefs.plan; const v = +el.dataset.v; pl.adj = (pl.adj || 0) + v; pl.ck = today(); pl.log = (pl.log || []).concat({d: today(), v}).slice(-8); saveState(); render(); toast(`Plano ajustado em ${sgn(v)}${fmtK(Math.abs(v))} kcal por dia.`); Platform.haptic('success'); };
 A['plan-skip'] = () => { const pl = ST.prefs.plan; pl.ck = today(); saveState(); render(); toast('Plano mantido. Novo check-in em 7 dias.'); };
-A['plan-weigh'] = () => { UI.progTab = 'corpo'; UI.bwMetric = 'kg'; goTab('progresso'); setTimeout(() => { const i = $('#bw-kg'); if (i){ i.scrollIntoView({block: 'center'}); i.focus(); } }, 60); };
+A['plan-weigh'] = () => { UI.progTab = 'corpo'; goTab('progresso'); openBwSheet(null, 'kg'); };
 A['plan-del'] = () => confirmSheet({title: 'Apagar o plano?', text: 'As metas de calorias e proteína e os ajustes dos check-ins serão apagados. Seu peso e suas medidas continuam salvos.', ok: 'Apagar', danger: true, onOk: () => { delete ST.prefs.plan; saveState(); UI.stack.pop(); render(); toast('Plano apagado'); }});
 A['cal-open'] = () => calSheet();
 A['cal-w'] = el => { document.querySelectorAll('#cal-w button').forEach(b => b.setAttribute('aria-pressed', b === el)); UI.sheet.wk = +el.dataset.v; };
