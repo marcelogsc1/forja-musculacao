@@ -1042,6 +1042,31 @@ button.hint{border:0;cursor:pointer;text-align:left}
 .bm-stats b{display:block;font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap}
 @media (max-width:360px){.bm-stats{grid-template-columns:repeat(2,1fr)}}
 
+/* ===== Observações do treino e calorias (v4.13) ===== */
+.ob-ta{min-height:84px;resize:vertical;font-size:15px;line-height:1.45}
+.ob-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.ob-rule{display:flex;align-items:flex-start;gap:12px;width:100%;padding:14px;border-radius:16px;background:var(--s2);border:1px solid var(--line);color:var(--ink);text-align:left}
+.ob-rule b{display:block;font-size:15px;margin-bottom:4px}
+.ob-rule span span{display:block;font-size:13px;color:var(--ink2);line-height:1.45}
+.ob-rule .tick{width:22px;height:22px;flex:none;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--line2);display:grid;place-items:center;margin-top:1px}
+.ob-rule .tick svg{width:13px;height:13px;stroke:var(--ember-ink);fill:none;stroke-width:3.2;opacity:0}
+.ob-rule[aria-pressed="true"] .tick{background:var(--ember);box-shadow:none}
+.ob-rule[aria-pressed="true"] .tick svg{opacity:1}
+.ob-rule[aria-pressed="false"]{opacity:.6}
+.ob-flag{margin-top:12px;padding:14px;border-radius:16px;background:color-mix(in srgb,var(--c2) 12%,transparent);border:1px solid color-mix(in srgb,var(--c2) 30%,transparent)}
+.ob-flag b{font-size:15px}
+.ob-flag p{margin:6px 0 0;font-size:13px;line-height:1.45;color:var(--ink2)}
+.ob-notes{margin-top:14px}
+.ob-notes p{margin:6px 0 0;font-size:14px;color:var(--ink2)}
+.ob-remind{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--s2);font-size:13.5px;color:var(--ink2)}
+.ob-remind svg{width:16px;height:16px;flex:none;stroke:var(--ember);fill:none;stroke-width:2;margin-top:2px}
+.kc-k{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.kc-k b{font-size:40px;font-weight:500;letter-spacing:-.05em}
+.kc-k span{font-size:14px;color:var(--muted)}
+.kc-how{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.kc-how summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink2)}
+.kc-how ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.5;color:var(--muted)}
+
 </style>
 </head>
 <body>
@@ -3167,7 +3192,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.12.0';
+const APP_VERSION = '4.13.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -3520,6 +3545,7 @@ function vWorkout(p){
       ${ed ? `<button class="icon sm" data-act="i-edit" data-j="${j}" aria-label="Editar exercício">${I.more}</button>` : ''}</div>`; }).join('')}</div>` : '<div class="empty"><b>Treino vazio</b>Adicione exercícios da biblioteca.</div>'}
     ${ed || !w.items.length ? `<button class="btn ghost block" style="margin-top:12px" data-act="i-add">${I.plus}Adicionar exercícios</button>` : ''}</section>`;
   if (ed) h += `<section class="row wrap"><button class="btn ghost sm" data-act="dup-workout" data-rid="${r.id}" data-wid="${w.id}">Duplicar treino</button><button class="btn danger sm" data-act="ask-del-workout" data-rid="${r.id}" data-wid="${w.id}">Excluir treino</button></section>`;
+  if (!ed && w.items.length) h += obsCard(r, w);
   h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos deste treino</div>${muscleBlock(m.pri, m.sec)}</section>`;
   if (!ed) h += `<div style="position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));margin-top:18px;z-index:5"><button class="btn primary block" data-act="start" data-rid="${r.id}" data-wid="${w.id}" ${open || !w.items.length ? 'disabled' : ''}>${I.play}${open ? 'Há um treino em andamento' : 'Começar treino'}</button></div>`;
   return h;
@@ -3624,7 +3650,7 @@ function vSession(){
   const st = stats(s); const total = s.items.reduce((a, e) => a + e.sets.filter(x => x.t !== 'w').length, 0);
   const cur = s.items.findIndex(e => e.sets.some(x => !x.ok));
   let h = `<section style="margin-top:16px"><div class="hero-lbl ${live ? 'live' : ''}" style="--pc:${col(s.cor)}">${live ? `${fmtD(s.date)} · em andamento` : s.status === 'draft' ? 'Registro de treino passado' : 'Editando treino salvo'}</div><h1 class="display h1" style="margin-top:10px">${esc(s.wname)}</h1>
-    ${live ? '' : `<div class="formgrid" style="margin-top:14px"><label class="flabel"><span class="tiny muted">Data</span><input id="ss-date" class="field" type="date" max="${today()}" value="${s.date}" data-act="ss-date"></label><label class="flabel"><span class="tiny muted">Duração (min)</span><input id="ss-dur" class="field num" inputmode="numeric" value="${s.dur ?? (s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : '')}" data-act="ss-dur" placeholder="opcional"></label></div>`}
+    ${live ? obsReminder(s) : ''}${live ? '' : `<div class="formgrid" style="margin-top:14px"><label class="flabel"><span class="tiny muted">Data</span><input id="ss-date" class="field" type="date" max="${today()}" value="${s.date}" data-act="ss-date"></label><label class="flabel"><span class="tiny muted">Duração (min)</span><input id="ss-dur" class="field num" inputmode="numeric" value="${s.dur ?? (s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : '')}" data-act="ss-dur" placeholder="opcional"></label></div>`}
     <div class="meta mono" style="margin-top:12px;font-size:12.5px"><span><b>${pad2(st.sets)}</b>/${pad2(total)} séries</span><span><b>${fmtVol(st.vol)}</b> de volume</span></div><div class="progress" style="margin-top:12px"><i style="width:${total ? st.sets / total * 100 : 0}%"></i></div>
     ${live ? '' : '<p class="tiny muted" style="margin:10px 0 0">Toque nos campos de kg e reps para anotar e no ✓ para confirmar cada série. Só séries confirmadas entram no histórico.</p>'}</section><section class="stack">`;
   s.items.forEach((e, k) => {
@@ -3692,6 +3718,7 @@ function vPast(p){
   let h = p.fresh ? `<section class="hero celebrate" style="--pc:${col(s.cor)};margin-top:14px">${glow()}<div class="hero-top" style="justify-content:center"><span class="hero-lbl">Treino concluído · ${fmtD(s.date)}</span></div>${heroTitle(s.wname, 'done', {tag: 'h1', key: 'done-' + s.id, stack: true, words: ['TÁ PAGO', s.wname, fmtD(s.date)]})}<p class="hero-tag" style="max-width:none">${tagline('done')}</p><p class="ink2" style="margin:8px 0 0">${st.sets ? `Mais um tijolo na construção. ${prs.length ? 'E com recorde novo.' : 'Bom trabalho.'}` : 'Registro salvo.'}</p></section>`
     : `<section class="row" style="gap:14px;margin-top:20px"><span class="plate" style="--pc:${col(s.cor)};width:52px;height:52px;font-size:20px">${esc((s.wname || '?').slice(0, 1))}</span><div class="grow"><div class="eyebrow">${fmtDLong(s.date)}</div><h1 class="display h2" style="margin-top:4px">${esc(s.wname)}</h1></div></section>`;
   h += `<section class="stats"><div class="stat"><b class="num">${mins != null ? mins : '–'}</b><span>minutos</span></div><div class="stat"><b class="num">${st.sets}</b><span>séries</span></div><div class="stat ember"><b class="num">${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}</b><span>${st.vol >= 10000 ? 'toneladas' : 'kg de volume'}</span></div></section>`;
+  h += kcalCard(s);
   if (prs.length) h += `<section class="card"><div class="eyebrow" style="margin-bottom:4px">Recordes neste treino</div>${prs.map(x => `<div class="pr"><span class="trophy">${I.trophy}</span><div class="grow"><b style="font-size:15px">${esc(exName(x.ex))}</b><div class="small muted num">${fmtN(x.kg)} kg × ${x.reps} · 1RM est. ${fmtN(Math.round(x.v * 10) / 10)} kg</div></div></div>`).join('')}</section>`;
   h += `<section class="card"><label class="flabel"><span class="eyebrow">Como foi o treino?</span><div class="seg" style="margin-top:4px">${[['1', 'Pesado'], ['2', 'Ok'], ['3', 'Muito bom']].map(([k, l]) => `<button data-act="feel" data-sid="${s.id}" data-v="${k}" aria-pressed="${s.feel === k}">${l}</button>`).join('')}</div><textarea id="s-note" class="field" style="margin-top:10px;min-height:64px" maxlength="400" placeholder="Anotação (sono, energia, dor, ajustes)" data-act="s-note" data-sid="${s.id}">${esc(s.note || '')}</textarea></label></section>`;
   if (!s.quick && st.sets) h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos trabalhados</div>${heatBlock(regionLevels([s]))}</section>`;
@@ -4976,6 +5003,44 @@ A['cal-clear'] = () => { delete ST.prefs.plan.cal; saveState(); closeSheet(); re
 document.addEventListener('input', ev => { const t = ev.target; if (!t.dataset || !t.dataset.pw || !UI.pw) return; UI.pw[t.dataset.pw] = t.value; const st = pwSteps()[UI.pw.step]; if (st === 'body'){ const w = UI.pw; const ok = !!(w.sex && ageFrom(w.birth) && parseNum(w.h) > 100 && parseNum(w.h) < 250 && parseNum(w.kg) > 30 && parseNum(w.kg) < 300); const b = $('[data-act="pw-next"]'); if (b) b.disabled = !ok; } });
 document.addEventListener('change', ev => { const t = ev.target; if (t.dataset && t.dataset.pw && UI.pw && (t.dataset.pw === 'birth' || t.dataset.pw === 'h')){ UI.pw[t.dataset.pw] = t.value; setTimeout(() => { if (!isTyping() && UI.pw) render(); }, 0); } });
 
+/* ---------- Calorias de um treino concluído (v4.13) ----------
+   Gasto = MET médio × metabolismo de repouso por hora × duração.
+   MET por série, do Compendium of Physical Activities 2024 (Herrmann et al.):
+     02054  3,5  musculação, vários exercícios, 8 a 15 repetições (valor padrão)
+     02052  5,0  agachamento, levantamento terra e afins
+     02022  3,8  calistenia (peso do corpo) moderada
+     02040  7,5  exercícios de condicionamento (burpee, polichinelo, corda, corrida)
+     02058  9,8  kettlebell swing
+     02055  5,8  circuito com pouco descanso (quando cada série, com o descanso, dura menos de 1 minuto)
+   O MET da sessão é a média ponderada pelas séries feitas, sobre o tempo real do treino (que já inclui os descansos).
+   Repouso por hora: Mifflin-St Jeor ÷ 24 quando há sexo, idade e altura (correção de MET proposta por Kozey et al.,
+   citada no Compendium); sem esses dados, 1 MET = 1 kcal/kg/h. Faixa de ±20%, porque o MET é uma média populacional. */
+function weightAt(date){ const l = (ST.bw || []).filter(x => x.kg).sort((a, b) => a.date.localeCompare(b.date)); const b = l.filter(x => x.date <= date).pop() || l[0]; return b ? b.kg : (ST.prefs.plan && ST.prefs.plan.startKg) || null; }
+function setMET(ex){ const e = getEx(ex); if (!e) return 3.5; if (ex === 'kettlebell-swing') return 9.8; if (e.m === 'cardio') return 7.5; if (['quad-comp', 'hinge', 'terra'].includes(e.p) && e.e !== 'peso') return 5.0; if (e.e === 'peso') return 3.8; return 3.5; }
+function sessKcal(s){
+  if (!s || s.quick) return null; const kg = weightAt(s.date); const sets = s.items.flatMap(e => e.sets.filter(x => x.ok).map(() => e.ex)); if (!sets.length) return null;
+  if (!kg) return {need: 'kg'};
+  let mins = sessMins(s); const est = !mins || mins < 5; if (est) mins = Math.round(sets.length * 2.25 + 5); mins = Math.min(240, Math.max(5, mins));
+  let met = sets.reduce((a, ex) => a + setMET(ex), 0) / sets.length; const perSet = mins * 60 / sets.length;
+  const circ = perSet <= 50 ? 1 : perSet >= 60 ? 0 : (60 - perSet) / 10; if (met < 5.8) met += (5.8 - met) * circ;
+  const pf = ST.profile || {}; const sex = sexOf(pf), age = ageFrom(pf.birth), h = parseNum(pf.height);
+  const rmrH = sex && age && h ? (10 * kg + 6.25 * h - 5 * age + (sex === 'M' ? 5 : -161)) / 24 : kg; const corr = !!(sex && age && h);
+  const kcal = met * rmrH * mins / 60; const r5 = v => Math.round(v / 5) * 5;
+  return {kcal: r5(kcal), lo: r5(kcal * .8), hi: r5(kcal * 1.2), net: r5((met - 1) * rmrH * mins / 60), met: Math.round(met * 10) / 10, mins, est, kg, corr, circ: circ > 0, n: sets.length};
+}
+function kcalCard(s){
+  const k = sessKcal(s); if (!k) return '';
+  if (k.need) return `<section class="card kc-card"><div class="row between"><span class="eyebrow">Gasto estimado</span></div><p class="small ink2" style="margin:8px 0 12px">Para calcular as calorias do treino, o app precisa do seu peso.</p><button class="btn sm primary" data-act="bw-open" data-f="kg">Registrar peso</button></section>`;
+  return `<section class="card kc-card"><div class="row between"><span class="eyebrow">Gasto estimado</span><span class="tiny muted">faixa ${fmtK(k.lo)}–${fmtK(k.hi)}</span></div>
+    <div class="kc-k"><b class="num">~${fmtK(k.kcal)}</b><span>kcal no treino</span></div>
+    <p class="small muted" style="margin:4px 0 0">Cerca de ${fmtK(k.net)} kcal acima do que você gastaria em repouso no mesmo tempo.</p>
+    <details class="kc-how"><summary>Como calculamos</summary><ul>
+      <li>${k.est ? `Duração estimada pelas séries: ${k.mins} min` : `Duração do treino: ${k.mins} min, com os descansos`}</li>
+      <li>Intensidade média ${fmtN(k.met)} MET, ponderada pelas ${k.n} séries feitas${k.circ ? ', com ajuste para circuito (pouco descanso)' : ''} (Compendium of Physical Activities 2024)</li>
+      <li>${k.corr ? `Gasto em repouso pelo seu metabolismo basal (peso ${fmtN(k.kg)} kg, altura, idade e sexo)` : `Peso de ${fmtN(k.kg)} kg. Complete altura, idade e sexo no perfil para um valor mais preciso`}</li>
+      <li>É uma estimativa: a mesma sessão pode gastar uns 20% a mais ou a menos dependendo do esforço e da pessoa.</li></ul></details></section>`;
+}
+
 /* Identidade animada dos treinos (v4.8).
    O usuário escolhe o estilo em Perfil › Animação do treino:
      'type'   Tipografia: o nome faz o movimento (uma coreografia por tipo de treino)
@@ -5205,6 +5270,168 @@ function openMotionSheet(){
 }
 A['motion-open'] = () => openMotionSheet();
 A['motion-set'] = el => { ST.prefs.motion = el.dataset.v; saveState(); Object.keys(KIN).forEach(k => delete KIN[k]); openMotionSheet(); render(); Platform.haptic('light'); };
+
+/* Observações do treino (v4.13)
+   O usuário escreve em português livre ("sem polia", "mais foco em glúteo", "tenho 40 minutos").
+   Regras fixas, sem IA: o texto é quebrado em frases, cada frase passa por padrões conhecidos
+   e vira ajustes pequenos sobre o treino escolhido (trocar, somar uma série, incluir um exercício).
+   Nada é aplicado sem a prévia "O que entendi"; o que não for reconhecido fica como lembrete na sessão. */
+
+const OB_EQ = [
+  [/\b(polias?|cabos?|cross ?over|cross)\b/, 'cabo'], [/\b(maquinas?|aparelhos?)\b/, 'maquina'], [/\bsmith\b/, 'smith'],
+  [/\bhalter(es)?\b/, 'halter'], [/\bbarra(s)?\b(?! fixa)(?! w)/, 'barra'], [/\b(elasticos?|faixas?|bands?|minibands?)\b/, 'elastico'],
+  [/\bkettlebells?\b/, 'kettlebell'], [/\b(peso do corpo|peso corporal|calistenia)\b/, 'peso'],
+];
+const OB_MUS = [
+  [/\b(peito|peitoral|peitorais)\b/, ['peito']], [/\b(costas|dorsal|dorsais|lats?)\b/, ['costas']], [/\b(ombros?|deltoides?)\b/, ['ombros']],
+  [/\bbiceps\b/, ['biceps']], [/\btriceps\b/, ['triceps']], [/\bbracos?\b/, ['biceps', 'triceps']], [/\bantebracos?\b/, ['antebraco']],
+  [/\bquadriceps\b/, ['quadriceps']], [/\bposteriores?( de coxa)?\b/, ['posteriores']], [/\b(gluteos?|bumbum)\b/, ['gluteos']],
+  [/\b(pernas?|coxas?|inferiores)\b/, ['quadriceps', 'posteriores']], [/\bpanturrilhas?\b/, ['panturrilha']],
+  [/\b(abdomen|abdominais?|abs|core|barriga)\b/, ['abdomen']], [/\badutor(es|a)?\b/, ['adutores']],
+];
+const OB_ADD = {peito: ['pressI', 'fly', 'pressH2'], costas: ['rowH2', 'pullV2', 'rowH', 'pullV'], ombros: ['lat', 'rear', 'ohp'], biceps: ['bi2', 'bi', 'bi3'], triceps: ['tri2', 'tri', 'tri3'],
+  quadriceps: ['squat2', 'legext', 'lunge'], posteriores: ['legcurl', 'hinge'], gluteos: ['glute', 'abduct', 'lunge'], panturrilha: ['calf'], abdomen: ['core2', 'core'], adutores: ['adduct'], antebraco: []};
+const OB_JOINT = [
+  [/\bombros?\b/, 'ombro', e => ['ombro-press', 'dip-peito', 'ombro-front', 'pullover', 'press-decl'].includes(e.p) || /remada alta|atras da nuca|paralela/.test(norm(e.n))],
+  [/\bjoelhos?\b/, 'joelho', e => ['quad-comp', 'quad-iso'].includes(e.p)],
+  [/\b(lombar|coluna|costas baixa|hernia)\b/, 'lombar', e => ['terra', 'hinge'].includes(e.p) || (e.p === 'remada' && e.e === 'barra') || (e.p === 'quad-comp' && e.e === 'barra')],
+  [/\b(punhos?|pulsos?)\b/, 'punho', e => (e.e === 'barra' && ['biceps', 'triceps-over', 'triceps-push'].includes(e.p)) || /flexao/.test(norm(e.n))],
+  [/\bcotovelos?\b/, 'cotovelo', e => ['triceps-over', 'triceps-push'].includes(e.p) && e.e === 'barra'],
+];
+const OB_NEG = /\b(sem|nao (quero|gosto|tenho|curto|consigo|uso|usar|fazer|faco|curti)|evit\w*|tir\w*|remov\w*|odeio|nada de|chega de|detesto|troc\w* (o|a|os|as)?)\b/;
+const OB_STOP = new Set(['com', 'sem', 'para', 'pra', 'mais', 'menos', 'quero', 'gosto', 'fazer', 'treino', 'exercicio', 'exercicios', 'nao', 'tirar', 'trocar', 'evitar', 'tenho', 'odeio', 'muito', 'pouco', 'favor']);
+let OB_VOCAB = null;
+const obVocab = () => OB_VOCAB || (OB_VOCAB = new Set(Object.values(CAT).flatMap(e => norm(e.n).split(/[^a-z0-9]+/)).filter(w => w.length >= 4 && !OB_STOP.has(w))));
+const ISO_P = ['quad-iso', 'fly', 'ombro-lat', 'ombro-front', 'ombro-post', 'biceps', 'martelo', 'triceps-over', 'triceps-push', 'flexora', 'pant', 'abd', 'abd-inf', 'obliquo', 'gluteo', 'adutor', 'antebraco', 'antebraco-flex', 'encolhimento'];
+/* exercícios que pedem técnica ou força avançada: só entram por troca automática se não houver outra opção */
+const OB_HARD = new Set(['flexora-nordica', 'sissy', 'paralelas', 'barra-fixa', 'agachamento-unilateral', 'pike', 'flexao-declinada']);
+const EQ_PREF = ['halter', 'barra', 'maquina', 'cabo', 'smith', 'peso', 'kettlebell', 'elastico', 'suspensao', 'outros'];
+
+/* equipamento que este treino já usa: se tem máquina ou polia, está numa academia */
+function obAllowedEq(items, ban){
+  const used = new Set(items.map(x => getEx(x.ex) && getEx(x.ex).e).filter(Boolean));
+  const gym = ['maquina', 'cabo', 'smith', 'barra'].some(e => used.has(e));
+  const base = gym ? LOCAIS.academia.eq : [...used, 'peso'];
+  return base.filter(e => !ban.has(e));
+}
+/* melhor substituto: mesmo padrão de movimento, equipamento permitido, ainda não está no treino */
+function obAlt(ex, items, ban, prefer){
+  const e = getEx(ex); if (!e) return null; const inW = new Set(items.map(x => x.ex)); const allow = new Set(obAllowedEq(items, ban));
+  const rank = k => { const c = CAT[k]; return (prefer && c.e === prefer ? 0 : 10) + (allow.has(c.e) ? 0 : 100) + EQ_PREF.indexOf(c.e); };
+  const ok = k => k !== ex && !inW.has(k) && !ban.has(CAT[k].e) && (allow.has(CAT[k].e) || (prefer && CAT[k].e === prefer));
+  const same = Object.keys(CAT).filter(k => ok(k) && CAT[k].p === e.p);
+  const near = Object.keys(CAT).filter(k => ok(k) && CAT[k].p !== e.p && CAT[k].m === e.m && (CAT[k].pri || [])[0] === (e.pri || [])[0] && CAT[k].m !== 'cardio');
+  const pick = l => l.sort((a, b) => rank(a) - rank(b))[0];
+  return pick(same.filter(k => !OB_HARD.has(k))) || pick(near.filter(k => !OB_HARD.has(k))) || pick(same) || pick(near) || null;
+}
+function obAddFor(m, items, ban){
+  const inW = new Set(items.map(x => x.ex)); const allow = new Set(obAllowedEq(items, ban));
+  for (const sl of OB_ADD[m] || []){ const k = (SLOTS[sl] ? SLOTS[sl].c : []).find(k => CAT[k] && !inW.has(k) && allow.has(CAT[k].e) && !ban.has(CAT[k].e)); if (k) return k; }
+  return null;
+}
+function obFitTime(items, mins){
+  const w = {items}; let guard = 40; const iso = x => ISO_P.includes((getEx(x.ex) || {}).p);
+  const log = [];
+  while (wMins(w) > mins && guard--){
+    const cand = items.map((x, j) => [x, j]).filter(([x]) => x.sets > 2 && !x._f).sort((a, b) => (iso(b[0]) - iso(a[0])) || (b[1] - a[1]))[0];
+    if (cand){ cand[0].sets--; log.push(`${exName(cand[0].ex)}: ${cand[0].sets + 1} → ${cand[0].sets} séries`); continue; }
+    const drop = items.map((x, j) => [x, j]).filter(([x]) => iso(x) && !x._f).pop() || (items.length > 3 ? [items[items.length - 1], items.length - 1] : null);
+    if (!drop) break; items.splice(drop[1], 1); log.push(`Sai ${exName(drop[0].ex)}`);
+  }
+  return log;
+}
+/* lê o texto e devolve as regras reconhecidas, cada uma com o que muda; off = índices desligados na prévia */
+function obInterpret(text, w0, off = new Set()){
+  let items = w0.items.map(x => ({...x})); const rules = [], flags = [], notes = [];
+  const ban = new Set(); let fitTo = null;
+  const FILL = /\b(por favor|pfv|pf|obrigad[oa]|valeu|ok|blz|beleza)\b/g;
+  const clauses = norm(text).replace(/\s+e\s+(?=(nao|sem|mais|quero|prefiro|tenho|tirar|trocar|foco|focar|priorizar|descanso|estou|odeio|evitar)\b)/g, ';').split(/[\n.;!?]+|,|\bmas\b/).map(c => c.replace(FILL, '').trim()).filter(c => c.length > 2);
+  const push = (title, fn) => { const i = rules.length; const before = items.map(x => ({...x})); const log = fn(); if (!log || !log.length){ items = before; return false; } if (off.has(i)) items = before; rules.push({title, log, on: !off.has(i)}); return true; };
+  // 1) primeiro as restrições de equipamento, para as outras regras já respeitarem
+  clauses.forEach(c => { if (!OB_NEG.test(c)) return; const exWords = c.split(/[^a-z0-9]+/).filter(w => obVocab().has(w) && !OB_EQ.some(([re]) => re.test(w)) && !OB_MUS.some(([re]) => re.test(w)));
+    if (exWords.length) return; OB_EQ.forEach(([re, eq]) => { if (re.test(c)) ban.add(eq); }); });
+  ban.forEach(eq => push(`Sem ${EQUIP[eq].toLowerCase()}`, () => { const log = []; items.forEach((x, j) => { const e = getEx(x.ex); if (!e || e.e !== eq) return; const alt = obAlt(x.ex, items, ban); if (alt){ log.push(`${exName(x.ex)} → ${exName(alt)}`); items[j] = {...x, ex: alt}; } else log.push(`${exName(x.ex)}: sem substituto com o equipamento disponível, ficou como está`); }); return log; }));
+  clauses.forEach(c => {
+    let hit = false; const mus = [...new Set(OB_MUS.filter(([re]) => re.test(c)).flatMap(([, m]) => m))];
+    const eqs = OB_EQ.filter(([re]) => re.test(c)).map(([, e]) => e); const neg = OB_NEG.test(c);
+    // dor: só sinaliza, não troca sozinho
+    if (/\b(dor|doi|doendo|lesao|lesion\w*|machuc\w*|incomod\w*|tendinite|bursite)\b/.test(c)){
+      OB_JOINT.forEach(([re, nome, test]) => { if (!re.test(c)) return; const list = items.filter(x => getEx(x.ex) && test(getEx(x.ex))).map(x => exName(x.ex));
+        flags.push({title: `Dor no ${nome}`, text: list.length ? `Os exercícios deste treino que costumam exigir mais do ${nome}: ${list.join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Você pode trocar cada um em Editar.` : `Nenhum exercício deste treino costuma exigir muito do ${nome}, mas com dor vale falar com um fisioterapeuta ou médico.`}); hit = true; });
+      if (hit) return;
+    }
+    // tempo disponível
+    const hh = c.match(/\b(\d)\s*(h|hora|horas)\b/); const mm = hh ? [0, String(+hh[1] * 60)] : c.match(/(\d{2,3})\s*(min|minutos|m\b)/); const short = /\b(mais curto|mais rapido|pouco tempo|menos tempo|treino curto|corrido|pressa)\b/.test(c);
+    if (mm || short){ fitTo = mm ? +mm[1] : 'short'; hit = true; }
+    // estilo
+    const style = /\b(forca|pesad\w*|carga alta|mais carga|poucas rep\w*)\b/.test(c) ? 'forca' : /\b(resistencia|definicao|definir|queimar|mais leve|muitas rep\w*|reps altas)\b/.test(c) ? 'res' : /\b(hipertrofia|ganhar massa|crescer)\b/.test(c) ? 'hip' : '';
+    if (style){ const S = {forca: ['mais força', 4, 6, 180, 2, 1], res: ['mais resistência', 12, 15, 60, 15, 20], hip: ['hipertrofia', 8, 12, 90, 10, 15]}[style];
+      hit = push(`Estilo: ${S[0]}`, () => { const log = []; items.forEach((x, j) => { const iso = ISO_P.includes((getEx(x.ex) || {}).p); const n = iso ? (style === 'forca' ? {...x, rmin: 8, rmax: 12, rest: 90} : {...x, rmin: S[4], rmax: S[5], rest: style === 'res' ? 45 : 60}) : {...x, rmin: S[1], rmax: S[2], rest: S[3]};
+        if (n.rmin !== x.rmin || n.rmax !== x.rmax || n.rest !== x.rest){ log.push(`${exName(x.ex)}: ${x.rmin}–${x.rmax} → ${n.rmin}–${n.rmax} reps, descanso ${fmtRest(n.rest)}`); items[j] = n; } }); return log; }) || hit; }
+    // descanso
+    const restUp = /\b(descanso (maior|mais longo|longo)|descansar mais|mais descanso)\b/.test(c), restDn = /\b(descanso (menor|mais curto|curto)|descansar menos|menos descanso)\b/.test(c);
+    if (restUp || restDn) hit = push(restUp ? 'Descanso maior' : 'Descanso menor', () => items.map((x, j) => { const r = Math.max(30, Math.min(300, (x.rest || 60) + (restUp ? 30 : -30))); if (r === x.rest) return null; items[j] = {...x, rest: r}; return `${exName(x.ex)}: ${fmtRest(x.rest || 60)} → ${fmtRest(r)}`; }).filter(Boolean)) || hit;
+    // tirar ou trocar um exercício específico
+    const words = c.split(/[^a-z0-9]+/).filter(w => obVocab().has(w) && !OB_MUS.some(([re]) => re.test(w)));
+    if (neg && words.length && words.some(w => !OB_EQ.some(([re]) => re.test(w)))){
+      const tg = items.filter(x => { const n = norm(exName(x.ex)); return words.every(w => n.includes(w)); });
+      if (tg.length){ const remove = /\b(tir\w*|remov\w*)\b/.test(c);
+        hit = push(remove ? `Tirar ${words.join(' ')}` : `Trocar ${words.join(' ')}`, () => { const log = []; tg.forEach(t => { const j = items.findIndex(x => x.uid === t.uid && x.ex === t.ex); if (j < 0) return;
+          if (remove){ items.splice(j, 1); log.push(`Sai ${exName(t.ex)}`); return; }
+          const alt = obAlt(t.ex, items, ban); if (alt){ items[j] = {...items[j], ex: alt}; log.push(`${exName(t.ex)} → ${exName(alt)}`); } }); return log; }) || hit; }
+    } else if (eqs.length && !neg && /\b(prefir\w*|mais|usar|quero|gosto|priorizar)\b/.test(c)){
+      // preferir um equipamento: troca até 2 exercícios que têm versão com ele
+      const pref = eqs[0]; hit = push(`Mais exercícios com ${EQUIP[pref].toLowerCase()}`, () => { const log = []; for (let j = 0; j < items.length && log.length < 2; j++){ const e = getEx(items[j].ex); if (!e || e.e === pref) continue; const alt = Object.keys(CAT).find(k => CAT[k].p === e.p && CAT[k].e === pref && !items.some(x => x.ex === k)); if (alt){ log.push(`${exName(items[j].ex)} → ${exName(alt)}`); items[j] = {...items[j], ex: alt}; } } return log; }) || hit;
+    }
+    // foco em músculo: uma série a mais nos exercícios dele; se pedir exercício a mais, ou se o treino não tiver nenhum, inclui um
+    if (mus.length && !neg && /\b(mais|foco|focar|priori\w*|enfase|enfatizar|reforc\w*|caprich\w*|fraco|atrasad\w*|desenvolver|crescer|atencao|incluir|adicion\w*|acrescent\w*)\b/.test(c)){
+      const wantEx = /\b(exercicios?|outro|incluir|adicion\w*|acrescent\w*)\b/.test(c);
+      mus.forEach(m => { hit = push(`Mais ${MUSC[m].toLowerCase()}`, () => { const log = []; const mine = items.filter(x => (getEx(x.ex) || {}).m === m);
+        if (wantEx || !mine.length){ const k = obAddFor(m, items, ban); if (k){ const it = {...newItem(k), sets: 3, _f: 1}; const iso = ISO_P.includes(CAT[k].p); const lastComp = items.map(x => ISO_P.includes((getEx(x.ex) || {}).p)).lastIndexOf(false);
+            const at = iso ? (items.findIndex(x => ['abdomen'].includes((getEx(x.ex) || {}).m)) + 1 || items.length + 1) - 1 : lastComp + 1; items.splice(Math.max(0, at), 0, it); log.push(`Entra ${exName(k)} (3 × ${it.rmin}–${it.rmax})`); } }
+        if (!wantEx) mine.slice(0, 2).forEach(x => { if (x.sets < 5){ x.sets++; x._f = 1; log.push(`${exName(x.ex)}: ${x.sets - 1} → ${x.sets} séries`); } });
+        return log; }) || hit; });
+    }
+    if (!hit && !(neg && eqs.length)){ const nt = norm(text.normalize('NFC')); const at = nt.indexOf(c); notes.push(at >= 0 ? text.normalize('NFC').substr(at, c.length) : c); }
+  });
+  // o tempo vem por último, para caber depois das outras mudanças (sem desfazer o foco pedido)
+  if (fitTo){ const tgt = fitTo === 'short' ? Math.round(wMins({items}) * .75) : fitTo;
+    if (tgt >= 15 && tgt < wMins({items})) push(`Treino em até ${tgt} minutos`, () => obFitTime(items, tgt));
+    else if (tgt >= 15) flags.push({title: `Cabe em ${tgt} minutos`, text: `Pela estimativa do app, este treino já leva cerca de ${wMins({items})} minutos.`}); }
+  return {rules, flags, notes, items};
+}
+
+/* ---------- interface ---------- */
+function obsCard(r, w){
+  return `<section class="card stack ob-card"><div class="row between"><span class="eyebrow">Observações e preferências</span>${w.obs ? `<span class="tiny muted">${w.obsAt ? 'ajustado ' + relDay(w.obsAt).toLowerCase() : 'salvo'}</span>` : ''}</div>
+    <textarea id="wobs" class="field ob-ta" rows="3" maxlength="400" placeholder="Ex.: sem polia · mais foco em glúteo · tenho 45 minutos · trocar o agachamento · mais força" data-act="wobs" data-rid="${r.id}" data-wid="${w.id}">${esc(w.obs || '')}</textarea>
+    <div class="row between" style="gap:10px"><span class="tiny muted grow">O app lê a anotação e sugere ajustes pequenos. Você confere antes de aplicar.</span><button class="btn sm primary" data-act="obs-run" data-rid="${r.id}" data-wid="${w.id}">Ajustar treino</button></div></section>`;
+}
+function openObsSheet(rid, wid){
+  const r = routineById(rid); const w = r && r.workouts.find(x => x.id === wid); if (!w) return;
+  const off = (UI.sheet && UI.sheet.kind === 'obs' && UI.sheet.wid === wid) ? UI.sheet.off : new Set();
+  const res = obInterpret(w.obs || '', w, off); UI.sheet = {kind: 'obs', rid, wid, off, res};
+  const on = res.rules.filter(x => x.on).length;
+  openSheet(`${sheetHead(w.nome, 'O que entendi')}
+    ${res.rules.length ? `<div class="ob-list">${res.rules.map((x, i) => `<button class="ob-rule" data-act="obs-tog" data-i="${i}" aria-pressed="${x.on}"><i class="tick">${I.check}</i><span class="grow"><b>${esc(x.title)}</b>${x.log.map(l => `<span>${esc(l)}</span>`).join('')}</span></button>`).join('')}</div>` : ''}
+    ${res.flags.map(f => `<div class="ob-flag"><b>${esc(f.title)}</b><p>${esc(f.text)}</p></div>`).join('')}
+    ${res.notes.length ? `<div class="ob-notes"><span class="eyebrow">Guardado como lembrete</span>${res.notes.map(n => `<p>“${esc(n)}”</p>`).join('')}<p class="tiny muted">Não reconheci um ajuste nessas frases. Elas aparecem no começo do treino para você lembrar.</p></div>` : ''}
+    ${!res.rules.length && !res.flags.length && !res.notes.length ? '<p class="ink2" style="margin:14px 0 0">Escreva uma observação para o app sugerir ajustes.</p>' : ''}
+    <div class="stack" style="margin-top:18px">${on ? `<button class="btn primary block" data-act="obs-apply">Aplicar ${on} ${on === 1 ? 'ajuste' : 'ajustes'}</button>` : ''}<button class="btn ghost block" data-act="close">${on ? 'Agora não' : 'Fechar'}</button></div>`);
+}
+A.wobs = el => { const r = routineById(el.dataset.rid); const w = r && r.workouts.find(x => x.id === el.dataset.wid); if (!w) return; const v = el.value.trim().slice(0, 400); if ((w.obs || '') === v) return; if (v) w.obs = v; else delete w.obs; saveState(); };
+A['obs-run'] = el => { const t = $('#wobs'); if (t) A.wobs(t); UI.sheet = null; openObsSheet(el.dataset.rid, el.dataset.wid); };
+A['obs-tog'] = el => { const sh = UI.sheet; const i = +el.dataset.i; if (sh.off.has(i)) sh.off.delete(i); else sh.off.add(i); openObsSheet(sh.rid, sh.wid); };
+A['obs-apply'] = () => { const sh = UI.sheet; const r = routineById(sh.rid); const w = r && r.workouts.find(x => x.id === sh.wid); if (!w) return;
+  const before = w.items.map(x => ({...x})); w.items = sh.res.items.map(x => { const y = {...x, uid: x.uid || uid('i')}; delete y._f; return y; }); w.obsAt = today(); saveState(); closeSheet(); render(); Platform.haptic('success');
+  toast('Treino ajustado', () => { w.items = before; saveState(); render(); }); };
+document.addEventListener('change', ev => { if (ev.target && ev.target.id === 'wobs') A.wobs(ev.target); });
+/* lembrete na sessão: as frases que não viraram ajuste */
+function obsReminder(s){
+  if (!s || !s.routine) return ''; const r = routineById(s.routine); const w = r && r.workouts.find(x => x.id === s.workout); if (!w || !w.obs) return '';
+  const notes = obInterpret(w.obs, w).notes; if (!notes.length) return '';
+  return `<div class="ob-remind">${I.note}<span>${notes.map(esc).join(' · ')}</span></div>`;
+}
 
 // Inicialização (carregado por último)
 Platform.onBack(handleBack, backDepth);

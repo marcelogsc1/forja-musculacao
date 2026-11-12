@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.12.0';
+const APP_VERSION = '4.13.0';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -352,6 +352,7 @@ function vWorkout(p){
       ${ed ? `<button class="icon sm" data-act="i-edit" data-j="${j}" aria-label="Editar exercício">${I.more}</button>` : ''}</div>`; }).join('')}</div>` : '<div class="empty"><b>Treino vazio</b>Adicione exercícios da biblioteca.</div>'}
     ${ed || !w.items.length ? `<button class="btn ghost block" style="margin-top:12px" data-act="i-add">${I.plus}Adicionar exercícios</button>` : ''}</section>`;
   if (ed) h += `<section class="row wrap"><button class="btn ghost sm" data-act="dup-workout" data-rid="${r.id}" data-wid="${w.id}">Duplicar treino</button><button class="btn danger sm" data-act="ask-del-workout" data-rid="${r.id}" data-wid="${w.id}">Excluir treino</button></section>`;
+  if (!ed && w.items.length) h += obsCard(r, w);
   h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos deste treino</div>${muscleBlock(m.pri, m.sec)}</section>`;
   if (!ed) h += `<div style="position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));margin-top:18px;z-index:5"><button class="btn primary block" data-act="start" data-rid="${r.id}" data-wid="${w.id}" ${open || !w.items.length ? 'disabled' : ''}>${I.play}${open ? 'Há um treino em andamento' : 'Começar treino'}</button></div>`;
   return h;
@@ -456,7 +457,7 @@ function vSession(){
   const st = stats(s); const total = s.items.reduce((a, e) => a + e.sets.filter(x => x.t !== 'w').length, 0);
   const cur = s.items.findIndex(e => e.sets.some(x => !x.ok));
   let h = `<section style="margin-top:16px"><div class="hero-lbl ${live ? 'live' : ''}" style="--pc:${col(s.cor)}">${live ? `${fmtD(s.date)} · em andamento` : s.status === 'draft' ? 'Registro de treino passado' : 'Editando treino salvo'}</div><h1 class="display h1" style="margin-top:10px">${esc(s.wname)}</h1>
-    ${live ? '' : `<div class="formgrid" style="margin-top:14px"><label class="flabel"><span class="tiny muted">Data</span><input id="ss-date" class="field" type="date" max="${today()}" value="${s.date}" data-act="ss-date"></label><label class="flabel"><span class="tiny muted">Duração (min)</span><input id="ss-dur" class="field num" inputmode="numeric" value="${s.dur ?? (s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : '')}" data-act="ss-dur" placeholder="opcional"></label></div>`}
+    ${live ? obsReminder(s) : ''}${live ? '' : `<div class="formgrid" style="margin-top:14px"><label class="flabel"><span class="tiny muted">Data</span><input id="ss-date" class="field" type="date" max="${today()}" value="${s.date}" data-act="ss-date"></label><label class="flabel"><span class="tiny muted">Duração (min)</span><input id="ss-dur" class="field num" inputmode="numeric" value="${s.dur ?? (s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : '')}" data-act="ss-dur" placeholder="opcional"></label></div>`}
     <div class="meta mono" style="margin-top:12px;font-size:12.5px"><span><b>${pad2(st.sets)}</b>/${pad2(total)} séries</span><span><b>${fmtVol(st.vol)}</b> de volume</span></div><div class="progress" style="margin-top:12px"><i style="width:${total ? st.sets / total * 100 : 0}%"></i></div>
     ${live ? '' : '<p class="tiny muted" style="margin:10px 0 0">Toque nos campos de kg e reps para anotar e no ✓ para confirmar cada série. Só séries confirmadas entram no histórico.</p>'}</section><section class="stack">`;
   s.items.forEach((e, k) => {
@@ -524,6 +525,7 @@ function vPast(p){
   let h = p.fresh ? `<section class="hero celebrate" style="--pc:${col(s.cor)};margin-top:14px">${glow()}<div class="hero-top" style="justify-content:center"><span class="hero-lbl">Treino concluído · ${fmtD(s.date)}</span></div>${heroTitle(s.wname, 'done', {tag: 'h1', key: 'done-' + s.id, stack: true, words: ['TÁ PAGO', s.wname, fmtD(s.date)]})}<p class="hero-tag" style="max-width:none">${tagline('done')}</p><p class="ink2" style="margin:8px 0 0">${st.sets ? `Mais um tijolo na construção. ${prs.length ? 'E com recorde novo.' : 'Bom trabalho.'}` : 'Registro salvo.'}</p></section>`
     : `<section class="row" style="gap:14px;margin-top:20px"><span class="plate" style="--pc:${col(s.cor)};width:52px;height:52px;font-size:20px">${esc((s.wname || '?').slice(0, 1))}</span><div class="grow"><div class="eyebrow">${fmtDLong(s.date)}</div><h1 class="display h2" style="margin-top:4px">${esc(s.wname)}</h1></div></section>`;
   h += `<section class="stats"><div class="stat"><b class="num">${mins != null ? mins : '–'}</b><span>minutos</span></div><div class="stat"><b class="num">${st.sets}</b><span>séries</span></div><div class="stat ember"><b class="num">${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}</b><span>${st.vol >= 10000 ? 'toneladas' : 'kg de volume'}</span></div></section>`;
+  h += kcalCard(s);
   if (prs.length) h += `<section class="card"><div class="eyebrow" style="margin-bottom:4px">Recordes neste treino</div>${prs.map(x => `<div class="pr"><span class="trophy">${I.trophy}</span><div class="grow"><b style="font-size:15px">${esc(exName(x.ex))}</b><div class="small muted num">${fmtN(x.kg)} kg × ${x.reps} · 1RM est. ${fmtN(Math.round(x.v * 10) / 10)} kg</div></div></div>`).join('')}</section>`;
   h += `<section class="card"><label class="flabel"><span class="eyebrow">Como foi o treino?</span><div class="seg" style="margin-top:4px">${[['1', 'Pesado'], ['2', 'Ok'], ['3', 'Muito bom']].map(([k, l]) => `<button data-act="feel" data-sid="${s.id}" data-v="${k}" aria-pressed="${s.feel === k}">${l}</button>`).join('')}</div><textarea id="s-note" class="field" style="margin-top:10px;min-height:64px" maxlength="400" placeholder="Anotação (sono, energia, dor, ajustes)" data-act="s-note" data-sid="${s.id}">${esc(s.note || '')}</textarea></label></section>`;
   if (!s.quick && st.sets) h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos trabalhados</div>${heatBlock(regionLevels([s]))}</section>`;

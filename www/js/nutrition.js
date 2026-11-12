@@ -388,3 +388,41 @@ A['cal-save'] = () => { const k = parseNum($('#cal-k').value); const pl = ST.pre
 A['cal-clear'] = () => { delete ST.prefs.plan.cal; saveState(); closeSheet(); render(); };
 document.addEventListener('input', ev => { const t = ev.target; if (!t.dataset || !t.dataset.pw || !UI.pw) return; UI.pw[t.dataset.pw] = t.value; const st = pwSteps()[UI.pw.step]; if (st === 'body'){ const w = UI.pw; const ok = !!(w.sex && ageFrom(w.birth) && parseNum(w.h) > 100 && parseNum(w.h) < 250 && parseNum(w.kg) > 30 && parseNum(w.kg) < 300); const b = $('[data-act="pw-next"]'); if (b) b.disabled = !ok; } });
 document.addEventListener('change', ev => { const t = ev.target; if (t.dataset && t.dataset.pw && UI.pw && (t.dataset.pw === 'birth' || t.dataset.pw === 'h')){ UI.pw[t.dataset.pw] = t.value; setTimeout(() => { if (!isTyping() && UI.pw) render(); }, 0); } });
+
+/* ---------- Calorias de um treino concluído (v4.13) ----------
+   Gasto = MET médio × metabolismo de repouso por hora × duração.
+   MET por série, do Compendium of Physical Activities 2024 (Herrmann et al.):
+     02054  3,5  musculação, vários exercícios, 8 a 15 repetições (valor padrão)
+     02052  5,0  agachamento, levantamento terra e afins
+     02022  3,8  calistenia (peso do corpo) moderada
+     02040  7,5  exercícios de condicionamento (burpee, polichinelo, corda, corrida)
+     02058  9,8  kettlebell swing
+     02055  5,8  circuito com pouco descanso (quando cada série, com o descanso, dura menos de 1 minuto)
+   O MET da sessão é a média ponderada pelas séries feitas, sobre o tempo real do treino (que já inclui os descansos).
+   Repouso por hora: Mifflin-St Jeor ÷ 24 quando há sexo, idade e altura (correção de MET proposta por Kozey et al.,
+   citada no Compendium); sem esses dados, 1 MET = 1 kcal/kg/h. Faixa de ±20%, porque o MET é uma média populacional. */
+function weightAt(date){ const l = (ST.bw || []).filter(x => x.kg).sort((a, b) => a.date.localeCompare(b.date)); const b = l.filter(x => x.date <= date).pop() || l[0]; return b ? b.kg : (ST.prefs.plan && ST.prefs.plan.startKg) || null; }
+function setMET(ex){ const e = getEx(ex); if (!e) return 3.5; if (ex === 'kettlebell-swing') return 9.8; if (e.m === 'cardio') return 7.5; if (['quad-comp', 'hinge', 'terra'].includes(e.p) && e.e !== 'peso') return 5.0; if (e.e === 'peso') return 3.8; return 3.5; }
+function sessKcal(s){
+  if (!s || s.quick) return null; const kg = weightAt(s.date); const sets = s.items.flatMap(e => e.sets.filter(x => x.ok).map(() => e.ex)); if (!sets.length) return null;
+  if (!kg) return {need: 'kg'};
+  let mins = sessMins(s); const est = !mins || mins < 5; if (est) mins = Math.round(sets.length * 2.25 + 5); mins = Math.min(240, Math.max(5, mins));
+  let met = sets.reduce((a, ex) => a + setMET(ex), 0) / sets.length; const perSet = mins * 60 / sets.length;
+  const circ = perSet <= 50 ? 1 : perSet >= 60 ? 0 : (60 - perSet) / 10; if (met < 5.8) met += (5.8 - met) * circ;
+  const pf = ST.profile || {}; const sex = sexOf(pf), age = ageFrom(pf.birth), h = parseNum(pf.height);
+  const rmrH = sex && age && h ? (10 * kg + 6.25 * h - 5 * age + (sex === 'M' ? 5 : -161)) / 24 : kg; const corr = !!(sex && age && h);
+  const kcal = met * rmrH * mins / 60; const r5 = v => Math.round(v / 5) * 5;
+  return {kcal: r5(kcal), lo: r5(kcal * .8), hi: r5(kcal * 1.2), net: r5((met - 1) * rmrH * mins / 60), met: Math.round(met * 10) / 10, mins, est, kg, corr, circ: circ > 0, n: sets.length};
+}
+function kcalCard(s){
+  const k = sessKcal(s); if (!k) return '';
+  if (k.need) return `<section class="card kc-card"><div class="row between"><span class="eyebrow">Gasto estimado</span></div><p class="small ink2" style="margin:8px 0 12px">Para calcular as calorias do treino, o app precisa do seu peso.</p><button class="btn sm primary" data-act="bw-open" data-f="kg">Registrar peso</button></section>`;
+  return `<section class="card kc-card"><div class="row between"><span class="eyebrow">Gasto estimado</span><span class="tiny muted">faixa ${fmtK(k.lo)}–${fmtK(k.hi)}</span></div>
+    <div class="kc-k"><b class="num">~${fmtK(k.kcal)}</b><span>kcal no treino</span></div>
+    <p class="small muted" style="margin:4px 0 0">Cerca de ${fmtK(k.net)} kcal acima do que você gastaria em repouso no mesmo tempo.</p>
+    <details class="kc-how"><summary>Como calculamos</summary><ul>
+      <li>${k.est ? `Duração estimada pelas séries: ${k.mins} min` : `Duração do treino: ${k.mins} min, com os descansos`}</li>
+      <li>Intensidade média ${fmtN(k.met)} MET, ponderada pelas ${k.n} séries feitas${k.circ ? ', com ajuste para circuito (pouco descanso)' : ''} (Compendium of Physical Activities 2024)</li>
+      <li>${k.corr ? `Gasto em repouso pelo seu metabolismo basal (peso ${fmtN(k.kg)} kg, altura, idade e sexo)` : `Peso de ${fmtN(k.kg)} kg. Complete altura, idade e sexo no perfil para um valor mais preciso`}</li>
+      <li>É uma estimativa: a mesma sessão pode gastar uns 20% a mais ou a menos dependendo do esforço e da pessoa.</li></ul></details></section>`;
+}

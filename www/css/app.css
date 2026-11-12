@@ -1018,3 +1018,28 @@ button.hint{border:0;cursor:pointer;text-align:left}
 .bm-stats span{display:block;font-size:11.5px;color:var(--muted)}
 .bm-stats b{display:block;font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap}
 @media (max-width:360px){.bm-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ===== Observações do treino e calorias (v4.13) ===== */
+.ob-ta{min-height:84px;resize:vertical;font-size:15px;line-height:1.45}
+.ob-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.ob-rule{display:flex;align-items:flex-start;gap:12px;width:100%;padding:14px;border-radius:16px;background:var(--s2);border:1px solid var(--line);color:var(--ink);text-align:left}
+.ob-rule b{display:block;font-size:15px;margin-bottom:4px}
+.ob-rule span span{display:block;font-size:13px;color:var(--ink2);line-height:1.45}
+.ob-rule .tick{width:22px;height:22px;flex:none;border-radius:7px;box-shadow:inset 0 0 0 1.5px var(--line2);display:grid;place-items:center;margin-top:1px}
+.ob-rule .tick svg{width:13px;height:13px;stroke:var(--ember-ink);fill:none;stroke-width:3.2;opacity:0}
+.ob-rule[aria-pressed="true"] .tick{background:var(--ember);box-shadow:none}
+.ob-rule[aria-pressed="true"] .tick svg{opacity:1}
+.ob-rule[aria-pressed="false"]{opacity:.6}
+.ob-flag{margin-top:12px;padding:14px;border-radius:16px;background:color-mix(in srgb,var(--c2) 12%,transparent);border:1px solid color-mix(in srgb,var(--c2) 30%,transparent)}
+.ob-flag b{font-size:15px}
+.ob-flag p{margin:6px 0 0;font-size:13px;line-height:1.45;color:var(--ink2)}
+.ob-notes{margin-top:14px}
+.ob-notes p{margin:6px 0 0;font-size:14px;color:var(--ink2)}
+.ob-remind{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--s2);font-size:13.5px;color:var(--ink2)}
+.ob-remind svg{width:16px;height:16px;flex:none;stroke:var(--ember);fill:none;stroke-width:2;margin-top:2px}
+.kc-k{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.kc-k b{font-size:40px;font-weight:500;letter-spacing:-.05em}
+.kc-k span{font-size:14px;color:var(--muted)}
+.kc-how{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.kc-how summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink2)}
+.kc-how ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.5;color:var(--muted)}
