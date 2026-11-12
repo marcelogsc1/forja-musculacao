@@ -6,6 +6,9 @@ const EQUIP = {barra:'Barra',halter:'Halteres',cabo:'Cabo / polia',maquina:'Máq
 const PAT = {'press-reto':'supino reto','press-incl':'supino inclinado','press-decl':'supino declinado',fly:'crucifixo','dip-peito':'mergulho',puxada:'puxada',remada:'remada',pullover:'pullover',encolhimento:'encolhimento','ombro-press':'desenvolvimento','ombro-lat':'elevação lateral','ombro-front':'elevação frontal','ombro-post':'posterior de ombro',biceps:'rosca',martelo:'rosca neutra','antebraco-flex':'rosca inversa',antebraco:'punho',carregar:'carregamento','triceps-over':'tríceps acima da cabeça','triceps-push':'tríceps empurrando','quad-comp':'agachamento e afundo','quad-iso':'isolado de quadríceps',flexora:'flexora',hinge:'dobradiça de quadril',terra:'levantamento terra',gluteo:'glúteo',adutor:'adutor',pant:'panturrilha',abd:'abdominal','abd-inf':'abdominal infra',obliquo:'oblíquos',core:'estabilidade',cardio:'cardio',custom:'personalizado'};
 const COLORS = 8;
 const col = i => `var(--c${((i % COLORS) + COLORS) % COLORS})`;
+/* cor do texto sobre a cor do treino (amarelo e cinza pedem texto escuro) */
+const colInk = i => `var(--c${((i % COLORS) + COLORS) % COLORS}i)`;
+const pcs = i => `--pc:${col(i)};--pci:${colInk(i)}`;
 
 // ---------- modelos de rotina ----------
 const X = (ex, sets, rmin, rmax, rest, nota = '') => ({ex, sets, rmin, rmax, rest, nota});

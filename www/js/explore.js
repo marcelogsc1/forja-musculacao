@@ -93,7 +93,7 @@ function vTemplate(p){
     ${optGroup('Nível', 'nivel', NIVEIS.map(n => [n, n]), g.nivel, 'tpl-opt', `data-tid="${t.id}"`)}</section>`;
   h += `<section class="stack" style="gap:10px"><button class="btn primary block" data-act="add-template" data-tid="${t.id}">${I.plus}${t.avulso ? 'Salvar como nova rotina' : 'Salvar nas minhas rotinas'}</button>
     ${t.avulso && activeRoutine() ? `<button class="btn block" data-act="add-tpl-workout" data-tid="${t.id}">Adicionar à rotina ativa</button>` : ''}</section>`;
-  h += t.workouts.map((w, i) => `<section><div class="row" style="margin-bottom:10px"><span class="plate" style="--pc:${col(w.cor)}">${i + 1}</span><div class="grow"><h2 class="display h3">${esc(w.nome)}</h2><span class="tiny muted">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></div></div><div class="list">${w.items.map(exRow).join('')}</div></section>`).join('');
+  h += t.workouts.map((w, i) => `<section><div class="row" style="margin-bottom:10px"><span class="plate" style="${pcs(w.cor)}">${i + 1}</span><div class="grow"><h2 class="display h3">${esc(w.nome)}</h2><span class="tiny muted">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></div></div><div class="list">${w.items.map(exRow).join('')}</div></section>`).join('');
   h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos trabalhados</div>${muscleBlock(m.pri, m.sec, false)}</section>`;
   return h;
 }
@@ -173,7 +173,7 @@ function vBuilderResult(b){
   return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
     <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
     <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
-  <section><div class="list bq-week">${t.workouts.map((w, i) => `<details class="bq-w"><summary><span class="plate" style="--pc:${col(w.cor)}">${i + 1}</span><span class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></span>${I.chev}</summary><div class="list">${w.items.map(exRow).join('')}</div></details>`).join('')}</div>
+  <section><div class="list bq-week">${t.workouts.map((w, i) => `<details class="bq-w"><summary><span class="plate" style="${pcs(w.cor)}">${i + 1}</span><span class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></span>${I.chev}</summary><div class="list">${w.items.map(exRow).join('')}</div></details>`).join('')}</div>
     <p class="tiny muted" style="margin:10px 4px 0">Toque em um treino para ver os exercícios. Depois de salvar, você pode trocar qualquer um.</p></section>
   <section class="stack" style="gap:10px"><button class="btn primary block" data-act="add-template" data-tid="_bld">${I.plus}Salvar programa</button>
     ${al ? '' : '<button class="link bq-more" data-act="bld-alt">Ver outras opções</button>'}</section>

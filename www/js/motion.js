@@ -14,6 +14,7 @@ const MOTION_MODES = [
   {v: 'type', t: 'Tipografia', s: 'Só o nome, com uma coreografia para cada tipo de treino.'},
   {v: 'equip', t: 'Equipamento', s: 'O aparelho do exercício principal em movimento.'},
   {v: 'badge', t: 'Selo', s: 'Selo de clube girando com o dia e os músculos.'},
+  {v: 'plate', t: 'Anilha', s: 'No Início, uma fatia acende a cada treino feito na semana, até a anilha ficar completa.'},
   {v: 'off', t: 'Estático', s: 'Sem animação.'},
 ];
 const motionMode = () => (typeof ST !== 'undefined' && ST.prefs && ST.prefs.motion) || 'combo';
@@ -162,6 +163,20 @@ function badgeSvg(ty, words){
     <g clip-path="url(#c${id})"><g transform="translate(60 61) scale(.6) translate(-60 -60)" class="eq">${eqDraw(ty)}</g></g></svg></div>`;
 }
 
+/* ---------- anilha da semana: uma fatia por treino feito ---------- */
+function plateSvg(wk){
+  const total = Math.max(1, Math.min(12, (wk && wk.total) || 5)); const done = Math.max(0, Math.min(total, wk ? wk.done || 0 : 0)); const nowI = wk && wk.today ? done : -1;
+  const C = 120, R = 112, r0 = R * .27, gap = total > 1 ? 2.2 : 0, step = 360 / total;
+  const pt = (r, a) => { const t = (a - 90) * Math.PI / 180; return `${(C + r * Math.cos(t)).toFixed(2)} ${(C + r * Math.sin(t)).toFixed(2)}`; };
+  const sec = (a0, a1) => { const L = a1 - a0 > 180 ? 1 : 0; return `M${pt(R, a0)}A${R} ${R} 0 ${L} 1 ${pt(R, a1)}L${pt(r0, a1)}A${r0} ${r0} 0 ${L} 0 ${pt(r0, a0)}Z`; };
+  const segs = total === 1 ? [`<circle cx="${C}" cy="${C}" r="${R}" class="${done ? 'pl-on' : nowI === 0 ? 'pl-on pl-now' : 'pl-off'}"/>`]
+    : [...Array(total)].map((_, i) => `<path d="${sec(i * step + gap / 2, (i + 1) * step - gap / 2)}" class="${i < done ? 'pl-on' : i === nowI ? 'pl-on pl-now' : 'pl-off'}"/>`);
+  return `<svg class="pl" viewBox="0 0 240 240" role="img" aria-label="Anilha da semana: ${done} de ${total} treinos"><g class="pl-spin">${segs.join('')}
+    <circle cx="${C}" cy="${C}" r="${R * .93}" fill="none" stroke="#000" stroke-opacity=".18" stroke-width="5"/><circle cx="${C}" cy="${C}" r="${R * .72}" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="2"/>
+    <text x="${C - R * .62}" y="${C + R * .58}" transform="rotate(-38 ${C - R * .62} ${C + R * .58})" class="pl-t">${done}/${total}</text></g>
+    <circle cx="${C}" cy="${C}" r="${r0}" fill="#C9CCD1"/><circle cx="${C}" cy="${C}" r="${r0}" fill="none" stroke="#8E9298" stroke-width="4"/><circle cx="${C}" cy="${C}" r="${R * .11}" fill="#0E0F11"/></svg>`;
+}
+
 /* ---------- nome com coreografia ---------- */
 function kineticName(name, ty, tag, key){
   const s = String(name).trim(); const ws = s.split(/\s+/);
@@ -206,6 +221,7 @@ function kineticName(name, ty, tag, key){
    words: palavras do anel do selo (dia + músculos). */
 function heroTitle(name, ty, opts = {}){
   const mode = motionMode(); const tag = opts.tag || 'h2'; const key = opts.key || '';
+  if (mode === 'plate') return !opts.week ? kineticName(name, ty, tag, key) : `<div class="hero-pl">${plateSvg(opts.week)}${kineticName(name, ty, tag, key)}</div>`;
   const side = mode === 'equip' || mode === 'combo' ? equipTile(ty) : mode === 'badge' ? badgeSvg(ty, opts.words || [DAY_WORD[ty] || name]) : '';
   if (!side) return kineticName(name, ty, tag, key);
   return opts.stack ? `<div class="hero-row stk">${side}${kineticName(name, ty, tag, key)}</div>` : `<div class="hero-row">${kineticName(name, ty, tag, key)}${side}</div>`;
@@ -215,13 +231,13 @@ function badgeWords(ty, items){ const top = items && items.length ? groupsOf(ite
 /* ---------- escolha do estilo (Perfil) ---------- */
 function motionPreview(mode){
   const prev = ST.prefs.motion; ST.prefs.motion = mode;
-  const html = `<div class="mp" style="--pc:${col(0)}">${heroTitle('Push', 'push', {words: ['PUSH DAY', 'PEITO', 'OMBROS', 'TRÍCEPS']})}</div>`;
+  const html = `<div class="mp" style="${pcs(0)}">${heroTitle('Push', 'push', {words: ['PUSH DAY', 'PEITO', 'OMBROS', 'TRÍCEPS'], week: {done: 3, total: 5}})}</div>`;
   ST.prefs.motion = prev; return html;
 }
 function openMotionSheet(){
   UI.sheet = {kind: 'motion'};
   openSheet(`${sheetHead('Personalidade', 'Animação do treino')}
-    <p class="ink2 small" style="margin:10px 0 0">Como o treino do dia aparece no cartão do Início, na página do treino e na tela de concluído.</p>
+    <p class="ink2 small" style="margin:10px 0 0">Como o treino do dia aparece no cartão do Início e na página do treino.</p>
     <div class="mo-list">${MOTION_MODES.map(m => `<button class="choice mo-opt" data-act="motion-set" data-v="${m.v}" aria-pressed="${motionMode() === m.v}">${motionPreview(m.v)}<span class="grow"><b>${m.t}${m.v === 'combo' ? ' <em class="pill good">padrão</em>' : ''}</b><span>${m.s}</span></span><i class="tick">${I.check}</i></button>`).join('')}</div>
     ${reducedMotion() ? '<p class="tiny muted" style="margin:10px 0 0">Seu aparelho está com "reduzir movimento" ligado, então as animações ficam paradas.</p>' : ''}`);
 }

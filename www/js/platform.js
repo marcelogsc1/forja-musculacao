@@ -39,7 +39,7 @@ const Platform = (() => {
     },
     themeColor(dark){
       let m = document.querySelector('meta[name="theme-color"]'); if (!m){ m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); }
-      m.content = dark ? '#0B0B0C' : '#F4F2EE';
+      m.content = dark ? '#0E0F11' : '#E8E6E1';
       const SB = plug('StatusBar'); if (SB){ SB.setStyle({style: dark ? 'DARK' : 'LIGHT'}).catch(() => {}); SB.setBackgroundColor && SB.setBackgroundColor({color: m.content}).catch(() => {}); }
     },
     /* Botão voltar do Android / gesto de voltar. handler() devolve false quando está na raiz. */
