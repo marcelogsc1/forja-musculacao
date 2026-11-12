@@ -20,7 +20,9 @@ const fmtRest = s => !s ? 'sem descanso' : s < 60 ? `${s} s` : (s % 60 ? `${Math
 const fmtClock = sec => { sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`; };
 const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 function uid(p){ return p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function mondayOf(d){ const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - (x.getDay() + 6) % 7); return x; }
+/* semana brasileira: começa no domingo e termina no sábado */
+function weekStartOf(d){ const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - x.getDay()); return x; }
+const mondayOf = weekStartOf; // nome antigo, mantido por compatibilidade
 function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

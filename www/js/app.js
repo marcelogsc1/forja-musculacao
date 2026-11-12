@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.13.0';
+const APP_VERSION = '4.13.1';
 const DEFAULT_PREFS = {theme: 'dark', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -56,7 +56,7 @@ function nextWorkout(r){
 /* ---- agenda da semana ----
    routine.dias = {"1": wid, ...} com a chave = dia da semana do JS (0 domingo ... 6 sábado).
    Sem agenda, vale a sequência (próximo treino depois do último feito). */
-const WEEK = [1, 2, 3, 4, 5, 6, 0];
+const WEEK = [0, 1, 2, 3, 4, 5, 6]; // domingo a sábado
 const DIA3 = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const hasSchedule = r => !!(r && r.dias && Object.values(r.dias).some(id => r.workouts.some(w => w.id === id)));
 const scheduledOn = (r, d) => hasSchedule(r) ? r.workouts.find(w => w.id === r.dias[d.getDay()]) || null : null;
@@ -191,7 +191,8 @@ function handleBack(){
 
 // ================= Início =================
 function greet(){ const h = new Date().getHours(); return h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
-function isoWeek(d){ const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return Math.ceil(((x - y0) / 864e5 + 1) / 7); }
+/* número da semana no ano com semanas de domingo a sábado: a semana do 1º de janeiro é a 1 */
+function isoWeek(d){ const y0 = new Date(d.getFullYear(), 0, 1); const doy = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - y0) / 864e5); return Math.floor((doy + y0.getDay()) / 7) + 1; }
 const pad2 = n => String(n).padStart(2, '0');
 const LEGS = ['quadriceps', 'posteriores', 'gluteos', 'adutores', 'panturrilha'];
 /* Frase curta do dia, a partir do foco do próximo treino (séries por grupo). */
@@ -287,7 +288,7 @@ function vHome(){
   { const pc = r ? planSummaryRow('home') : ''; if (pc) h += `<section>${pc}</section>`; }
   if (Platform.canInstall() && !installHidden()) h += installCard(true);
   if (!ST.profile.name) h += `<section><button class="lastrow" data-act="profile"><span class="avatar">${I.user}</span><div class="grow"><div class="eyebrow">Perfil</div><b>Complete seu perfil</b><div class="small muted" style="margin-top:2px">Nome, objetivo e meta semanal personalizam o app.</div></div>${I.chev}</button></section>`;
-  const left = Math.max(0, goal - weekSess.length); const daysLeft = 7 - ((now.getDay() + 6) % 7) - (trainedToday ? 1 : 0);
+  const left = Math.max(0, goal - weekSess.length); const daysLeft = 7 - now.getDay() - (trainedToday ? 1 : 0);
   const hint = left === 0 ? `Meta cumprida.<span>${weekSess.length > goal ? `${weekSess.length - goal} além da meta` : 'Semana fechada'}</span>` : `Faltam ${left} ${left === 1 ? 'treino' : 'treinos'}<span>${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'} até domingo</span>`;
   h += `<section class="card wk"><div class="wk-top"><div><div class="eyebrow">Meta da semana</div><div class="wk-n"><b>${weekSess.length}</b><span>/${goal}</span></div></div><p class="wk-hint">${hint}</p></div>
     <div class="wk-bars">${days.map(d => { const k = isoDate(d); const l = byDate[k] || []; const pw = !l.length && k >= td ? scheduledOn(r, d) : null; const cls = [k === td ? 'today' : '', l.length ? 'on' : '', l.length > 1 ? 'two' : '', k > td ? 'fut' : '', pw ? 'plan' : ''].join(' '); return `<div class="wb ${cls}" style="--pc:${l.length ? col(l[0].cor) : pw ? col(pw.cor) : 'transparent'};--pc2:${l[1] ? col(l[1].cor) : 'transparent'}" title="${l.length ? l.map(s => esc(s.wname)).join(', ') : pw ? 'Planejado: ' + esc(pw.nome) : ''}"><i></i>${'STQQSSD'[(d.getDay() + 6) % 7]}</div>`; }).join('')}</div></section>
@@ -631,7 +632,7 @@ function vProgress(){
 function progGeneral(){
   const now = new Date(); if (!UI.calMonth) UI.calMonth = [now.getFullYear(), now.getMonth()];
   const [y, m] = UI.calMonth; const D = done(); const byDate = {}; D.forEach(s => (byDate[s.date] = byDate[s.date] || []).push(s));
-  const first = new Date(y, m, 1); const lead = (first.getDay() + 6) % 7; const dim = new Date(y, m + 1, 0).getDate();
+  const first = new Date(y, m, 1); const lead = first.getDay(); const dim = new Date(y, m + 1, 0).getDate();
   let cells = ''; for (let k = 0; k < lead; k++) cells += '<button class="out" tabindex="-1" aria-hidden="true"></button>';
   for (let d = 1; d <= dim; d++){ const ds = `${y}-${pad(m + 1)}-${pad(d)}`; const l = byDate[ds] || []; cells += `<button class="${l.length ? 'has' : ''} ${ds === today() ? 'today' : ''} ${ds === UI.calSel ? 'sel' : ''}" style="--pc:${l.length ? col(l[0].cor) : 'transparent'}" data-act="calsel" data-date="${ds}" aria-label="${d} de ${MESL[m]}${l.length ? ', ' + l.map(s => s.wname).join(' e ') : ''}"><span>${d}</span><span class="dots">${l.slice(0, 3).map(s => `<i style="--pc:${col(s.cor)}"></i>`).join('')}</span></button>`; }
   const sel = byDate[UI.calSel] || []; const [, sm, sd] = UI.calSel.split('-'); const future = UI.calSel > today(); const r = activeRoutine();
@@ -641,7 +642,7 @@ function progGeneral(){
   const weekS = D.filter(s => s.date >= isoDate(mon)); const got = {}; weekS.forEach(s => (s.items || []).forEach(e => { const g = getEx(e.ex).m; const n = workSets(e).length; if (n) got[g] = (got[g] || 0) + n; }));
   const rows = Object.keys(MUSC).filter(g => tgt[g] || got[g]);
   return `<section class="card"><div class="row between"><button class="icon sm" data-act="calnav" data-d="-1" aria-label="Mês anterior">${I.back}</button><h2 class="display h3">${MESL[m]} ${y}</h2><button class="icon sm" data-act="calnav" data-d="1" aria-label="Próximo mês">${svg('M9 5l7 7-7 7')}</button></div>
-    <div class="cal">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map(w => `<span class="wd">${w}</span>`).join('')}${cells}</div>
+    <div class="cal">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(w => `<span class="wd">${w}</span>`).join('')}${cells}</div>
     <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px"><div class="eyebrow">${+sd} de ${MESL[+sm - 1].toLowerCase()}</div>
     ${sel.length ? `<div style="margin:8px -14px 0">${sel.map(s => { const st = stats(s); return `<button class="li noimg" data-act="open-past" data-sid="${s.id}"><span class="plate" style="--pc:${col(s.cor)}">${esc((s.wname || '?').slice(0, 1))}</span><div class="grow"><b>${esc(s.wname)}</b><span class="sub num">${s.quick ? 'marcado sem séries' : `${st.sets} séries · ${fmtVol(st.vol)}`}</span></div>${I.chev}</button>`; }).join('')}</div>` : `<p class="small muted" style="margin:8px 0 0">${future ? 'Esse dia ainda não chegou.' : 'Nenhum treino neste dia.'}</p>`}
     ${!future ? `<div style="margin-top:14px" class="stack"><button class="btn ${sel.length ? 'ghost' : 'primary'} block" data-act="retro-sheet" data-date="${UI.calSel}">${I.plus}Registrar treino ${UI.calSel === today() ? 'de hoje' : 'neste dia'}</button>${r ? `<div><div class="tiny muted" style="margin-bottom:8px">Ou só marcar como feito, sem séries:</div><div class="row wrap" style="gap:6px">${r.workouts.map(w => `<button class="chip" data-act="quick" data-rid="${r.id}" data-wid="${w.id}"><span class="plate sm" style="--pc:${col(w.cor)}"></span>${esc(w.nome)}</button>`).join('')}</div></div>` : ''}</div>` : ''}</div></section>
