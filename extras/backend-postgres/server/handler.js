@@ -5,7 +5,7 @@
 const getDb = require('./lib/db');
 const S = require('./lib/security');
 
-const TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'session'];
+const TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar', 'session'];
 const ID_RE = /^[A-Za-z0-9_.~:@+-]{1,120}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
@@ -119,7 +119,7 @@ function cleanChange(c){
   if (!c || typeof c !== 'object') throw bad('Mudança inválida.');
   if (!TYPES.includes(c.type)) throw bad('Tipo inválido: ' + c.type);
   if (typeof c.id !== 'string' || !ID_RE.test(c.id)) throw bad('Id inválido.');
-  if ((c.type === 'profile' || c.type === 'prefs') && c.id !== 'me') throw bad('Id inválido para ' + c.type);
+  if ((c.type === 'profile' || c.type === 'prefs' || c.type === 'avatar') && c.id !== 'me') throw bad('Id inválido para ' + c.type);
   if (c.type === 'measurement' && !DATE_RE.test(c.id)) throw bad('Medida precisa de data AAAA-MM-DD.');
   const at = new Date(c.updatedAt); if (isNaN(at)) throw bad('updatedAt inválido.');
   const max = Date.now() + 5 * 60 * 1000; const updatedAt = new Date(Math.min(at.getTime(), max)); // relógio adiantado não trava o registro

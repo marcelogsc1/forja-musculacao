@@ -38,7 +38,7 @@ service cloud.firestore {
 
     function validId(t, i) {
       return i is string && i.size() >= 1 && i.size() <= 120 && i.matches('^[A-Za-z0-9_.~:@+-]+$')
-        && ((t != 'profile' && t != 'prefs') || i == 'me')
+        && ((t != 'profile' && t != 'prefs' && t != 'avatar') || i == 'me')
         && (t != 'measurement' || isDate(i));
     }
 
@@ -76,6 +76,12 @@ service cloud.firestore {
     function validMedia(d) {
       return d.keys().hasOnly(['asset']) && d.asset is string && d.asset.size() <= 200;
     }
+    // foto do perfil: JPEG reduzido no aparelho (256 px), guardado como data URL de até 60 mil caracteres
+    function validAvatar(d) {
+      return d.keys().hasOnly(['img', 'at'])
+        && d.img is string && d.img.size() <= 60000 && d.img.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')
+        && optStr(d, 'at', 40);
+    }
     function validSession(d, i) {
       return d.size() <= 40 && d.keys().hasAll(['id', 'status', 'date', 'items'])
         && d.id == i && d.status in ['open', 'draft', 'done'] && isDate(d.date)
@@ -92,6 +98,7 @@ service cloud.firestore {
         || (t == 'exercise' && validExercise(d))
         || (t == 'measurement' && validMeasurement(d, i))
         || (t == 'media' && validMedia(d))
+        || (t == 'avatar' && validAvatar(d))
         || (t == 'session' && validSession(d, i));
     }
 
@@ -100,7 +107,7 @@ service cloud.firestore {
       let r = request.resource.data;
       return r.keys().hasOnly(['type', 'id', 'data', 'deleted', 'updatedAt', 'serverAt'])
         && r.keys().hasAll(['type', 'id', 'data', 'deleted', 'updatedAt', 'serverAt'])
-        && r.type in ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'session']
+        && r.type in ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar', 'session']
         && validId(r.type, r.id)
         && rid == r.type + '__' + r.id
         && r.deleted is bool

@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.14.0';
+const APP_VERSION = '4.15.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -143,6 +143,9 @@ function push(page){ closeKP(); UI.scroll[UI.stack.length] = window.scrollY; UI.
 function pop(){ closeKP(); UI.stack.pop(); closeSheet(); render(); window.scrollTo({top: UI.scroll[UI.stack.length] || 0}); }
 function goTab(t){ closeKP(); UI.tab = t; UI.stack = []; closeSheet(); if (!Platform.isArtifact && location.hash !== '#' + t) try { history.replaceState(history.state, '', '#' + t); } catch (e) {} render(); window.scrollTo({top: 0}); }
 const curPage = () => UI.stack[UI.stack.length - 1];
+/* foto do perfil (sincronizada) ou as iniciais */
+const hasPic = () => !!(ST.avatar && typeof ST.avatar.img === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(ST.avatar.img));
+const avatarIn = () => hasPic() ? `<img src="${esc(ST.avatar.img)}" alt="">` : (initials() || I.user);
 function initials(){ const n = (ST.profile.name || '').trim(); return n ? n.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() : ''; }
 function render(){
   doneReset();
@@ -160,7 +163,7 @@ function render(){
   let head, body;
   if (p && p.type === 'auth'){ head = ''; body = vAuth(p); }
   else if (!p){
-    head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar" data-act="profile" aria-label="Perfil e ajustes">${initials() || I.user}</button>`;
+    head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar${hasPic() ? ' pic' : ''}" data-act="profile" aria-label="Perfil e ajustes">${avatarIn()}</button>`;
     body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'exercicios' ? vLibrary() : UI.tab === 'progresso' ? vProgress() : vHome();
   } else if (inSess){
     const s = curSess(); const live = s && s.status === 'open';
@@ -347,6 +350,7 @@ function vWorkout(p){
     ${w.items.length ? `<p class="hero-focus">${esc(groupsOf(w.items))}</p>` : ''}
     <div class="hero-stats"><div><b>${pad2(w.items.length)}</b><span>exercícios</span></div><div><b>${pad2(wSets(w))}</b><span>séries</span></div><div><b>${w.items.length ? wMins(w) : 0}′</b><span>estimados</span></div></div>
     ${w.items.length ? `<p class="tiny muted" style="margin:14px 0 0">Equipamentos: ${esc(equipOf(w.items))}</p>` : ''}</section>`;
+  if (ed && w.items.length) h += obsCard(r, w, true);
   if (ed) h += `<section class="card"><div class="eyebrow" style="margin-bottom:12px">Cor do treino</div><div class="swatches">${[...Array(COLORS)].map((_, k) => `<button style="${pcs(k)}" data-act="wcolor" data-rid="${r.id}" data-wid="${w.id}" data-c="${k}" aria-pressed="${w.cor === k}" aria-label="Cor ${k + 1}"></button>`).join('')}</div></section>`;
   h += `<section><div class="sec-head"><span class="eyebrow">${ed ? 'Arraste para reordenar' : 'Ordem dos exercícios'}</span><button class="btn sm ${ed ? 'primary' : ''}" data-act="toggle-edit">${ed ? 'Concluir edição' : I.edit + 'Editar'}</button></div>
     ${w.items.length ? `<div class="list" data-drag-kind="items" data-drag-id="${r.id}|${w.id}">${w.items.map((x, j) => { const pp = lastPerf(x.ex); return `<div class="li" data-drag-row>
@@ -890,7 +894,7 @@ function vProfile(){
   const acct = Store.mode === 'verify' ? `Conta <b>${esc(Auth.user?.email || '')}</b> criada. Falta confirmar o e-mail: abra o link que enviamos (confira também o spam). Até lá, tudo fica salvo neste aparelho e sobe para a conta assim que você confirmar.` : Store.mode === 'api' ? `Conectado como <b>${esc(Auth.user?.email || Auth.user?.name || 'usuário')}</b>. Seus treinos ficam salvos na sua conta e sincronizam entre aparelhos.` : Store.mode === 'cloud' ? 'Seus dados estão salvos na sua conta do Claude e sincronizam entre aparelhos.' : Store.authExpired ? 'Sua sessão expirou. Entre de novo para voltar a sincronizar.' : 'Seus dados estão salvos só neste aparelho. Crie uma conta para guardar na nuvem e usar em outros aparelhos.';
   const field = (id, label, val, attrs = '') => `<label class="flabel"><span class="tiny muted">${label}</span><input id="pf-${id}" class="field" value="${esc(val ?? '')}" data-act="pf" data-k="${id}" ${attrs}></label>`;
   const seg = (k, opts) => `<div class="seg wrapseg">${opts.map(([v, l]) => `<button data-act="pf-set" data-k="${k}" data-v="${v}" aria-pressed="${String(pf[k] || '') === String(v)}">${l}</button>`).join('')}</div>`;
-  return `<section class="profile-hero"><div class="avatar xl">${initials() || I.user}</div><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
+  return `<section class="profile-hero"><button class="avatar xl${hasPic() ? ' pic' : ''}" data-act="avatar-menu" aria-label="${hasPic() ? 'Trocar ou remover a foto' : 'Adicionar foto'}">${avatarIn()}<span class="av-cam" aria-hidden="true">${I.camera}</span></button><input id="avatar-in" type="file" accept="image/*" data-act="avatar" hidden><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
   <section><button class="set-btn" data-act="open-settings"><span class="s-ic">${I.gear}</span><span class="grow"><b>Configurações</b><span class="sub">Treino, aparência, animações e dados</span></span>${I.chev}</button></section>
   <section>${planSummaryRow('profile')}</section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
@@ -1024,6 +1028,35 @@ A.profile = () => { push({type: 'profile'}); if (Auth.kind === 'firebase' && Sto
 A.pref = el => { const k = el.dataset.k; let v = el.dataset.v; if (k !== 'theme') v = +v; ST.prefs[k] = v; saveState(); applyTheme(); render(); };
 A['hint-up'] = el => { const ss = curSess(); const e = ss && ss.items[+el.dataset.k]; if (!e) return; const kg = +el.dataset.kg, r = +el.dataset.r; e.sets.forEach(x => { if (!x.ok && x.t !== 'w'){ x.kg = kg; x.reps = r; } }); saveSession(ss); render(); Platform.haptic('light'); toast(`${fmtN(kg)} kg nas próximas séries, mirando em ${r} repetições`); };
 A['pref-tog'] = el => { const k = el.dataset.k; ST.prefs[k] = !ST.prefs[k]; saveState(); render(); if (k === 'sound' && ST.prefs.sound){ Platform.unlockAudio(); Platform.alarm(); } };
+/* foto do perfil: reduzida no aparelho para um quadrado de até 256 px em JPEG (cerca de 15 a 30 KB) */
+const AVATAR_MAX_FILE = 15 * 1024 * 1024; const AVATAR_MAX_LEN = 60000;
+async function shrinkAvatar(f){
+  let src, close = () => {};
+  try { src = await createImageBitmap(f, {imageOrientation: 'from-image'}); close = () => src.close && src.close(); }
+  catch (e) { const url = URL.createObjectURL(f); src = await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = url; }); close = () => URL.revokeObjectURL(url); }
+  const w = src.width, h = src.height; if (!w || !h) throw new Error('vazia'); const side = Math.min(w, h);
+  let out = '';
+  for (const [px, q] of [[256, .84], [256, .72], [200, .7], [160, .66]]){
+    const c = document.createElement('canvas'); c.width = c.height = px; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+    g.drawImage(src, (w - side) / 2, (h - side) / 2, side, side, 0, 0, px, px); out = c.toDataURL('image/jpeg', q); if (out.length <= AVATAR_MAX_LEN) break;
+  }
+  close(); if (!/^data:image\/jpeg;base64,/.test(out) || out.length > AVATAR_MAX_LEN) throw new Error('grande');
+  return out;
+}
+async function setAvatar(f){
+  if (!/^image\//.test(f.type || '') && !/\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(f.name || '')){ toast('Escolha uma imagem (JPG, PNG ou WEBP).'); return; }
+  if (f.size > AVATAR_MAX_FILE){ toast('Imagem grande demais. O limite é 15 MB.'); return; }
+  try { const img = await shrinkAvatar(f); ST.avatar = {img, at: new Date().toISOString()}; saveState(); render(); Platform.haptic('success'); toast('Foto salva'); }
+  catch (e) { toast('Não consegui abrir essa imagem. Tente uma foto em JPG ou PNG.'); }
+}
+A['avatar-menu'] = () => {
+  if (!hasPic()){ $('#avatar-in')?.click(); return; }
+  openSheet(`${sheetHead('Foto do perfil', 'Sua foto')}<div class="av-prev"><span class="avatar xl pic">${avatarIn()}</span></div>
+    <p class="small muted" style="margin:12px 0 0;text-align:center">Aparece no topo do app e em todos os aparelhos em que você entrar com a sua conta.</p>
+    <div class="stack" style="margin-top:18px"><button class="btn primary block" data-act="avatar-pick">Escolher outra foto</button><button class="btn ghost block" data-act="avatar-del">Remover foto</button></div>`);
+};
+A['avatar-pick'] = () => { closeSheet(); $('#avatar-in')?.click(); };
+A['avatar-del'] = () => { const old = ST.avatar; delete ST.avatar; saveState(); closeSheet(); render(); toast('Foto removida', () => { ST.avatar = old; saveState(); render(); }); };
 A['share-session'] = el => { const s = SESS.find(x => x.id === el.dataset.sid); if (!s) return; const st = stats(s); const m = sessMins(s); const kc = sessKcal(s);
   const txt = `${s.wname} · Tá pago. ${fmtD(s.date)}${m ? `, ${m} min` : ''}, ${st.sets} séries, ${fmtVol(st.vol)} de volume${kc && !kc.need ? `, ~${fmtK(kc.kcal)} kcal` : ''}. Forja`;
   if (navigator.share) Platform.share(txt); else { try { navigator.clipboard.writeText(txt).then(() => toast('Resumo copiado'), () => toast('Não deu para compartilhar daqui')); } catch (e) { toast('Não deu para compartilhar daqui'); } } };
@@ -1203,6 +1236,7 @@ document.addEventListener('change', async ev => {
     confirmSheet({title: 'Importar backup?', text: `${j.sessoes.length} treinos e ${(j.estado.routines || []).length} rotinas. Os dados atuais serão substituídos.`, ok: 'Importar', onOk: () => { const keep = new Set(j.sessoes.map(x => x.id)); SESS.filter(x => !keep.has(x.id)).map(x => x.id).forEach(id => deleteSession(id)); ST = j.estado; fixState(); saveState(); SESS = j.sessoes.map(normSession); SESS.forEach(x => saveSession(x)); applyTheme(); render(); toast('Backup importado'); }});
   }
   if (act === 'wname'){ const w = findWorkout(t.dataset.rid, t.dataset.wid); const v = t.value.trim(); if (w && v){ w.nome = v; saveState(); } }
+  if (act === 'avatar' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; setAvatar(f); return; }
   if (act === 'media' && t.files && t.files[0]){
     const f = t.files[0]; if (f.size > 20 * 1024 * 1024){ toast('Arquivo grande demais (máx. 20 MB).'); return; }
     toast('Enviando imagem…');

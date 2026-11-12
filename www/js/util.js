@@ -29,6 +29,7 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const svg = (d, extra = '') => `<svg viewBox="0 0 24 24" ${extra}><path d="${d}"/></svg>`;
 const I = {
   share: svg('M12 15V3M7 8l5-5 5 5M5 13v7h14v-7'),
+  camera: svg('M4 8h3l2-3h6l2 3h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'),
   user: svg('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5'),
   target: svg('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 12.6a.6.6 0 1 0 0-1.2.6.6 0 0 0 0 1.2z'),
   eye: svg('M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'),

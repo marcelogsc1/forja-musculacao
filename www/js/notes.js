@@ -68,7 +68,8 @@ function obFitTime(items, mins){
   return log;
 }
 /* lê o texto e devolve as regras reconhecidas, cada uma com o que muda; off = índices desligados na prévia */
-function obInterpret(text, w0, off = new Set()){
+/* opts.program: leitura para um programa inteiro (assistente). Foco em músculo só mexe nos treinos que já trabalham aquele músculo. */
+function obInterpret(text, w0, off = new Set(), opts = {}){
   let items = w0.items.map(x => ({...x})); const rules = [], flags = [], notes = [];
   const ban = new Set(); let fitTo = null;
   const FILL = /\b(por favor|pfv|pf|obrigad[oa]|valeu|ok|blz|beleza)\b/g;
@@ -84,7 +85,7 @@ function obInterpret(text, w0, off = new Set()){
     // dor: só sinaliza, não troca sozinho
     if (/\b(dor|doi|doendo|lesao|lesion\w*|machuc\w*|incomod\w*|tendinite|bursite)\b/.test(c)){
       OB_JOINT.forEach(([re, nome, test]) => { if (!re.test(c)) return; const list = items.filter(x => getEx(x.ex) && test(getEx(x.ex))).map(x => exName(x.ex));
-        flags.push({title: `Dor no ${nome}`, text: list.length ? `Os exercícios deste treino que costumam exigir mais do ${nome}: ${list.join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Você pode trocar cada um em Editar.` : `Nenhum exercício deste treino costuma exigir muito do ${nome}, mas com dor vale falar com um fisioterapeuta ou médico.`}); hit = true; });
+        flags.push({title: `Dor no ${nome}`, joint: nome, list, text: list.length ? `Os exercícios deste treino que costumam exigir mais do ${nome}: ${list.join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Você pode trocar cada um em Editar.` : `Nenhum exercício deste treino costuma exigir muito do ${nome}, mas com dor vale falar com um fisioterapeuta ou médico.`}); hit = true; });
       if (hit) return;
     }
     // tempo disponível
@@ -113,7 +114,7 @@ function obInterpret(text, w0, off = new Set()){
     // foco em músculo: uma série a mais nos exercícios dele; se pedir exercício a mais, ou se o treino não tiver nenhum, inclui um
     if (mus.length && !neg && /\b(mais|foco|focar|priori\w*|enfase|enfatizar|reforc\w*|caprich\w*|fraco|atrasad\w*|desenvolver|crescer|atencao|incluir|adicion\w*|acrescent\w*)\b/.test(c)){
       const wantEx = /\b(exercicios?|outro|incluir|adicion\w*|acrescent\w*)\b/.test(c);
-      mus.forEach(m => { hit = push(`Mais ${MUSC[m].toLowerCase()}`, () => { const log = []; const mine = items.filter(x => (getEx(x.ex) || {}).m === m);
+      mus.forEach(m => { hit = push(`Mais ${MUSC[m].toLowerCase()}`, () => { const log = []; const mine = items.filter(x => (getEx(x.ex) || {}).m === m); if (opts.program && !mine.length) return log;
         if (wantEx || !mine.length){ const k = obAddFor(m, items, ban); if (k){ const it = {...newItem(k), sets: 3, _f: 1}; const iso = ISO_P.includes(CAT[k].p); const lastComp = items.map(x => ISO_P.includes((getEx(x.ex) || {}).p)).lastIndexOf(false);
             const at = iso ? (items.findIndex(x => ['abdomen'].includes((getEx(x.ex) || {}).m)) + 1 || items.length + 1) - 1 : lastComp + 1; items.splice(Math.max(0, at), 0, it); log.push(`Entra ${exName(k)} (3 × ${it.rmin}–${it.rmax})`); } }
         if (!wantEx) mine.slice(0, 2).forEach(x => { if (x.sets < 5){ x.sets++; x._f = 1; log.push(`${exName(x.ex)}: ${x.sets - 1} → ${x.sets} séries`); } });
@@ -129,10 +130,10 @@ function obInterpret(text, w0, off = new Set()){
 }
 
 /* ---------- interface ---------- */
-function obsCard(r, w){
+function obsCard(r, w, ed = false){
   return `<section class="card stack ob-card"><div class="row between"><span class="eyebrow">Observações e preferências</span>${w.obs ? `<span class="tiny muted">${w.obsAt ? 'ajustado ' + relDay(w.obsAt).toLowerCase() : 'salvo'}</span>` : ''}</div>
     <textarea id="wobs" class="field ob-ta" rows="3" maxlength="400" placeholder="Ex.: sem polia · mais foco em glúteo · tenho 45 minutos · trocar o agachamento · mais força" data-act="wobs" data-rid="${r.id}" data-wid="${w.id}">${esc(w.obs || '')}</textarea>
-    <div class="row between" style="gap:10px"><span class="tiny muted grow">O app lê a anotação e sugere ajustes pequenos. Você confere antes de aplicar.</span><button class="btn sm primary" data-act="obs-run" data-rid="${r.id}" data-wid="${w.id}">Ajustar treino</button></div></section>`;
+    <div class="row between" style="gap:10px"><span class="tiny muted grow">${ed ? 'Escreva o que quer mudar. O app sugere ajustes pequenos, você confere e eles ficam salvos neste treino.' : 'O app lê a anotação e sugere ajustes pequenos. Você confere antes de aplicar, e eles ficam salvos no treino.'}</span><button class="btn sm primary" data-act="obs-run" data-rid="${r.id}" data-wid="${w.id}">Ajustar treino</button></div></section>`;
 }
 function openObsSheet(rid, wid){
   const r = routineById(rid); const w = r && r.workouts.find(x => x.id === wid); if (!w) return;

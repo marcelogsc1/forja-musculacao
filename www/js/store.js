@@ -13,6 +13,7 @@
      exercise     id do exercício     exercício criado pelo usuário
      measurement  data (AAAA-MM-DD)   medidas corporais do dia
      media        id do exercício     {asset} imagem própria do exercício
+     avatar       'me'                {img, at} foto do perfil, reduzida no aparelho (JPEG 256 px)
      session      id do treino        treino completo (séries, cargas, notas)
 
    Cada registro tem updatedAt (gerado no aparelho) e deleted (exclusão lógica).
@@ -31,7 +32,7 @@
    ========================================================================== */
 
 const recKey = (type, id) => type + '/' + id;
-const STATE_TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media'];
+const STATE_TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar'];
 const nowISO = () => new Date().toISOString();
 
 /* estado (ST) → registros, sem as sessões */
@@ -43,6 +44,7 @@ function decomposeState(st){
   Object.entries(st.custom || {}).forEach(([id, e]) => put('exercise', id, e));
   (st.bw || []).forEach(m => m && m.date && put('measurement', m.date, m));
   Object.entries(st.media || {}).forEach(([ex, a]) => put('media', ex, {asset: a}));
+  if (st.avatar && st.avatar.img) put('avatar', 'me', {img: st.avatar.img, at: st.avatar.at || null});
   return out;
 }
 /* registros → estado (ST) */
@@ -57,6 +59,7 @@ function assembleState(recs){
     else if (r.type === 'exercise') st.custom[r.id] = r.data;
     else if (r.type === 'measurement') st.bw.push(r.data);
     else if (r.type === 'media') st.media[r.id] = r.data.asset;
+    else if (r.type === 'avatar') st.avatar = r.data;
   }
   st.routines = routines.sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)).map(({ord, ...r}) => r);
   st.bw.sort((a, b) => a.date.localeCompare(b.date));

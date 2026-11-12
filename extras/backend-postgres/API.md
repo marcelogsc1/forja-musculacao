@@ -36,6 +36,7 @@ Tudo o que o usuário grava é um registro `{type, id, data, updatedAt, deleted}
 | `exercise` | id do exercício criado | `{n, m, e, p, pri[], sec[], d[]}` |
 | `measurement` | `AAAA-MM-DD` | `{date, kg, cintura, ...}` |
 | `media` | id do exercício | `{asset}` |
+| `avatar` | `me` | `{img, at}`: foto do perfil em data URL JPEG, até 60 mil caracteres |
 | `session` | id do treino | treino completo (formato abaixo) |
 
 `updatedAt` é o horário da alteração no aparelho (ISO 8601). `deleted: true` com `data: null` é uma exclusão; ela é guardada para avisar os outros aparelhos.

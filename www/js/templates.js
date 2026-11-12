@@ -45,6 +45,6 @@ const TEMPLATES = [
 function routineFromTemplate(t, id, keepIds){
   return {id: id || uid('r'), nome: t.nome, desc: t.desc, from: t.id, workouts: t.workouts.map((w, i) => {
     const wid = keepIds ? 'd' + (i + 1) : uid('w');
-    return {id: wid, nome: w.nome, cor: w.cor, items: w.items.map((x, j) => ({uid: keepIds ? `${wid}-${j + 1}` : uid('i'), ...x}))};
+    return {id: wid, nome: w.nome, cor: w.cor, ...(w.obs ? {obs: w.obs} : {}), items: w.items.map((x, j) => ({uid: keepIds ? `${wid}-${j + 1}` : uid('i'), ...x}))};
   })};
 }

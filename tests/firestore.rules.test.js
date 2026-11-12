@@ -49,6 +49,10 @@ const session = id => ({id, status: 'done', date: '2026-11-03', wname: 'Upper', 
   await t('medida válida', () => assertSucceeds(setDoc(R(ana, 'ana', 'measurement__2026-11-03'), rec('measurement', '2026-11-03', {date: '2026-11-03', kg: 70.5, cintura: 82}))));
   await t('medida absurda recusada', () => assertFails(setDoc(R(ana, 'ana', 'measurement__2026-11-04'), rec('measurement', '2026-11-04', {date: '2026-11-04', kg: 9999}))));
   await t('rotina válida', () => assertSucceeds(setDoc(R(ana, 'ana', 'routine__r-hip5'), rec('routine', 'r-hip5', {id: 'r-hip5', nome: 'Hipertrofia', ord: 0, workouts: [{id: 'd1', nome: 'Upper', cor: 0, items: []}]}))));
+  await t('foto do perfil válida', () => assertSucceeds(setDoc(R(ana, 'ana', 'avatar__me'), rec('avatar', 'me', {img: 'data:image/jpeg;base64,' + 'A'.repeat(20000), at: '2026-11-12T20:00:00.000Z'}))));
+  await t('foto grande demais recusada', () => assertFails(setDoc(R(ana, 'ana', 'avatar__me'), rec('avatar', 'me', {img: 'data:image/jpeg;base64,' + 'A'.repeat(70000)}, '2026-11-12T21:00:00.000Z'))));
+  await t('foto que não é imagem recusada', () => assertFails(setDoc(R(ana, 'ana', 'avatar__me'), rec('avatar', 'me', {img: 'javascript:alert(1)'}, '2026-11-12T21:00:00.000Z'))));
+  await t('foto com id diferente de me recusada', () => assertFails(setDoc(R(ana, 'ana', 'avatar__x'), rec('avatar', 'x', {img: 'data:image/jpeg;base64,AAAA'}))));
   await t('preferências válidas', () => assertSucceeds(setDoc(R(ana, 'ana', 'prefs__me'), rec('prefs', 'me', {prefs: {theme: 'dark', rest: 90}, active: 'r-hip5', v: 4}))));
   await t('exercício criado válido', () => assertSucceeds(setDoc(R(ana, 'ana', 'exercise__c-1'), rec('exercise', 'c-1', {n: 'Supino articulado', m: 'peito', e: 'maquina', p: 'custom', pri: ['peitoral'], sec: [], d: []}))));
   await t('mais recente vence: gravação antiga recusada', () => assertFails(setDoc(R(ana, 'ana', 'session__s-1'), rec('session', 's-1', {...session('s-1'), note: 'velha'}, '2026-11-03T09:00:00.000Z'))));

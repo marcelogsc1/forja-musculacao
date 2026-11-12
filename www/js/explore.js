@@ -99,7 +99,7 @@ function vTemplate(p){
 }
 
 // ---------- assistente ----------
-const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto'};
+const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto', obs: ''};
 const FOCO_MAX = 3;
 const focosTxt = fs => { const n = fs.map(k => FOCOS[k].n.toLowerCase()); return n.length > 1 ? n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1] : n[0] || ''; };
 function bldKeys(b){
@@ -112,13 +112,43 @@ function bldKeys(b){
 function builderTpl(){
   const b = UI.bld || (UI.bld = {...BLD0}); const o = {...b, keys: bldKeys(b), focos: b.focos || [], foco: undefined};
   const nm = `${{hipertrofia: 'Hipertrofia', forca: 'Força', definicao: 'Definição', condicionamento: 'Condicionamento', saude: 'Saúde'}[b.goal]} sob medida ${b.dias}x`;
-  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.`,
-    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: genProgram(o)};
+  const ob = bldObs(genProgram(o), b.obs);
+  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.${ob.text ? ` Suas observações: “${ob.text}”.` : ''}`,
+    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
+}
+/* Observações do assistente: as mesmas regras do campo do treino, aplicadas a cada treino do programa.
+   Devolve os treinos ajustados e um resumo agrupado (o que mudou, em quais treinos, alertas e lembretes). */
+function bldObs(workouts, text){
+  text = String(text || '').trim().slice(0, 400); if (!text) return {workouts, text: '', rules: [], flags: [], notes: []};
+  const rules = new Map(), flags = new Map(); const notes = [];
+  const out = workouts.map(w => { const res = obInterpret(text, w, new Set(), {program: true});
+    res.rules.forEach(x => { const g = rules.get(x.title) || {title: x.title, ws: [], log: []}; g.ws.push(w.nome); g.log.push(...x.log.map(l => `${w.nome}: ${l}`)); rules.set(x.title, g); });
+    res.flags.forEach(f => { const g = flags.get(f.title) || {...f, all: []}; if (f.list) g.all.push(...f.list); flags.set(f.title, g); }); notes.push(res.notes);
+    return {...w, items: res.items.map(({_f, uid, ...x}) => x)}; });
+  /* lembrete só para a frase que nenhum treino conseguiu usar */
+  const left = notes.length ? notes[0].filter(n => notes.every(l => l.includes(n))) : [];
+  if (left.length) out.forEach(w => { w.obs = left.join('. '); });
+  /* alerta de dor: junta os exercícios de todos os treinos do programa */
+  const fl = [...flags.values()].map(f => !f.joint ? f : {title: f.title, text: f.all.length ? `Os exercícios do programa que costumam exigir mais do ${f.joint}: ${[...new Set(f.all)].join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Depois de salvar, você pode trocar cada um em Editar.` : `Nenhum exercício do programa costuma exigir muito do ${f.joint}, mas com dor vale falar com um fisioterapeuta ou médico.`});
+  return {workouts: out, text, rules: [...rules.values()], flags: fl, notes: left};
+}
+const OBS_EX = ['Sem polia', 'Não gosto de agachamento livre', 'Mais foco em glúteo', 'Treinos de 45 minutos', 'Prefiro halteres', 'Mais força'];
+function bldObsField(b, where){
+  const v = where === 'res' && b.obsDraft != null ? b.obsDraft : b.obs || '';
+  return `<textarea id="bld-obs" class="field ob-ta" rows="3" maxlength="400" placeholder="Ex.: sem polia · não gosto de agachamento livre · mais foco em glúteo · prefiro halteres" data-w="${where}" aria-label="Observações e preferências">${esc(v)}</textarea>
+    <div class="ob-ex" role="group" aria-label="Exemplos">${OBS_EX.map(x => `<button class="chip" data-act="bld-obs-ex" data-v="${esc(x)}" data-w="${where}">+ ${esc(x)}</button>`).join('')}</div>`;
+}
+function bldObsSummary(ob){
+  if (!ob || !ob.text) return '';
+  return `${ob.rules.length ? `<div class="ob-list">${ob.rules.map(x => `<div class="ob-rule static"><span class="grow"><b>${esc(x.title)}</b>${x.log.slice(0, 6).map(l => `<span>${esc(l)}</span>`).join('')}${x.log.length > 6 ? `<span>e mais ${x.log.length - 6}</span>` : ''}</span></div>`).join('')}</div>` : ''}
+    ${ob.flags.map(f => `<div class="ob-flag"><b>${esc(f.title)}</b><p>${esc(f.text)}</p></div>`).join('')}
+    ${ob.notes.length ? `<div class="ob-notes"><span class="eyebrow">Guardado como lembrete</span>${ob.notes.map(n => `<p>“${esc(n)}”</p>`).join('')}<p class="tiny muted">Não reconheci um ajuste nessas frases. Elas aparecem no começo de cada treino.</p></div>` : ''}
+    ${!ob.rules.length && !ob.flags.length && !ob.notes.length ? '<p class="small muted" style="margin:10px 0 0">Nada para ajustar com essa anotação.</p>' : ''}`;
 }
 /* Assistente em passos: uma pergunta por tela, cada passo é uma página da pilha
    (o voltar do celular e o do topo voltam uma pergunta). No fim, o programa recomendado
    e, discretamente, outras opções compatíveis com as respostas. */
-const BSTEPS = ['goal', 'dias', 'local', 'nivel', 'foco'];
+const BSTEPS = ['goal', 'dias', 'local', 'nivel', 'foco', 'obs'];
 const GOAL_SUB = {hipertrofia: 'Aumentar a massa muscular, com volume e repetições moderadas.', forca: 'Levantar mais peso nos básicos. Poucas repetições e descansos longos.', definicao: 'Perder gordura mantendo os músculos. Bi-sets e cardio no fim.', condicionamento: 'Fôlego e gasto calórico. Circuitos quase sem descanso.', saude: 'Começar ou voltar a treinar com segurança e constância.'};
 const NIVEL_SUB = {Iniciante: 'Começando agora ou voltando depois de uma pausa longa.', 'Intermediário': 'Treina com regularidade e já conhece os exercícios básicos.', 'Avançado': 'Treina há anos e precisa de mais volume para evoluir.'};
 function splitLabel(keys){ const ks = keys.join(); return /CI/.test(ks) ? 'Circuitos' : /GA/.test(ks) ? 'Glúteos em foco' : /^PU,PL,LG,PU2/.test(ks) ? 'Push Pull Legs 2x' : /^PU,PL,LG$/.test(ks) ? 'Push Pull Legs' : /^UA,LA,PU/.test(ks) ? 'Upper Lower + Push Pull Legs' : /^UA,LA/.test(ks) ? 'Superiores e inferiores' : 'Corpo inteiro'; }
@@ -164,17 +194,25 @@ function vBuilderStep(b, step){
     body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. Escolha até ${FOCO_MAX}: eles ganham volume extra e entram mais cedo nos treinos, sem deixar o resto de lado.</p><div class="list">
       <button class="li frow bq-foco" data-act="bld-foco" data-v="" aria-pressed="${!fs.length}"><span class="fthumb">${bodyThumb([], 0)}</span><div class="grow"><b>Não, quero equilíbrio</b><span class="sub">Todos os grupos com o mesmo peso</span></div><i class="tick">${I.check}</i></button>
       ${Object.entries(FOCOS).map(([k, f]) => { const on = fs.includes(k); const full = !on && fs.length >= FOCO_MAX; return `<button class="li frow bq-foco multi" data-act="bld-foco" data-v="${k}" aria-pressed="${on}" ${full ? 'data-full="1"' : ''}><span class="fthumb">${bodyThumb(f.reg, FOCO_BACK[k])}</span><div class="grow"><b>${esc(f.n)}</b>${on ? `<span class="sub">${fs.indexOf(k) === 0 && fs.length > 1 ? 'Prioridade principal' : 'Prioridade'}</span>` : ''}</div><i class="tick">${on && fs.length > 1 ? `<span class="mono">${fs.indexOf(k) + 1}</span>` : I.check}</i></button>`; }).join('')}</div>
-      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="foco">${fs.length ? `Ver meu programa · ${fs.length} ${fs.length === 1 ? 'prioridade' : 'prioridades'}` : 'Ver meu programa'}</button></div>`; }
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="foco">${fs.length ? `Continuar · ${fs.length} ${fs.length === 1 ? 'prioridade' : 'prioridades'}` : 'Continuar'}</button></div>`; }
+  else if (step === 'obs'){ q = 'Alguma observação ou preferência?';
+    body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. Escreva do seu jeito o que gosta, o que não tem na academia ou o que quer evitar. O app lê e ajusta os treinos sugeridos.</p>
+      ${bldObsField(b, 'step')}
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="obs">Ver meu programa</button>${b.obs ? '' : '<button class="link bq-more" data-act="bld-next" data-step="obs">Pular</button>'}</div>`; }
   return `<section class="bq">${bldProgress(i)}<h1 class="display h2 bq-q">${q}</h1>${body}</section>`;
 }
 function vBuilderResult(b){
   const t = builderTpl(); const keys = bldKeys(b); const al = UI.bldAlt ? bldAlts(b) : null;
-  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade']];
+  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
   return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
     <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
     <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
   <section><div class="list bq-week">${t.workouts.map((w, i) => `<details class="bq-w"><summary><span class="plate" style="${pcs(w.cor)}">${i + 1}</span><span class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></span>${I.chev}</summary><div class="list">${w.items.map(exRow).join('')}</div></details>`).join('')}</div>
     <p class="tiny muted" style="margin:10px 4px 0">Toque em um treino para ver os exercícios. Depois de salvar, você pode trocar qualquer um.</p></section>
+  <section class="card stack ob-card bq-obs"><div class="row between"><span class="eyebrow">Observações e preferências</span>${t.obsRes && t.obsRes.text ? `<span class="tiny muted">${t.obsRes.rules.length} ${t.obsRes.rules.length === 1 ? 'ajuste' : 'ajustes'}</span>` : ''}</div>
+    ${bldObsField(b, 'res')}
+    <div class="row between" style="gap:10px"><span class="tiny muted grow">Mude o texto e atualize: o programa acima é refeito com as suas preferências.</span><button class="btn sm primary" data-act="bld-obs-run">Atualizar programa</button></div>
+    ${bldObsSummary(t.obsRes)}</section>
   <section class="stack" style="gap:10px"><button class="btn primary block" data-act="add-template" data-tid="_bld">${I.plus}Salvar programa</button>
     ${al ? '' : '<button class="link bq-more" data-act="bld-alt">Ver outras opções</button>'}</section>
   ${al ? `<section><div class="sec-head"><span class="eyebrow">Outras opções para você</span><button class="link" data-act="bld-alt">Ocultar</button></div>
@@ -201,7 +239,10 @@ A.bld = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' 
 A['bld-set'] = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; render(); Platform.haptic('light'); };
 /* escolher avança sozinho depois de um instante, para a marcação aparecer */
 A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
-A['bld-next'] = el => bldNext(el.dataset.step);
+A['bld-next'] = el => { const ta = $('#bld-obs'); if (ta) UI.bld.obs = ta.value.trim().slice(0, 400); bldNext(el.dataset.step); };
+A['bld-obs-ex'] = el => { const ta = $('#bld-obs'); const cur = (ta ? ta.value : UI.bld.obs || '').trim(); const v = el.dataset.v; if (norm(cur).includes(norm(v))) return; UI.bld.obs = (cur ? cur.replace(/[.;,\s]+$/, '') + '. ' : '') + v; UI.bld.obsDraft = null; render(); const t = $('#bld-obs'); if (t){ t.focus({preventScroll: true}); t.setSelectionRange(t.value.length, t.value.length); } Platform.haptic('light'); };
+A['bld-obs-run'] = () => { const ta = $('#bld-obs'); UI.bld.obs = ta ? ta.value.trim().slice(0, 400) : ''; UI.bld.obsDraft = null; render(); Platform.haptic('light'); const n = tplById('_bld').obsRes; toast(UI.bld.obs ? (n.rules.length ? `Programa refeito com ${n.rules.length} ${n.rules.length === 1 ? 'ajuste' : 'ajustes'}` : 'Nenhum ajuste reconhecido nessa anotação') : 'Observações removidas'); };
+document.addEventListener('input', ev => { const t = ev.target; if (!t || t.id !== 'bld-obs' || !UI.bld) return; if (t.dataset.w === 'res') UI.bld.obsDraft = t.value.slice(0, 400); else UI.bld.obs = t.value.slice(0, 400); });
 A['bld-wd'] = el => { const d = +el.dataset.d; const b = UI.bld; b.wd = b.wd.includes(d) ? b.wd.filter(x => x !== d) : [...b.wd, d]; b.dias = b.wd.length; b.div = 'auto'; render(); Platform.haptic('light'); };
 A['bld-wdmode'] = el => { const b = UI.bld; if (el.dataset.v === '1'){ b.dias = Math.min(6, Math.max(2, b.dias)); b.wd = defaultDays(b.dias); } else { b.wd = null; b.dias = Math.min(6, Math.max(2, b.dias)); } render(); };
 A['bld-foco'] = el => { const b = UI.bld; const k = el.dataset.v; if (!k) b.focos = []; else if (b.focos.includes(k)) b.focos = b.focos.filter(x => x !== k); else if (b.focos.length >= FOCO_MAX){ toast(`Até ${FOCO_MAX} músculos. Com mais, a prioridade se dilui e os treinos ficam longos.`); return; } else b.focos = [...b.focos, k]; b.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); };

@@ -1188,6 +1188,20 @@ nav.tabs .fab .burst{opacity:0;animation:fab-burst 3.6s ease-out infinite}
 .bb-load{animation:bb-load .5s cubic-bezier(.2,.9,.3,1) both}
 @keyframes bb-load{0%{opacity:0;transform:translateX(-14px)}100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.pl-spin,.pl .pl-now,nav.tabs .fab .lift,nav.tabs .fab .burst,.tp-stamp.stamp,.bb-load,.wb i::after{animation:none!important;transition:none}nav.tabs .fab .burst{opacity:0}}
+/* foto do perfil (v4.15) */
+.avatar.pic{padding:0;overflow:hidden;background:var(--s2)}
+.avatar.pic img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.profile-hero .avatar.xl{position:relative;overflow:visible;cursor:pointer}
+.profile-hero .avatar.xl.pic img{border-radius:50%}
+.av-cam{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg);box-shadow:0 0 0 3px var(--bg)}
+.av-cam svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
+.av-prev{display:flex;justify-content:center;margin-top:16px}
+.av-prev .avatar.xl{width:112px;height:112px}
+/* observações no assistente (v4.15) */
+.ob-ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ob-ex .chip{min-height:34px;font-size:13px}
+.ob-rule.static{padding:12px 14px}
+.bq-obs .ob-list{margin-top:6px}
 
 </style>
 </head>
@@ -1245,6 +1259,7 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const svg = (d, extra = '') => `<svg viewBox="0 0 24 24" ${extra}><path d="${d}"/></svg>`;
 const I = {
   share: svg('M12 15V3M7 8l5-5 5 5M5 13v7h14v-7'),
+  camera: svg('M4 8h3l2-3h6l2 3h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'),
   user: svg('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5'),
   target: svg('M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 12.6a.6.6 0 1 0 0-1.2.6.6 0 0 0 0 1.2z'),
   eye: svg('M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'),
@@ -1318,7 +1333,7 @@ const TEMPLATES = [
 function routineFromTemplate(t, id, keepIds){
   return {id: id || uid('r'), nome: t.nome, desc: t.desc, from: t.id, workouts: t.workouts.map((w, i) => {
     const wid = keepIds ? 'd' + (i + 1) : uid('w');
-    return {id: wid, nome: w.nome, cor: w.cor, items: w.items.map((x, j) => ({uid: keepIds ? `${wid}-${j + 1}` : uid('i'), ...x}))};
+    return {id: wid, nome: w.nome, cor: w.cor, ...(w.obs ? {obs: w.obs} : {}), items: w.items.map((x, j) => ({uid: keepIds ? `${wid}-${j + 1}` : uid('i'), ...x}))};
   })};
 }
 
@@ -2849,6 +2864,7 @@ const Platform = (() => {
      exercise     id do exercício     exercício criado pelo usuário
      measurement  data (AAAA-MM-DD)   medidas corporais do dia
      media        id do exercício     {asset} imagem própria do exercício
+     avatar       'me'                {img, at} foto do perfil, reduzida no aparelho (JPEG 256 px)
      session      id do treino        treino completo (séries, cargas, notas)
 
    Cada registro tem updatedAt (gerado no aparelho) e deleted (exclusão lógica).
@@ -2867,7 +2883,7 @@ const Platform = (() => {
    ========================================================================== */
 
 const recKey = (type, id) => type + '/' + id;
-const STATE_TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media'];
+const STATE_TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar'];
 const nowISO = () => new Date().toISOString();
 
 /* estado (ST) → registros, sem as sessões */
@@ -2879,6 +2895,7 @@ function decomposeState(st){
   Object.entries(st.custom || {}).forEach(([id, e]) => put('exercise', id, e));
   (st.bw || []).forEach(m => m && m.date && put('measurement', m.date, m));
   Object.entries(st.media || {}).forEach(([ex, a]) => put('media', ex, {asset: a}));
+  if (st.avatar && st.avatar.img) put('avatar', 'me', {img: st.avatar.img, at: st.avatar.at || null});
   return out;
 }
 /* registros → estado (ST) */
@@ -2893,6 +2910,7 @@ function assembleState(recs){
     else if (r.type === 'exercise') st.custom[r.id] = r.data;
     else if (r.type === 'measurement') st.bw.push(r.data);
     else if (r.type === 'media') st.media[r.id] = r.data.asset;
+    else if (r.type === 'avatar') st.avatar = r.data;
   }
   st.routines = routines.sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)).map(({ord, ...r}) => r);
   st.bw.sort((a, b) => a.date.localeCompare(b.date));
@@ -3320,7 +3338,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.14.0';
+const APP_VERSION = '4.15.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -3464,6 +3482,9 @@ function push(page){ closeKP(); UI.scroll[UI.stack.length] = window.scrollY; UI.
 function pop(){ closeKP(); UI.stack.pop(); closeSheet(); render(); window.scrollTo({top: UI.scroll[UI.stack.length] || 0}); }
 function goTab(t){ closeKP(); UI.tab = t; UI.stack = []; closeSheet(); if (!Platform.isArtifact && location.hash !== '#' + t) try { history.replaceState(history.state, '', '#' + t); } catch (e) {} render(); window.scrollTo({top: 0}); }
 const curPage = () => UI.stack[UI.stack.length - 1];
+/* foto do perfil (sincronizada) ou as iniciais */
+const hasPic = () => !!(ST.avatar && typeof ST.avatar.img === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(ST.avatar.img));
+const avatarIn = () => hasPic() ? `<img src="${esc(ST.avatar.img)}" alt="">` : (initials() || I.user);
 function initials(){ const n = (ST.profile.name || '').trim(); return n ? n.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() : ''; }
 function render(){
   doneReset();
@@ -3481,7 +3502,7 @@ function render(){
   let head, body;
   if (p && p.type === 'auth'){ head = ''; body = vAuth(p); }
   else if (!p){
-    head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar" data-act="profile" aria-label="Perfil e ajustes">${initials() || I.user}</button>`;
+    head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar${hasPic() ? ' pic' : ''}" data-act="profile" aria-label="Perfil e ajustes">${avatarIn()}</button>`;
     body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'exercicios' ? vLibrary() : UI.tab === 'progresso' ? vProgress() : vHome();
   } else if (inSess){
     const s = curSess(); const live = s && s.status === 'open';
@@ -3668,6 +3689,7 @@ function vWorkout(p){
     ${w.items.length ? `<p class="hero-focus">${esc(groupsOf(w.items))}</p>` : ''}
     <div class="hero-stats"><div><b>${pad2(w.items.length)}</b><span>exercícios</span></div><div><b>${pad2(wSets(w))}</b><span>séries</span></div><div><b>${w.items.length ? wMins(w) : 0}′</b><span>estimados</span></div></div>
     ${w.items.length ? `<p class="tiny muted" style="margin:14px 0 0">Equipamentos: ${esc(equipOf(w.items))}</p>` : ''}</section>`;
+  if (ed && w.items.length) h += obsCard(r, w, true);
   if (ed) h += `<section class="card"><div class="eyebrow" style="margin-bottom:12px">Cor do treino</div><div class="swatches">${[...Array(COLORS)].map((_, k) => `<button style="${pcs(k)}" data-act="wcolor" data-rid="${r.id}" data-wid="${w.id}" data-c="${k}" aria-pressed="${w.cor === k}" aria-label="Cor ${k + 1}"></button>`).join('')}</div></section>`;
   h += `<section><div class="sec-head"><span class="eyebrow">${ed ? 'Arraste para reordenar' : 'Ordem dos exercícios'}</span><button class="btn sm ${ed ? 'primary' : ''}" data-act="toggle-edit">${ed ? 'Concluir edição' : I.edit + 'Editar'}</button></div>
     ${w.items.length ? `<div class="list" data-drag-kind="items" data-drag-id="${r.id}|${w.id}">${w.items.map((x, j) => { const pp = lastPerf(x.ex); return `<div class="li" data-drag-row>
@@ -4211,7 +4233,7 @@ function vProfile(){
   const acct = Store.mode === 'verify' ? `Conta <b>${esc(Auth.user?.email || '')}</b> criada. Falta confirmar o e-mail: abra o link que enviamos (confira também o spam). Até lá, tudo fica salvo neste aparelho e sobe para a conta assim que você confirmar.` : Store.mode === 'api' ? `Conectado como <b>${esc(Auth.user?.email || Auth.user?.name || 'usuário')}</b>. Seus treinos ficam salvos na sua conta e sincronizam entre aparelhos.` : Store.mode === 'cloud' ? 'Seus dados estão salvos na sua conta do Claude e sincronizam entre aparelhos.' : Store.authExpired ? 'Sua sessão expirou. Entre de novo para voltar a sincronizar.' : 'Seus dados estão salvos só neste aparelho. Crie uma conta para guardar na nuvem e usar em outros aparelhos.';
   const field = (id, label, val, attrs = '') => `<label class="flabel"><span class="tiny muted">${label}</span><input id="pf-${id}" class="field" value="${esc(val ?? '')}" data-act="pf" data-k="${id}" ${attrs}></label>`;
   const seg = (k, opts) => `<div class="seg wrapseg">${opts.map(([v, l]) => `<button data-act="pf-set" data-k="${k}" data-v="${v}" aria-pressed="${String(pf[k] || '') === String(v)}">${l}</button>`).join('')}</div>`;
-  return `<section class="profile-hero"><div class="avatar xl">${initials() || I.user}</div><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
+  return `<section class="profile-hero"><button class="avatar xl${hasPic() ? ' pic' : ''}" data-act="avatar-menu" aria-label="${hasPic() ? 'Trocar ou remover a foto' : 'Adicionar foto'}">${avatarIn()}<span class="av-cam" aria-hidden="true">${I.camera}</span></button><input id="avatar-in" type="file" accept="image/*" data-act="avatar" hidden><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
   <section><button class="set-btn" data-act="open-settings"><span class="s-ic">${I.gear}</span><span class="grow"><b>Configurações</b><span class="sub">Treino, aparência, animações e dados</span></span>${I.chev}</button></section>
   <section>${planSummaryRow('profile')}</section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
@@ -4345,6 +4367,35 @@ A.profile = () => { push({type: 'profile'}); if (Auth.kind === 'firebase' && Sto
 A.pref = el => { const k = el.dataset.k; let v = el.dataset.v; if (k !== 'theme') v = +v; ST.prefs[k] = v; saveState(); applyTheme(); render(); };
 A['hint-up'] = el => { const ss = curSess(); const e = ss && ss.items[+el.dataset.k]; if (!e) return; const kg = +el.dataset.kg, r = +el.dataset.r; e.sets.forEach(x => { if (!x.ok && x.t !== 'w'){ x.kg = kg; x.reps = r; } }); saveSession(ss); render(); Platform.haptic('light'); toast(`${fmtN(kg)} kg nas próximas séries, mirando em ${r} repetições`); };
 A['pref-tog'] = el => { const k = el.dataset.k; ST.prefs[k] = !ST.prefs[k]; saveState(); render(); if (k === 'sound' && ST.prefs.sound){ Platform.unlockAudio(); Platform.alarm(); } };
+/* foto do perfil: reduzida no aparelho para um quadrado de até 256 px em JPEG (cerca de 15 a 30 KB) */
+const AVATAR_MAX_FILE = 15 * 1024 * 1024; const AVATAR_MAX_LEN = 60000;
+async function shrinkAvatar(f){
+  let src, close = () => {};
+  try { src = await createImageBitmap(f, {imageOrientation: 'from-image'}); close = () => src.close && src.close(); }
+  catch (e) { const url = URL.createObjectURL(f); src = await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = url; }); close = () => URL.revokeObjectURL(url); }
+  const w = src.width, h = src.height; if (!w || !h) throw new Error('vazia'); const side = Math.min(w, h);
+  let out = '';
+  for (const [px, q] of [[256, .84], [256, .72], [200, .7], [160, .66]]){
+    const c = document.createElement('canvas'); c.width = c.height = px; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+    g.drawImage(src, (w - side) / 2, (h - side) / 2, side, side, 0, 0, px, px); out = c.toDataURL('image/jpeg', q); if (out.length <= AVATAR_MAX_LEN) break;
+  }
+  close(); if (!/^data:image\/jpeg;base64,/.test(out) || out.length > AVATAR_MAX_LEN) throw new Error('grande');
+  return out;
+}
+async function setAvatar(f){
+  if (!/^image\//.test(f.type || '') && !/\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(f.name || '')){ toast('Escolha uma imagem (JPG, PNG ou WEBP).'); return; }
+  if (f.size > AVATAR_MAX_FILE){ toast('Imagem grande demais. O limite é 15 MB.'); return; }
+  try { const img = await shrinkAvatar(f); ST.avatar = {img, at: new Date().toISOString()}; saveState(); render(); Platform.haptic('success'); toast('Foto salva'); }
+  catch (e) { toast('Não consegui abrir essa imagem. Tente uma foto em JPG ou PNG.'); }
+}
+A['avatar-menu'] = () => {
+  if (!hasPic()){ $('#avatar-in')?.click(); return; }
+  openSheet(`${sheetHead('Foto do perfil', 'Sua foto')}<div class="av-prev"><span class="avatar xl pic">${avatarIn()}</span></div>
+    <p class="small muted" style="margin:12px 0 0;text-align:center">Aparece no topo do app e em todos os aparelhos em que você entrar com a sua conta.</p>
+    <div class="stack" style="margin-top:18px"><button class="btn primary block" data-act="avatar-pick">Escolher outra foto</button><button class="btn ghost block" data-act="avatar-del">Remover foto</button></div>`);
+};
+A['avatar-pick'] = () => { closeSheet(); $('#avatar-in')?.click(); };
+A['avatar-del'] = () => { const old = ST.avatar; delete ST.avatar; saveState(); closeSheet(); render(); toast('Foto removida', () => { ST.avatar = old; saveState(); render(); }); };
 A['share-session'] = el => { const s = SESS.find(x => x.id === el.dataset.sid); if (!s) return; const st = stats(s); const m = sessMins(s); const kc = sessKcal(s);
   const txt = `${s.wname} · Tá pago. ${fmtD(s.date)}${m ? `, ${m} min` : ''}, ${st.sets} séries, ${fmtVol(st.vol)} de volume${kc && !kc.need ? `, ~${fmtK(kc.kcal)} kcal` : ''}. Forja`;
   if (navigator.share) Platform.share(txt); else { try { navigator.clipboard.writeText(txt).then(() => toast('Resumo copiado'), () => toast('Não deu para compartilhar daqui')); } catch (e) { toast('Não deu para compartilhar daqui'); } } };
@@ -4524,6 +4575,7 @@ document.addEventListener('change', async ev => {
     confirmSheet({title: 'Importar backup?', text: `${j.sessoes.length} treinos e ${(j.estado.routines || []).length} rotinas. Os dados atuais serão substituídos.`, ok: 'Importar', onOk: () => { const keep = new Set(j.sessoes.map(x => x.id)); SESS.filter(x => !keep.has(x.id)).map(x => x.id).forEach(id => deleteSession(id)); ST = j.estado; fixState(); saveState(); SESS = j.sessoes.map(normSession); SESS.forEach(x => saveSession(x)); applyTheme(); render(); toast('Backup importado'); }});
   }
   if (act === 'wname'){ const w = findWorkout(t.dataset.rid, t.dataset.wid); const v = t.value.trim(); if (w && v){ w.nome = v; saveState(); } }
+  if (act === 'avatar' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; setAvatar(f); return; }
   if (act === 'media' && t.files && t.files[0]){
     const f = t.files[0]; if (f.size > 20 * 1024 * 1024){ toast('Arquivo grande demais (máx. 20 MB).'); return; }
     toast('Enviando imagem…');
@@ -4663,7 +4715,7 @@ function vTemplate(p){
 }
 
 // ---------- assistente ----------
-const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto'};
+const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto', obs: ''};
 const FOCO_MAX = 3;
 const focosTxt = fs => { const n = fs.map(k => FOCOS[k].n.toLowerCase()); return n.length > 1 ? n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1] : n[0] || ''; };
 function bldKeys(b){
@@ -4676,13 +4728,43 @@ function bldKeys(b){
 function builderTpl(){
   const b = UI.bld || (UI.bld = {...BLD0}); const o = {...b, keys: bldKeys(b), focos: b.focos || [], foco: undefined};
   const nm = `${{hipertrofia: 'Hipertrofia', forca: 'Força', definicao: 'Definição', condicionamento: 'Condicionamento', saude: 'Saúde'}[b.goal]} sob medida ${b.dias}x`;
-  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.`,
-    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: genProgram(o)};
+  const ob = bldObs(genProgram(o), b.obs);
+  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.${ob.text ? ` Suas observações: “${ob.text}”.` : ''}`,
+    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
+}
+/* Observações do assistente: as mesmas regras do campo do treino, aplicadas a cada treino do programa.
+   Devolve os treinos ajustados e um resumo agrupado (o que mudou, em quais treinos, alertas e lembretes). */
+function bldObs(workouts, text){
+  text = String(text || '').trim().slice(0, 400); if (!text) return {workouts, text: '', rules: [], flags: [], notes: []};
+  const rules = new Map(), flags = new Map(); const notes = [];
+  const out = workouts.map(w => { const res = obInterpret(text, w, new Set(), {program: true});
+    res.rules.forEach(x => { const g = rules.get(x.title) || {title: x.title, ws: [], log: []}; g.ws.push(w.nome); g.log.push(...x.log.map(l => `${w.nome}: ${l}`)); rules.set(x.title, g); });
+    res.flags.forEach(f => { const g = flags.get(f.title) || {...f, all: []}; if (f.list) g.all.push(...f.list); flags.set(f.title, g); }); notes.push(res.notes);
+    return {...w, items: res.items.map(({_f, uid, ...x}) => x)}; });
+  /* lembrete só para a frase que nenhum treino conseguiu usar */
+  const left = notes.length ? notes[0].filter(n => notes.every(l => l.includes(n))) : [];
+  if (left.length) out.forEach(w => { w.obs = left.join('. '); });
+  /* alerta de dor: junta os exercícios de todos os treinos do programa */
+  const fl = [...flags.values()].map(f => !f.joint ? f : {title: f.title, text: f.all.length ? `Os exercícios do programa que costumam exigir mais do ${f.joint}: ${[...new Set(f.all)].join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Depois de salvar, você pode trocar cada um em Editar.` : `Nenhum exercício do programa costuma exigir muito do ${f.joint}, mas com dor vale falar com um fisioterapeuta ou médico.`});
+  return {workouts: out, text, rules: [...rules.values()], flags: fl, notes: left};
+}
+const OBS_EX = ['Sem polia', 'Não gosto de agachamento livre', 'Mais foco em glúteo', 'Treinos de 45 minutos', 'Prefiro halteres', 'Mais força'];
+function bldObsField(b, where){
+  const v = where === 'res' && b.obsDraft != null ? b.obsDraft : b.obs || '';
+  return `<textarea id="bld-obs" class="field ob-ta" rows="3" maxlength="400" placeholder="Ex.: sem polia · não gosto de agachamento livre · mais foco em glúteo · prefiro halteres" data-w="${where}" aria-label="Observações e preferências">${esc(v)}</textarea>
+    <div class="ob-ex" role="group" aria-label="Exemplos">${OBS_EX.map(x => `<button class="chip" data-act="bld-obs-ex" data-v="${esc(x)}" data-w="${where}">+ ${esc(x)}</button>`).join('')}</div>`;
+}
+function bldObsSummary(ob){
+  if (!ob || !ob.text) return '';
+  return `${ob.rules.length ? `<div class="ob-list">${ob.rules.map(x => `<div class="ob-rule static"><span class="grow"><b>${esc(x.title)}</b>${x.log.slice(0, 6).map(l => `<span>${esc(l)}</span>`).join('')}${x.log.length > 6 ? `<span>e mais ${x.log.length - 6}</span>` : ''}</span></div>`).join('')}</div>` : ''}
+    ${ob.flags.map(f => `<div class="ob-flag"><b>${esc(f.title)}</b><p>${esc(f.text)}</p></div>`).join('')}
+    ${ob.notes.length ? `<div class="ob-notes"><span class="eyebrow">Guardado como lembrete</span>${ob.notes.map(n => `<p>“${esc(n)}”</p>`).join('')}<p class="tiny muted">Não reconheci um ajuste nessas frases. Elas aparecem no começo de cada treino.</p></div>` : ''}
+    ${!ob.rules.length && !ob.flags.length && !ob.notes.length ? '<p class="small muted" style="margin:10px 0 0">Nada para ajustar com essa anotação.</p>' : ''}`;
 }
 /* Assistente em passos: uma pergunta por tela, cada passo é uma página da pilha
    (o voltar do celular e o do topo voltam uma pergunta). No fim, o programa recomendado
    e, discretamente, outras opções compatíveis com as respostas. */
-const BSTEPS = ['goal', 'dias', 'local', 'nivel', 'foco'];
+const BSTEPS = ['goal', 'dias', 'local', 'nivel', 'foco', 'obs'];
 const GOAL_SUB = {hipertrofia: 'Aumentar a massa muscular, com volume e repetições moderadas.', forca: 'Levantar mais peso nos básicos. Poucas repetições e descansos longos.', definicao: 'Perder gordura mantendo os músculos. Bi-sets e cardio no fim.', condicionamento: 'Fôlego e gasto calórico. Circuitos quase sem descanso.', saude: 'Começar ou voltar a treinar com segurança e constância.'};
 const NIVEL_SUB = {Iniciante: 'Começando agora ou voltando depois de uma pausa longa.', 'Intermediário': 'Treina com regularidade e já conhece os exercícios básicos.', 'Avançado': 'Treina há anos e precisa de mais volume para evoluir.'};
 function splitLabel(keys){ const ks = keys.join(); return /CI/.test(ks) ? 'Circuitos' : /GA/.test(ks) ? 'Glúteos em foco' : /^PU,PL,LG,PU2/.test(ks) ? 'Push Pull Legs 2x' : /^PU,PL,LG$/.test(ks) ? 'Push Pull Legs' : /^UA,LA,PU/.test(ks) ? 'Upper Lower + Push Pull Legs' : /^UA,LA/.test(ks) ? 'Superiores e inferiores' : 'Corpo inteiro'; }
@@ -4728,17 +4810,25 @@ function vBuilderStep(b, step){
     body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. Escolha até ${FOCO_MAX}: eles ganham volume extra e entram mais cedo nos treinos, sem deixar o resto de lado.</p><div class="list">
       <button class="li frow bq-foco" data-act="bld-foco" data-v="" aria-pressed="${!fs.length}"><span class="fthumb">${bodyThumb([], 0)}</span><div class="grow"><b>Não, quero equilíbrio</b><span class="sub">Todos os grupos com o mesmo peso</span></div><i class="tick">${I.check}</i></button>
       ${Object.entries(FOCOS).map(([k, f]) => { const on = fs.includes(k); const full = !on && fs.length >= FOCO_MAX; return `<button class="li frow bq-foco multi" data-act="bld-foco" data-v="${k}" aria-pressed="${on}" ${full ? 'data-full="1"' : ''}><span class="fthumb">${bodyThumb(f.reg, FOCO_BACK[k])}</span><div class="grow"><b>${esc(f.n)}</b>${on ? `<span class="sub">${fs.indexOf(k) === 0 && fs.length > 1 ? 'Prioridade principal' : 'Prioridade'}</span>` : ''}</div><i class="tick">${on && fs.length > 1 ? `<span class="mono">${fs.indexOf(k) + 1}</span>` : I.check}</i></button>`; }).join('')}</div>
-      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="foco">${fs.length ? `Ver meu programa · ${fs.length} ${fs.length === 1 ? 'prioridade' : 'prioridades'}` : 'Ver meu programa'}</button></div>`; }
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="foco">${fs.length ? `Continuar · ${fs.length} ${fs.length === 1 ? 'prioridade' : 'prioridades'}` : 'Continuar'}</button></div>`; }
+  else if (step === 'obs'){ q = 'Alguma observação ou preferência?';
+    body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. Escreva do seu jeito o que gosta, o que não tem na academia ou o que quer evitar. O app lê e ajusta os treinos sugeridos.</p>
+      ${bldObsField(b, 'step')}
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="obs">Ver meu programa</button>${b.obs ? '' : '<button class="link bq-more" data-act="bld-next" data-step="obs">Pular</button>'}</div>`; }
   return `<section class="bq">${bldProgress(i)}<h1 class="display h2 bq-q">${q}</h1>${body}</section>`;
 }
 function vBuilderResult(b){
   const t = builderTpl(); const keys = bldKeys(b); const al = UI.bldAlt ? bldAlts(b) : null;
-  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade']];
+  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
   return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
     <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
     <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
   <section><div class="list bq-week">${t.workouts.map((w, i) => `<details class="bq-w"><summary><span class="plate" style="${pcs(w.cor)}">${i + 1}</span><span class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></span>${I.chev}</summary><div class="list">${w.items.map(exRow).join('')}</div></details>`).join('')}</div>
     <p class="tiny muted" style="margin:10px 4px 0">Toque em um treino para ver os exercícios. Depois de salvar, você pode trocar qualquer um.</p></section>
+  <section class="card stack ob-card bq-obs"><div class="row between"><span class="eyebrow">Observações e preferências</span>${t.obsRes && t.obsRes.text ? `<span class="tiny muted">${t.obsRes.rules.length} ${t.obsRes.rules.length === 1 ? 'ajuste' : 'ajustes'}</span>` : ''}</div>
+    ${bldObsField(b, 'res')}
+    <div class="row between" style="gap:10px"><span class="tiny muted grow">Mude o texto e atualize: o programa acima é refeito com as suas preferências.</span><button class="btn sm primary" data-act="bld-obs-run">Atualizar programa</button></div>
+    ${bldObsSummary(t.obsRes)}</section>
   <section class="stack" style="gap:10px"><button class="btn primary block" data-act="add-template" data-tid="_bld">${I.plus}Salvar programa</button>
     ${al ? '' : '<button class="link bq-more" data-act="bld-alt">Ver outras opções</button>'}</section>
   ${al ? `<section><div class="sec-head"><span class="eyebrow">Outras opções para você</span><button class="link" data-act="bld-alt">Ocultar</button></div>
@@ -4765,7 +4855,10 @@ A.bld = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' 
 A['bld-set'] = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; render(); Platform.haptic('light'); };
 /* escolher avança sozinho depois de um instante, para a marcação aparecer */
 A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
-A['bld-next'] = el => bldNext(el.dataset.step);
+A['bld-next'] = el => { const ta = $('#bld-obs'); if (ta) UI.bld.obs = ta.value.trim().slice(0, 400); bldNext(el.dataset.step); };
+A['bld-obs-ex'] = el => { const ta = $('#bld-obs'); const cur = (ta ? ta.value : UI.bld.obs || '').trim(); const v = el.dataset.v; if (norm(cur).includes(norm(v))) return; UI.bld.obs = (cur ? cur.replace(/[.;,\s]+$/, '') + '. ' : '') + v; UI.bld.obsDraft = null; render(); const t = $('#bld-obs'); if (t){ t.focus({preventScroll: true}); t.setSelectionRange(t.value.length, t.value.length); } Platform.haptic('light'); };
+A['bld-obs-run'] = () => { const ta = $('#bld-obs'); UI.bld.obs = ta ? ta.value.trim().slice(0, 400) : ''; UI.bld.obsDraft = null; render(); Platform.haptic('light'); const n = tplById('_bld').obsRes; toast(UI.bld.obs ? (n.rules.length ? `Programa refeito com ${n.rules.length} ${n.rules.length === 1 ? 'ajuste' : 'ajustes'}` : 'Nenhum ajuste reconhecido nessa anotação') : 'Observações removidas'); };
+document.addEventListener('input', ev => { const t = ev.target; if (!t || t.id !== 'bld-obs' || !UI.bld) return; if (t.dataset.w === 'res') UI.bld.obsDraft = t.value.slice(0, 400); else UI.bld.obs = t.value.slice(0, 400); });
 A['bld-wd'] = el => { const d = +el.dataset.d; const b = UI.bld; b.wd = b.wd.includes(d) ? b.wd.filter(x => x !== d) : [...b.wd, d]; b.dias = b.wd.length; b.div = 'auto'; render(); Platform.haptic('light'); };
 A['bld-wdmode'] = el => { const b = UI.bld; if (el.dataset.v === '1'){ b.dias = Math.min(6, Math.max(2, b.dias)); b.wd = defaultDays(b.dias); } else { b.wd = null; b.dias = Math.min(6, Math.max(2, b.dias)); } render(); };
 A['bld-foco'] = el => { const b = UI.bld; const k = el.dataset.v; if (!k) b.focos = []; else if (b.focos.includes(k)) b.focos = b.focos.filter(x => x !== k); else if (b.focos.length >= FOCO_MAX){ toast(`Até ${FOCO_MAX} músculos. Com mais, a prioridade se dilui e os treinos ficam longos.`); return; } else b.focos = [...b.focos, k]; b.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); };
@@ -5531,7 +5624,8 @@ function obFitTime(items, mins){
   return log;
 }
 /* lê o texto e devolve as regras reconhecidas, cada uma com o que muda; off = índices desligados na prévia */
-function obInterpret(text, w0, off = new Set()){
+/* opts.program: leitura para um programa inteiro (assistente). Foco em músculo só mexe nos treinos que já trabalham aquele músculo. */
+function obInterpret(text, w0, off = new Set(), opts = {}){
   let items = w0.items.map(x => ({...x})); const rules = [], flags = [], notes = [];
   const ban = new Set(); let fitTo = null;
   const FILL = /\b(por favor|pfv|pf|obrigad[oa]|valeu|ok|blz|beleza)\b/g;
@@ -5547,7 +5641,7 @@ function obInterpret(text, w0, off = new Set()){
     // dor: só sinaliza, não troca sozinho
     if (/\b(dor|doi|doendo|lesao|lesion\w*|machuc\w*|incomod\w*|tendinite|bursite)\b/.test(c)){
       OB_JOINT.forEach(([re, nome, test]) => { if (!re.test(c)) return; const list = items.filter(x => getEx(x.ex) && test(getEx(x.ex))).map(x => exName(x.ex));
-        flags.push({title: `Dor no ${nome}`, text: list.length ? `Os exercícios deste treino que costumam exigir mais do ${nome}: ${list.join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Você pode trocar cada um em Editar.` : `Nenhum exercício deste treino costuma exigir muito do ${nome}, mas com dor vale falar com um fisioterapeuta ou médico.`}); hit = true; });
+        flags.push({title: `Dor no ${nome}`, joint: nome, list, text: list.length ? `Os exercícios deste treino que costumam exigir mais do ${nome}: ${list.join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Você pode trocar cada um em Editar.` : `Nenhum exercício deste treino costuma exigir muito do ${nome}, mas com dor vale falar com um fisioterapeuta ou médico.`}); hit = true; });
       if (hit) return;
     }
     // tempo disponível
@@ -5576,7 +5670,7 @@ function obInterpret(text, w0, off = new Set()){
     // foco em músculo: uma série a mais nos exercícios dele; se pedir exercício a mais, ou se o treino não tiver nenhum, inclui um
     if (mus.length && !neg && /\b(mais|foco|focar|priori\w*|enfase|enfatizar|reforc\w*|caprich\w*|fraco|atrasad\w*|desenvolver|crescer|atencao|incluir|adicion\w*|acrescent\w*)\b/.test(c)){
       const wantEx = /\b(exercicios?|outro|incluir|adicion\w*|acrescent\w*)\b/.test(c);
-      mus.forEach(m => { hit = push(`Mais ${MUSC[m].toLowerCase()}`, () => { const log = []; const mine = items.filter(x => (getEx(x.ex) || {}).m === m);
+      mus.forEach(m => { hit = push(`Mais ${MUSC[m].toLowerCase()}`, () => { const log = []; const mine = items.filter(x => (getEx(x.ex) || {}).m === m); if (opts.program && !mine.length) return log;
         if (wantEx || !mine.length){ const k = obAddFor(m, items, ban); if (k){ const it = {...newItem(k), sets: 3, _f: 1}; const iso = ISO_P.includes(CAT[k].p); const lastComp = items.map(x => ISO_P.includes((getEx(x.ex) || {}).p)).lastIndexOf(false);
             const at = iso ? (items.findIndex(x => ['abdomen'].includes((getEx(x.ex) || {}).m)) + 1 || items.length + 1) - 1 : lastComp + 1; items.splice(Math.max(0, at), 0, it); log.push(`Entra ${exName(k)} (3 × ${it.rmin}–${it.rmax})`); } }
         if (!wantEx) mine.slice(0, 2).forEach(x => { if (x.sets < 5){ x.sets++; x._f = 1; log.push(`${exName(x.ex)}: ${x.sets - 1} → ${x.sets} séries`); } });
@@ -5592,10 +5686,10 @@ function obInterpret(text, w0, off = new Set()){
 }
 
 /* ---------- interface ---------- */
-function obsCard(r, w){
+function obsCard(r, w, ed = false){
   return `<section class="card stack ob-card"><div class="row between"><span class="eyebrow">Observações e preferências</span>${w.obs ? `<span class="tiny muted">${w.obsAt ? 'ajustado ' + relDay(w.obsAt).toLowerCase() : 'salvo'}</span>` : ''}</div>
     <textarea id="wobs" class="field ob-ta" rows="3" maxlength="400" placeholder="Ex.: sem polia · mais foco em glúteo · tenho 45 minutos · trocar o agachamento · mais força" data-act="wobs" data-rid="${r.id}" data-wid="${w.id}">${esc(w.obs || '')}</textarea>
-    <div class="row between" style="gap:10px"><span class="tiny muted grow">O app lê a anotação e sugere ajustes pequenos. Você confere antes de aplicar.</span><button class="btn sm primary" data-act="obs-run" data-rid="${r.id}" data-wid="${w.id}">Ajustar treino</button></div></section>`;
+    <div class="row between" style="gap:10px"><span class="tiny muted grow">${ed ? 'Escreva o que quer mudar. O app sugere ajustes pequenos, você confere e eles ficam salvos neste treino.' : 'O app lê a anotação e sugere ajustes pequenos. Você confere antes de aplicar, e eles ficam salvos no treino.'}</span><button class="btn sm primary" data-act="obs-run" data-rid="${r.id}" data-wid="${w.id}">Ajustar treino</button></div></section>`;
 }
 function openObsSheet(rid, wid){
   const r = routineById(rid); const w = r && r.workouts.find(x => x.id === wid); if (!w) return;

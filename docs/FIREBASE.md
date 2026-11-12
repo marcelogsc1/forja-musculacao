@@ -62,9 +62,11 @@ npx firebase use --add          # escolha o projeto; atualiza o .firebaserc
 npm run rules:deploy
 ```
 
-**Testar as regras (38 testes):** precisa de Java 21 ou mais novo. `npm run test:rules` sobe o emulador oficial e confere que o dono consegue gravar e ler; que outra pessoa, ou alguém sem login, não consegue; e que formatos inválidos, `serverAt` forjado e gravações antigas são recusados.
+**Testar as regras (42 testes):** precisa de Java 21 ou mais novo. `npm run test:rules` sobe o emulador oficial e confere que o dono consegue gravar e ler; que outra pessoa, ou alguém sem login, não consegue; e que formatos inválidos, `serverAt` forjado e gravações antigas são recusados.
 
 Ao acrescentar um campo novo no perfil ou nas medidas, inclua o nome dele na lista correspondente das regras, ou a gravação será recusada.
+
+**Foto do perfil (v4.15):** o app reduz a foto no aparelho para um quadrado de até 256 px em JPEG e grava como registro `avatar__me`, com no máximo 60 mil caracteres. As regras precisam ser publicadas de novo para a foto sincronizar; antes disso ela fica salva só no aparelho.
 
 ## Confirmação de e-mail no app
 

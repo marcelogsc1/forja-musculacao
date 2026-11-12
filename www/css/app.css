@@ -1165,3 +1165,17 @@ nav.tabs .fab .burst{opacity:0;animation:fab-burst 3.6s ease-out infinite}
 .bb-load{animation:bb-load .5s cubic-bezier(.2,.9,.3,1) both}
 @keyframes bb-load{0%{opacity:0;transform:translateX(-14px)}100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.pl-spin,.pl .pl-now,nav.tabs .fab .lift,nav.tabs .fab .burst,.tp-stamp.stamp,.bb-load,.wb i::after{animation:none!important;transition:none}nav.tabs .fab .burst{opacity:0}}
+/* foto do perfil (v4.15) */
+.avatar.pic{padding:0;overflow:hidden;background:var(--s2)}
+.avatar.pic img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.profile-hero .avatar.xl{position:relative;overflow:visible;cursor:pointer}
+.profile-hero .avatar.xl.pic img{border-radius:50%}
+.av-cam{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg);box-shadow:0 0 0 3px var(--bg)}
+.av-cam svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
+.av-prev{display:flex;justify-content:center;margin-top:16px}
+.av-prev .avatar.xl{width:112px;height:112px}
+/* observações no assistente (v4.15) */
+.ob-ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ob-ex .chip{min-height:34px;font-size:13px}
+.ob-rule.static{padding:12px 14px}
+.bq-obs .ob-list{margin-top:6px}
