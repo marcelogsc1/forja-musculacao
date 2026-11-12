@@ -3338,7 +3338,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.15.0';
+const APP_VERSION = '4.15.1';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -3485,6 +3485,19 @@ const curPage = () => UI.stack[UI.stack.length - 1];
 /* foto do perfil (sincronizada) ou as iniciais */
 const hasPic = () => !!(ST.avatar && typeof ST.avatar.img === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(ST.avatar.img));
 const avatarIn = () => hasPic() ? `<img src="${esc(ST.avatar.img)}" alt="">` : (initials() || I.user);
+/* cor do treino em destaque no cartão do Início: o botão Treinar usa a mesma, para as duas sempre baterem */
+function homeAccent(o){
+  try {
+    if (o) return [col(o.cor), colInk(o.cor)];
+    const r = activeRoutine(); if (!r) return [];
+    const picked = UI.homeSel ? r.workouts.find(x => x.id === UI.homeSel) : null; if (picked) return [col(picked.cor), colInk(picked.cor)];
+    const pl = todayPlan(r);
+    if (pl.kind === 'done') return ['#3FCB82', '#0B1A12'];
+    if (pl.kind === 'rest') return ['#C9CCD1', '#17181A'];
+    if (pl.w) return [col(pl.w.cor), colInk(pl.w.cor)];
+  } catch (e) {}
+  return [];
+}
 function initials(){ const n = (ST.profile.name || '').trim(); return n ? n.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() : ''; }
 function render(){
   doneReset();
@@ -3494,9 +3507,8 @@ function render(){
   document.body.classList.toggle('auth-mode', !!(p && p.type === 'auth'));
   if (p && p.type === 'auth' && p.first && (Store.mode === 'cloud' || Store.mode === 'api')){ UI.stack.pop(); return render(); }
   document.querySelectorAll('nav.tabs a').forEach(x => x.setAttribute('aria-current', !p && x.dataset.tab === UI.tab ? 'page' : 'false'));
-  { const fab = $('#fab'); const o = openSession(); fab.classList.toggle('live', !!o);
-    let c = o ? o.cor : null; if (c == null) try { const r = activeRoutine(); const pl = r ? todayPlan(r) : null; if (pl && pl.w && pl.kind !== 'done' && pl.kind !== 'rest') c = pl.w.cor; } catch (e) {}
-    if (c != null){ fab.style.setProperty('--pc', col(c)); fab.style.setProperty('--pci', colInk(c)); } else { fab.style.removeProperty('--pc'); fab.style.removeProperty('--pci'); } }
+  { const fab = $('#fab'); const o = openSession(); fab.classList.toggle('live', !!o); const [pc, pci] = homeAccent(o);
+    if (pc){ fab.style.setProperty('--pc', pc); fab.style.setProperty('--pci', pci); } else { fab.style.removeProperty('--pc'); fab.style.removeProperty('--pci'); } }
   const syncLbl = {cloud: 'Salvo na nuvem', pending: 'Sincronizando', local: 'Salvo só neste aparelho'}[syncClass()] || 'Conectando';
   const sync = `<span class="sync ${syncClass()}" title="${syncLbl}" role="img" aria-label="${syncLbl}"></span>`;
   let head, body;
@@ -3607,7 +3619,7 @@ function vHome(){
       <div class="hero-act"><button class="btn ghost" style="flex:1" data-act="open-past" data-sid="${s.id}">Ver resumo do treino</button></div></section>`;
   } else if (plan.kind === 'rest'){
     const a = plan.after;
-    h += `<section class="hero home-hero is-rest" style="--pc:var(--muted)">${glow()}<div class="hero-top"><span class="hero-lbl">Descanso · ${DIA3[now.getDay()]}</span><span class="hero-rt">${esc(r.nome)}</span></div>
+    h += `<section class="hero home-hero is-rest" style="--pc:#C9CCD1;--pci:#17181A">${glow()}<div class="hero-top"><span class="hero-lbl">Descanso · ${DIA3[now.getDay()]}</span><span class="hero-rt">${esc(r.nome)}</span></div>
       ${heroTitle('Descanso', 'rest', {key: 'home', words: ['REST DAY', 'SONO', 'ÁGUA', 'PROTEÍNA'], week: {done: weekSess.length, total: Math.max(goal, weekSess.length)}})}
       <p class="hero-tag">${tagline('rest')}</p>${a ? `<p class="hero-focus">${afterTxt(a)}.</p>` : ''}
       <div class="hero-act"><button class="btn ghost" style="flex:1" data-act="fab">Treinar mesmo assim</button>${a ? `<button class="btn ghost" data-act="open-workout" data-rid="${r.id}" data-wid="${a.w.id}">Ver ${esc(a.w.nome)}</button>` : ''}</div></section>`;
