@@ -516,3 +516,4 @@ A['mn-swap-do'] = el => {
   saveState(); closeSheet(); render(); Platform.haptic('light');
 };
 document.addEventListener('input', ev => { const t = ev.target; if (t && t.id === 'mn-obs'){ if (UI.mnc) UI.mnc.obs = t.value; const p = $('#mn-obs-prev'); if (p) p.innerHTML = obsPreview(t.value); } });
+A['plan-weigh-go'] = () => { UI.bodyTab = 'nutricao'; goTab('corpo'); };

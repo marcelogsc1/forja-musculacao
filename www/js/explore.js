@@ -66,7 +66,7 @@ function vExplore(){
   const feat = ['t-hip5', 'g-glute4', 'c-phul', 'g-casa3', 'c-avulso-hiit'].map(tplById).filter(Boolean);
   let h = `<section class="stack" style="gap:12px;margin-top:16px"><div class="search">${svg('M11 17.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.2-4.2')}<input id="x-q" class="field" type="search" placeholder="Buscar programas e treinos" value="${esc(UI.xq || '')}" data-act="xq" autocomplete="off"></div>${xChips()}</section>`;
   if (xActive()) return h + `<section id="x-results" style="margin-top:14px">${xResults()}</section>`;
-  h += `<section><button class="builder-cta" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Cinco perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>5 perguntas</i><i class="hot">1 minuto</i></span></button></section>
+  h += `<section>${builderCta()}</section>
   <section><div class="sec-head"><span class="eyebrow">Em destaque</span><span class="tiny muted">${TEMPLATES.length} programas e treinos</span></div><div class="hscroll">${feat.map(pslide).join('')}</div></section>
   <section><div class="sec-head"><span class="eyebrow">Onde você treina</span></div><div class="ltiles">${Object.entries(LOCAIS).map(([k, l]) => `<button class="ltile" data-act="open-xlist" data-f='{"local":"${k}"}' data-title="${esc(l.n)}">${coverArt({goal: ['hipertrofia'], art: l.art, nome: l.n}, '', {eb: '', meta: `${tplFilter({local: k}).length} opções`, chips: []})}</button>`).join('')}</div></section>
   <section><div class="sec-head"><span class="eyebrow">Foco muscular</span></div><div class="list">${Object.entries(FOCOS).map(([k, fo]) => `<button class="li frow" data-act="open-xlist" data-f='{"foco":"${k}"}' data-title="${esc(fo.n)}"><span class="fthumb">${bodyThumb(fo.reg, FOCO_BACK[k])}</span><div class="grow"><b>${esc(fo.n)}</b><span class="sub">${tplFilter({foco: k}).length} programas e treinos</span></div>${I.chev}</button>`).join('')}</div></section>`;
@@ -116,6 +116,8 @@ function builderTpl(){
   return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.${ob.text ? ` Suas observações: “${ob.text}”.` : ''}`,
     goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
 }
+/* Cartão do assistente: borda com uma luz laranja girando em volta */
+function builderCta(){ return `<button class="builder-cta spin-b" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Algumas perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>6 passos</i><i class="hot">1 minuto</i></span></button>`; }
 /* Observações do assistente: as mesmas regras do campo do treino, aplicadas a cada treino do programa.
    Devolve os treinos ajustados e um resumo agrupado (o que mudou, em quais treinos, alertas e lembretes). */
 function bldObs(workouts, text){
@@ -124,7 +126,7 @@ function bldObs(workouts, text){
   const out = workouts.map(w => { const res = obInterpret(text, w, new Set(), {program: true});
     res.rules.forEach(x => { const g = rules.get(x.title) || {title: x.title, ws: [], log: []}; g.ws.push(w.nome); g.log.push(...x.log.map(l => `${w.nome}: ${l}`)); rules.set(x.title, g); });
     res.flags.forEach(f => { const g = flags.get(f.title) || {...f, all: []}; if (f.list) g.all.push(...f.list); flags.set(f.title, g); }); notes.push(res.notes);
-    return {...w, items: res.items.map(({_f, uid, ...x}) => x)}; });
+    return {...w, items: res.items.map(({_f, uid, ...x}) => x), ...(res.wset && 'restEx' in res.wset ? {restEx: res.wset.restEx} : {})}; });
   /* lembrete só para a frase que nenhum treino conseguiu usar */
   const left = notes.length ? notes[0].filter(n => notes.every(l => l.includes(n))) : [];
   if (left.length) out.forEach(w => { w.obs = left.join('. '); });

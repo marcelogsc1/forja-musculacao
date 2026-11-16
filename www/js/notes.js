@@ -71,10 +71,10 @@ function obFitTime(items, mins){
 /* opts.program: leitura para um programa inteiro (assistente). Foco em músculo só mexe nos treinos que já trabalham aquele músculo. */
 function obInterpret(text, w0, off = new Set(), opts = {}){
   let items = w0.items.map(x => ({...x})); const rules = [], flags = [], notes = [];
-  const ban = new Set(); let fitTo = null;
+  const ban = new Set(); let fitTo = null; let wset = {};
   const FILL = /\b(por favor|pfv|pf|obrigad[oa]|valeu|ok|blz|beleza)\b/g;
   const clauses = norm(text).replace(/\s+e\s+(?=(nao|sem|mais|quero|prefiro|tenho|tirar|trocar|foco|focar|priorizar|descanso|estou|odeio|evitar)\b)/g, ';').split(/[\n.;!?]+|,|\bmas\b/).map(c => c.replace(FILL, '').trim()).filter(c => c.length > 2);
-  const push = (title, fn) => { const i = rules.length; const before = items.map(x => ({...x})); const log = fn(); if (!log || !log.length){ items = before; return false; } if (off.has(i)) items = before; rules.push({title, log, on: !off.has(i)}); return true; };
+  const push = (title, fn) => { const i = rules.length; const before = items.map(x => ({...x})); const bw = {...wset}; const log = fn(); if (!log || !log.length){ items = before; wset = bw; return false; } if (off.has(i)){ items = before; wset = bw; } rules.push({title, log, on: !off.has(i)}); return true; };
   // 1) primeiro as restrições de equipamento, para as outras regras já respeitarem
   clauses.forEach(c => { if (!OB_NEG.test(c)) return; const exWords = c.split(/[^a-z0-9]+/).filter(w => obVocab().has(w) && !OB_EQ.some(([re]) => re.test(w)) && !OB_MUS.some(([re]) => re.test(w)));
     if (exWords.length) return; OB_EQ.forEach(([re, eq]) => { if (re.test(c)) ban.add(eq); }); });
@@ -88,9 +88,25 @@ function obInterpret(text, w0, off = new Set(), opts = {}){
         flags.push({title: `Dor no ${nome}`, joint: nome, list, text: list.length ? `Os exercícios deste treino que costumam exigir mais do ${nome}: ${list.join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Você pode trocar cada um em Editar.` : `Nenhum exercício deste treino costuma exigir muito do ${nome}, mas com dor vale falar com um fisioterapeuta ou médico.`}); hit = true; });
       if (hit) return;
     }
+    // descanso com valor: entre séries (todos os exercícios) ou entre um exercício e o próximo
+    const isRest = /\b(descans\w*|intervalo|pausa|emend\w*)\b/.test(c) || (/\bentre (as |os |um |cada )?(series|exercicios?|aparelhos?)\b/.test(c) && obRestVal(c) != null);
+    if (isRest){
+      const exScope = /\bentre (os |um |cada )?(exercicios?|aparelhos?|maquinas?)\b|troca de (exercicio|aparelho)|de um exercicio (pro|para o|pra) (outro|proximo)|(depois|no fim|ao fim|ao terminar) (de )?(cada )?exercicio|emend\w*/.test(c);
+      const v = obRestVal(c); const none = /\bsem (descanso|intervalo|pausa)\b|\bemend\w*/.test(c);
+      const up = /\b(maior|mais longo|longo|mais descanso|descansar mais|aumentar)\b/.test(c), dn = /\b(menor|mais curto|curto|menos descanso|descansar menos|diminuir|reduzir)\b/.test(c);
+      if (exScope){
+        const base = w0.restEx != null ? w0.restEx : Math.round(items.reduce((a, x) => a + (x.rest || 60), 0) / Math.max(1, items.length));
+        const nv = none ? 0 : v != null ? v : up ? Math.min(600, base + 30) : dn ? Math.max(0, base - 30) : null;
+        if (nv != null){ hit = push(nv ? `Descanso entre exercícios: ${fmtRest(nv)}` : 'Sem pausa extra entre exercícios', () => { if (w0.restEx === nv) return []; wset.restEx = nv; return [`Ao terminar um exercício: ${w0.restEx != null ? fmtRest(w0.restEx) : 'mesmo descanso das séries'} → ${nv ? fmtRest(nv) : 'segue direto para o próximo'}`]; }) || hit; if (hit) return; }
+      } else if (v != null || none){
+        const nv = none ? 0 : v;
+        hit = push(nv ? `Descanso entre séries: ${fmtRest(nv)}` : 'Sem descanso entre séries', () => items.map((x, j) => { if (x.rest === nv) return null; const l = `${exName(x.ex)}: ${fmtRest(x.rest || 0)} → ${fmtRest(nv)}`; items[j] = {...x, rest: nv}; return l; }).filter(Boolean)) || hit;
+        if (hit) return;
+      }
+    }
     // tempo disponível
     const hh = c.match(/\b(\d)\s*(h|hora|horas)\b/); const mm = hh ? [0, String(+hh[1] * 60)] : c.match(/(\d{2,3})\s*(min|minutos|m\b)/); const short = /\b(mais curto|mais rapido|pouco tempo|menos tempo|treino curto|corrido|pressa)\b/.test(c);
-    if (mm || short){ fitTo = mm ? +mm[1] : 'short'; hit = true; }
+    if ((mm || short) && !isRest){ fitTo = mm ? +mm[1] : 'short'; hit = true; }
     // estilo
     const style = /\b(forca|pesad\w*|carga alta|mais carga|poucas rep\w*)\b/.test(c) ? 'forca' : /\b(resistencia|definicao|definir|queimar|mais leve|muitas rep\w*|reps altas)\b/.test(c) ? 'res' : /\b(hipertrofia|ganhar massa|crescer)\b/.test(c) ? 'hip' : '';
     if (style){ const S = {forca: ['mais força', 4, 6, 180, 2, 1], res: ['mais resistência', 12, 15, 60, 15, 20], hip: ['hipertrofia', 8, 12, 90, 10, 15]}[style];
@@ -126,13 +142,26 @@ function obInterpret(text, w0, off = new Set(), opts = {}){
   if (fitTo){ const tgt = fitTo === 'short' ? Math.round(wMins({items}) * .75) : fitTo;
     if (tgt >= 15 && tgt < wMins({items})) push(`Treino em até ${tgt} minutos`, () => obFitTime(items, tgt));
     else if (tgt >= 15) flags.push({title: `Cabe em ${tgt} minutos`, text: `Pela estimativa do app, este treino já leva cerca de ${wMins({items})} minutos.`}); }
-  return {rules, flags, notes, items};
+  return {rules, flags, notes, items, wset};
+}
+/* valor de descanso em segundos: "90 s", "2 min", "1:30", "minuto e meio", "dois minutos", "descanso 60" */
+function obRestVal(c){
+  const cl = v => Math.max(10, Math.min(600, Math.round(v / 5) * 5)); let m;
+  if ((m = c.match(/\b(\d{1,2}):(\d{2})\b/))) return cl(+m[1] * 60 + +m[2]);
+  if ((m = c.match(/(\d+(?:[.,]\d+)?)\s*(s|seg|segs|segundos?)\b/))) return cl(parseFloat(m[1].replace(',', '.')));
+  if (/\b(1|um) minuto e meio\b|\b1[.,]5 ?min/.test(c)) return 90;
+  if ((m = c.match(/\b(\d|dois|duas|tres|quatro|cinco) minutos? e meio\b/))) return cl((({dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5})[m[1]] || +m[1]) * 60 + 30);
+  if (/\bmeio minuto\b/.test(c)) return 30;
+  if ((m = c.match(/(\d+(?:[.,]\d+)?)\s*(min|mins|minutos?|m)\b/))) return cl(parseFloat(m[1].replace(',', '.')) * 60);
+  if ((m = c.match(/\b(um|dois|duas|tres|quatro|cinco)\s+minutos?\b/))) return cl(({um: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5})[m[1]] * 60);
+  if ((m = c.match(/\b(\d{2,3})\b/)) && +m[1] >= 15 && +m[1] <= 300) return cl(+m[1]);
+  return null;
 }
 
 /* ---------- interface ---------- */
 function obsCard(r, w, ed = false){
   return `<section class="card stack ob-card"><div class="row between"><span class="eyebrow">Observações e preferências</span>${w.obs ? `<span class="tiny muted">${w.obsAt ? 'ajustado ' + relDay(w.obsAt).toLowerCase() : 'salvo'}</span>` : ''}</div>
-    <textarea id="wobs" class="field ob-ta" rows="3" maxlength="400" placeholder="Ex.: sem polia · mais foco em glúteo · tenho 45 minutos · trocar o agachamento · mais força" data-act="wobs" data-rid="${r.id}" data-wid="${w.id}">${esc(w.obs || '')}</textarea>
+    <textarea id="wobs" class="field ob-ta" rows="3" maxlength="400" placeholder="Ex.: sem polia · mais foco em glúteo · tenho 45 minutos · descanso de 90 s · 2 min entre exercícios" data-act="wobs" data-rid="${r.id}" data-wid="${w.id}">${esc(w.obs || '')}</textarea>
     <div class="row between" style="gap:10px"><span class="tiny muted grow">${ed ? 'Escreva o que quer mudar. O app sugere ajustes pequenos, você confere e eles ficam salvos neste treino.' : 'O app lê a anotação e sugere ajustes pequenos. Você confere antes de aplicar, e eles ficam salvos no treino.'}</span><button class="btn sm primary" data-act="obs-run" data-rid="${r.id}" data-wid="${w.id}">Ajustar treino</button></div></section>`;
 }
 function openObsSheet(rid, wid){
@@ -151,8 +180,10 @@ A.wobs = el => { const r = routineById(el.dataset.rid); const w = r && r.workout
 A['obs-run'] = el => { const t = $('#wobs'); if (t) A.wobs(t); UI.sheet = null; openObsSheet(el.dataset.rid, el.dataset.wid); };
 A['obs-tog'] = el => { const sh = UI.sheet; const i = +el.dataset.i; if (sh.off.has(i)) sh.off.delete(i); else sh.off.add(i); openObsSheet(sh.rid, sh.wid); };
 A['obs-apply'] = () => { const sh = UI.sheet; const r = routineById(sh.rid); const w = r && r.workouts.find(x => x.id === sh.wid); if (!w) return;
-  const before = w.items.map(x => ({...x})); w.items = sh.res.items.map(x => { const y = {...x, uid: x.uid || uid('i')}; delete y._f; return y; }); w.obsAt = today(); saveState(); closeSheet(); render(); Platform.haptic('success');
-  toast('Treino ajustado', () => { w.items = before; saveState(); render(); }); };
+  const before = w.items.map(x => ({...x})); const bEx = w.restEx; w.items = sh.res.items.map(x => { const y = {...x, uid: x.uid || uid('i')}; delete y._f; return y; });
+  if ('restEx' in (sh.res.wset || {})) w.restEx = sh.res.wset.restEx;
+  w.obsAt = today(); saveState(); closeSheet(); render(); Platform.haptic('success');
+  toast('Treino ajustado', () => { w.items = before; if (bEx === undefined) delete w.restEx; else w.restEx = bEx; saveState(); render(); }); };
 document.addEventListener('change', ev => { if (ev.target && ev.target.id === 'wobs') A.wobs(ev.target); });
 /* lembrete na sessão: as frases que não viraram ajuste */
 function obsReminder(s){
