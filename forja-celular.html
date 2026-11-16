@@ -3424,7 +3424,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.17.0';
+const APP_VERSION = '4.17.1';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -5879,15 +5879,51 @@ async function imgJpeg(f, max, q, crop34, lim){
     return out;
   } finally { close(); }
 }
+/* Data em que a foto foi tirada: EXIF (DateTimeOriginal) do JPEG; senão, a data do arquivo; senão, hoje. */
+async function exifDate(f){
+  try {
+    const buf = await f.slice(0, 256 * 1024).arrayBuffer(); const v = new DataView(buf);
+    if (v.byteLength < 4 || v.getUint16(0) !== 0xFFD8) return null;
+    let o = 2;
+    while (o + 4 < v.byteLength){
+      const m = v.getUint16(o); const len = v.getUint16(o + 2); if ((m & 0xFF00) !== 0xFF00) return null;
+      if (m === 0xFFE1 && v.getUint32(o + 4) === 0x45786966){ /* "Exif" */
+        const t = o + 10; const le = v.getUint16(t) === 0x4949; const u16 = a => v.getUint16(a, le), u32 = a => v.getUint32(a, le);
+        const str = (a, n) => { let s = ''; for (let i = 0; i < n && a + i < v.byteLength; i++){ const c = v.getUint8(a + i); if (!c) break; s += String.fromCharCode(c); } return s; };
+        const ifd = (start, want) => { const out = {}; if (start + 2 > v.byteLength) return out; const n = u16(start); for (let i = 0; i < n; i++){ const e = start + 2 + i * 12; if (e + 12 > v.byteLength) break; const tag = u16(e); if (want.includes(tag)) out[tag] = u16(e + 2) === 2 ? str(t + u32(e + 8), u32(e + 4)) : u32(e + 8); } return out; };
+        const i0 = ifd(t + u32(t + 4), [0x0132, 0x8769]); const ex = i0[0x8769] ? ifd(t + i0[0x8769], [0x9003, 0x9004]) : {};
+        const raw = ex[0x9003] || ex[0x9004] || i0[0x0132]; const mt = /^(\d{4}):(\d{2}):(\d{2})/.exec(raw || '');
+        return mt ? `${mt[1]}-${mt[2]}-${mt[3]}` : null;
+      }
+      if (m === 0xFFDA) return null; o += 2 + len;
+    }
+  } catch (e) {}
+  return null;
+}
+async function photoDate(f){
+  const ok = d => d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= '2000-01-01' && d <= today();
+  const ex = await exifDate(f); if (ok(ex)) return {date: ex, src: 'camera'};
+  const lm = f.lastModified ? isoDate(new Date(f.lastModified)) : null; if (ok(lm) && lm !== today()) return {date: lm, src: 'arquivo'};
+  return {date: today(), src: 'hoje'};
+}
 async function addPhoto(f){
   if (!/^image\//.test(f.type || '') && !/\.(jpe?g|png|webp|heic|heif|avif)$/i.test(f.name || '')){ toast('Escolha uma imagem (JPG, PNG ou WEBP).'); return; }
   if (f.size > PHOTO_MAX_FILE){ toast('Imagem grande demais. O limite é 20 MB.'); return; }
   toast('Preparando a foto…');
   try {
-    const [img, th] = await Promise.all([imgJpeg(f, 1080, .8, false, PHOTO_MAX_LEN), imgJpeg(f, 300, .74, true, THUMB_MAX_LEN)]);
-    Store.putRec('photo', uid('ph'), {date: today(), at: new Date().toISOString(), th, img}); UI.photos = null;
-    render(); Platform.haptic('success'); toast(photoCloud() ? 'Foto salva na sua conta' : 'Foto salva neste aparelho');
-  } catch (e) { toast('Não consegui salvar essa imagem. Tente uma foto em JPG ou PNG.'); }
+    const [img, th, d] = await Promise.all([imgJpeg(f, 1080, .8, false, PHOTO_MAX_LEN), imgJpeg(f, 300, .74, true, THUMB_MAX_LEN), photoDate(f)]);
+    UI.phNew = {img, th, date: d.date, src: d.src}; openNewPhoto();
+  } catch (e) { toast('Não consegui abrir essa imagem. Tente uma foto em JPG ou PNG.'); }
+}
+/* confirmação: a data vem da foto, mas a pessoa confere e corrige antes de salvar */
+function openNewPhoto(){
+  const n = UI.phNew; if (!n) return; const kg = kgNear(n.date);
+  const why = n.src === 'camera' ? 'Data lida da própria foto, de quando ela foi tirada.' : n.src === 'arquivo' ? 'A foto não tinha a data da câmera; usamos a data do arquivo.' : 'A foto não tinha data; confira se ela é de hoje.';
+  openSheet(`${sheetHead('Nova foto de evolução', 'Confira a data')}
+    <div class="ph-view"><img src="${n.img}" alt="Foto escolhida"></div>
+    <div class="row" style="gap:10px;margin-top:12px;align-items:flex-end"><label class="flabel grow"><span class="tiny muted">Data em que a foto foi tirada</span><input id="phn-date" class="field" type="date" value="${n.date}" max="${today()}"></label>${kg != null ? `<div class="ph-kg"><span class="tiny muted">Peso perto dessa data</span><b class="num">${fmtN(kg)} kg</b></div>` : ''}</div>
+    <p class="tiny muted" style="margin:8px 2px 0">${why}</p>
+    <div class="sheet-foot"><button class="btn primary block" data-act="ph-save">Salvar foto</button><button class="link muted" style="width:100%;margin-top:4px" data-act="ph-cancel">Cancelar</button></div>`);
 }
 /* fotos da prévia 4.17 (guardadas à parte no aparelho) passam para os registros */
 async function migratePhotosV417(){
@@ -5926,7 +5962,7 @@ async function openPhoto(id){
   const kg = kgNear(p.date); const L = getPhotos(); const first = L[L.length - 1];
   openSheet(`${sheetHead('Foto de evolução', fmtDLong(p.date))}
     <div class="ph-view"><img src="${p.img || p.th}" alt="Foto de ${fmtD(p.date)}"></div>
-    <div class="row" style="gap:10px;margin-top:12px;align-items:flex-end"><label class="flabel grow"><span class="tiny muted">Data da foto</span><input class="field" type="date" value="${p.date}" max="${today()}" data-act="ph-date" data-id="${p.id}"></label>${kg != null ? `<div class="ph-kg"><span class="tiny muted">Peso perto dessa data</span><b class="num">${fmtN(kg)} kg</b></div>` : ''}</div>
+    <div class="row" style="gap:10px;margin-top:12px;align-items:flex-end"><label class="flabel grow"><span class="tiny muted">Data da foto (toque para corrigir)</span><input class="field" type="date" value="${p.date}" max="${today()}" data-act="ph-date" data-id="${p.id}"></label>${kg != null ? `<div class="ph-kg"><span class="tiny muted">Peso perto dessa data</span><b class="num">${fmtN(kg)} kg</b></div>` : ''}</div>
     <div class="stack" style="margin-top:16px">${first && first.id !== p.id ? `<button class="btn ghost block" data-act="ph-compare" data-id="${p.id}">Comparar com a primeira</button>` : ''}<button class="btn danger block" data-act="ph-del" data-id="${p.id}">Apagar foto</button></div>`);
 }
 async function openCompare(id){
@@ -6006,6 +6042,9 @@ function vBody(){
 
 A['body-tab'] = el => { UI.bodyTab = el.dataset.t; render(); };
 A['ph-open'] = el => openPhoto(el.dataset.id);
+A['ph-save'] = () => { const n = UI.phNew; if (!n) return; const v = $('#phn-date') && $('#phn-date').value; const date = v && /^\d{4}-\d{2}-\d{2}$/.test(v) && v <= today() ? v : n.date;
+  Store.putRec('photo', uid('ph'), {date, at: new Date().toISOString(), th: n.th, img: n.img}); UI.phNew = null; UI.photos = null; closeSheet(); render(); Platform.haptic('success'); toast(photoCloud() ? 'Foto salva na sua conta' : 'Foto salva neste aparelho'); };
+A['ph-cancel'] = () => { UI.phNew = null; closeSheet(); };
 A['ph-compare'] = el => openCompare(el.dataset.id);
 A['ph-all'] = () => { const L = getPhotos(); openSheet(`${sheetHead('Fotos de evolução', `${L.length} fotos`)}<div class="ph-grid">${L.map(p => `<button class="ph-th" data-act="ph-open" data-id="${p.id}"><img src="${p.th}" alt=""><span>${fmtD(p.date)}</span></button>`).join('')}</div>`); };
 A['ph-del'] = el => { const id = el.dataset.id; confirmSheet({title: 'Apagar esta foto?', text: `Ela será apagada${photoCloud() ? ' da sua conta e de todos os aparelhos' : ' deste aparelho'} e não dá para recuperar.`, ok: 'Apagar', danger: true, onOk: () => { Store.delRec('photo', id); UI.photos = null; render(); toast('Foto apagada'); }}); };
