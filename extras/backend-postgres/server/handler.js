@@ -5,7 +5,7 @@
 const getDb = require('./lib/db');
 const S = require('./lib/security');
 
-const TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar', 'session'];
+const TYPES = ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar', 'photo', 'session'];
 const ID_RE = /^[A-Za-z0-9_.~:@+-]{1,120}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;

@@ -53,6 +53,9 @@ const session = id => ({id, status: 'done', date: '2026-11-03', wname: 'Upper', 
   await t('foto grande demais recusada', () => assertFails(setDoc(R(ana, 'ana', 'avatar__me'), rec('avatar', 'me', {img: 'data:image/jpeg;base64,' + 'A'.repeat(70000)}, '2026-11-12T21:00:00.000Z'))));
   await t('foto que não é imagem recusada', () => assertFails(setDoc(R(ana, 'ana', 'avatar__me'), rec('avatar', 'me', {img: 'javascript:alert(1)'}, '2026-11-12T21:00:00.000Z'))));
   await t('foto com id diferente de me recusada', () => assertFails(setDoc(R(ana, 'ana', 'avatar__x'), rec('avatar', 'x', {img: 'data:image/jpeg;base64,AAAA'}))));
+  await t('foto de evolução válida', () => assertSucceeds(setDoc(R(ana, 'ana', 'photo__ph-1'), rec('photo', 'ph-1', {date: '2026-11-16', at: '2026-11-16T12:00:00.000Z', th: 'data:image/jpeg;base64,' + 'A'.repeat(8000), img: 'data:image/jpeg;base64,' + 'A'.repeat(150000)}))));
+  await t('foto de evolução grande demais recusada', () => assertFails(setDoc(R(ana, 'ana', 'photo__ph-2'), rec('photo', 'ph-2', {date: '2026-11-16', th: 'data:image/jpeg;base64,AAAA', img: 'data:image/jpeg;base64,' + 'A'.repeat(250000)}))));
+  await t('foto de evolução sem data recusada', () => assertFails(setDoc(R(ana, 'ana', 'photo__ph-3'), rec('photo', 'ph-3', {th: 'data:image/jpeg;base64,AAAA', img: 'data:image/jpeg;base64,AAAA'}))));
   await t('preferências válidas', () => assertSucceeds(setDoc(R(ana, 'ana', 'prefs__me'), rec('prefs', 'me', {prefs: {theme: 'dark', rest: 90}, active: 'r-hip5', v: 4}))));
   await t('exercício criado válido', () => assertSucceeds(setDoc(R(ana, 'ana', 'exercise__c-1'), rec('exercise', 'c-1', {n: 'Supino articulado', m: 'peito', e: 'maquina', p: 'custom', pri: ['peitoral'], sec: [], d: []}))));
   await t('mais recente vence: gravação antiga recusada', () => assertFails(setDoc(R(ana, 'ana', 'session__s-1'), rec('session', 's-1', {...session('s-1'), note: 'velha'}, '2026-11-03T09:00:00.000Z'))));

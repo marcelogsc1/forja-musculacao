@@ -1217,6 +1217,67 @@ nav.tabs .fab .burst{opacity:0;animation:fab-burst 3.6s ease-out infinite}
 .sched-row .link{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
 .sched-row .link svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
 .dm-pick .chip:not([aria-pressed="true"]){box-shadow:inset 0 0 0 1px var(--line2)}
+/* aba Corpo (v4.17) */
+nav.tabs svg .fillc{fill:currentColor;stroke:none}
+nav.tabs a[aria-current="page"] svg .fillc{fill:var(--ember)}
+.body-lead{margin:8px 0 0;font-size:14.5px;line-height:1.45;max-width:34ch}
+.ph-card{margin-top:16px}
+.ph-strip{display:flex;gap:8px;margin:14px -16px 0;padding:0 16px 2px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity}
+.ph-strip::-webkit-scrollbar{display:none}
+.ph-add,.ph-th,.ph-more{flex:none;width:84px;height:112px;border-radius:16px;scroll-snap-align:start}
+.ph-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed var(--s3);color:var(--muted);font-size:12px;font-weight:600;text-align:center;cursor:pointer;padding:0 8px}
+.ph-add svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8}
+.ph-add.sk{border-style:solid;background:var(--s2)}
+.ph-th{position:relative;padding:0;border:0;overflow:hidden;background:var(--s2);cursor:pointer}
+.ph-th img{width:100%;height:100%;object-fit:cover;display:block}
+.ph-th span{position:absolute;left:6px;bottom:6px;padding:2px 6px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px;font-weight:600}
+.ph-more{border:0;background:var(--s2);color:var(--ink);font:700 15px var(--f-body);cursor:pointer}
+.ph-note{margin:12px 0 0;font-size:11.5px;line-height:1.45;color:var(--muted)}
+.ph-view{margin-top:14px;border-radius:18px;overflow:hidden;background:#000;display:flex;justify-content:center}
+.ph-view img{max-width:100%;max-height:56vh;display:block}
+.ph-kg{text-align:right;padding-bottom:10px}
+.ph-kg b{display:block;font-size:18px}
+.ph-cmp-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.ph-cmp{margin:0}
+.ph-cmp img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;display:block;background:#000}
+.ph-cmp figcaption{display:flex;flex-direction:column;margin-top:6px;font-size:12.5px}
+.ph-cmp figcaption span{color:var(--muted)}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.ph-grid .ph-th{width:auto;height:auto;aspect-ratio:3/4}
+.wt-now{margin-top:14px}
+.wt-big{display:flex;align-items:baseline;gap:6px;margin-top:6px}
+.wt-big b{font-family:var(--f-mono);font-size:44px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.wt-big span{font-size:16px;color:var(--muted)}
+.wt-now .btn.sm svg{width:16px;height:16px}
+.wt-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.wt-cell{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:16px;background:var(--s2);border:0;text-align:left;color:var(--ink);font:inherit;min-width:0}
+.wt-cell span{font-size:11.5px;color:var(--muted)}
+.wt-cell b{font-size:17px;font-weight:600;white-space:nowrap}
+.wt-cell em{font-style:normal;font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.wt-goal{cursor:pointer;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--good) 45%,transparent)}
+button.wt-goal b{color:var(--good)}
+.wt-prog{margin-top:16px}
+.wt-prog .gl-bar em{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--s1);box-shadow:0 0 0 3px var(--good)}
+.imc-v{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+.imc-v b{font-family:var(--f-mono);font-size:36px;font-weight:600;letter-spacing:-.03em}
+.imc-v span{font-size:14px;font-weight:600}
+.imc-bar{position:relative;display:flex;gap:3px;height:8px;margin-top:14px}
+.imc-bar i{border-radius:4px;opacity:.85}
+.imc-bar em{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--s1);box-shadow:0 0 0 3px var(--ink)}
+.imc-ticks{position:relative;height:16px;margin-top:6px;font-size:10.5px;color:var(--muted);font-family:var(--f-mono)}
+.imc-ticks span{position:absolute;transform:translateX(-50%)}
+.hw-v{display:flex;align-items:baseline;gap:6px;margin-top:6px}
+.hw-v b{font-family:var(--f-mono);font-size:28px;font-weight:600;letter-spacing:-.03em}
+.hw-v span{color:var(--muted)}
+.hw-bar{position:relative;height:10px;margin-top:14px;border-radius:6px;background:var(--s3)}
+.hw-bar i{position:absolute;top:0;bottom:0;border-radius:6px;background:color-mix(in srgb,var(--good) 55%,transparent)}
+.hw-bar em,.hw-leg em{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 3px var(--s1)}
+.hw-bar u,.hw-leg u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--good)}
+.hw-leg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:12.5px;color:var(--ink2)}
+.hw-leg span{position:relative;padding-left:18px}
+.hw-leg em{left:6px;width:10px;height:10px;margin:-5px 0 0 -5px;box-shadow:none}
+.hw-leg u{left:6px;top:2px;bottom:2px}
+.bm-seg{padding:3px;border-radius:14px}.bm-seg button{height:34px;font-size:13px;border-radius:11px}
 
 </style>
 </head>
@@ -1233,8 +1294,8 @@ nav.tabs .fab .burst{opacity:0;animation:fab-burst 3.6s ease-out infinite}
   <a href="#inicio" data-tab="inicio"><svg viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Início</a>
   <a href="#rotinas" data-tab="rotinas"><svg viewBox="0 0 24 24"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Exercícios</a>
   <button class="tab fab" id="fab" data-act="fab" aria-label="Treinar"><span class="b"><svg class="fist" viewBox="0 0 48 48" aria-hidden="true"><g class="lift"><path class="burst" d="M24 2.6v3.4M15 5.2l1.8 2.8M33 5.2l-1.8 2.8"/><path d="M10 21h28"/><rect class="fb" x="2.6" y="15.6" width="4.4" height="10.8" rx="1.6"/><rect class="fb" x="7" y="11.4" width="6.2" height="19.2" rx="2"/><rect class="fb" x="41" y="15.6" width="4.4" height="10.8" rx="1.6"/><rect class="fb" x="34.8" y="11.4" width="6.2" height="19.2" rx="2"/><path class="fb" d="M16.8 15.6a1.8 1.8 0 0 1 3.6 0a1.8 1.8 0 0 1 3.6-.6a1.8 1.8 0 0 1 3.6 .2a1.8 1.8 0 0 1 3.6 1.2V23c0 3-1.8 4.6-2.2 6.4V46H19V29.2l-3.8-4.6c-2-2.4-1.4-6 1.6-7.2z"/><path d="M20.4 15.6v3.2M24 15v3.6M27.6 15.2v3.4M15.6 22.8h8.6"/></g></svg></span>Treinar</button>
-    <a href="#progresso" data-tab="progresso"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V11M11 16V6.5M15.5 16v-6M20 16V8.5"/></svg>Progresso</a>
-  <a href="#corpo" data-tab="corpo"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.8" r="2.3"/><path d="M5 9h14M12 9v5.5M12 14.5l-3.4 6M12 14.5l3.4 6"/></svg>Corpo</a>
+  <a href="#progresso" data-tab="progresso"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V11M11 16V6.5M15.5 16v-6M20 16V8.5"/></svg>Progresso</a>
+  <a href="#corpo" data-tab="corpo"><svg viewBox="0 0 24 24"><path d="M1.4 4.6V3.0A1.6 1.6 0 0 1 3.0 1.4H4.6M19.400000000000002 1.4H21.0A1.6 1.6 0 0 1 22.6 3.0V4.6M22.6 19.400000000000002V21.0A1.6 1.6 0 0 1 21.0 22.6H19.400000000000002M4.6 22.6H3.0A1.6 1.6 0 0 1 1.4 21.0V19.400000000000002"/><g transform="translate(12 12.3) scale(0.86) translate(-12 -12.4)" class="fillc"><circle cx="12" cy="3.5" r="2.15"/><path d="M13.00 6.20C13.72 6.30 14.60 6.55 15.30 6.80C16.00 7.05 16.72 7.23 17.20 7.70C17.68 8.17 17.88 8.82 18.20 9.60C18.52 10.38 18.80 11.47 19.10 12.40C19.40 13.33 19.87 14.52 20.00 15.20C20.13 15.88 20.08 16.25 19.90 16.50C19.72 16.75 19.17 16.85 18.90 16.70C18.63 16.55 18.55 16.23 18.30 15.60C18.05 14.97 17.75 13.70 17.40 12.90C17.05 12.10 16.52 10.82 16.20 10.80C15.88 10.78 15.73 12.20 15.50 12.80C15.27 13.40 14.83 13.82 14.80 14.40C14.77 14.98 15.22 15.57 15.30 16.30C15.38 17.03 15.35 18.05 15.30 18.80C15.25 19.55 15.02 20.23 15.00 20.80C14.98 21.37 15.33 21.90 15.20 22.20C15.07 22.50 14.50 22.63 14.20 22.60C13.90 22.57 13.55 22.52 13.40 22.00C13.25 21.48 13.40 20.30 13.30 19.50C13.20 18.70 13.02 17.72 12.80 17.20C12.58 16.68 12.27 16.40 12.00 16.40C11.73 16.40 11.42 16.68 11.20 17.20C10.98 17.72 10.80 18.70 10.70 19.50C10.60 20.30 10.75 21.48 10.60 22.00C10.45 22.52 10.10 22.57 9.80 22.60C9.50 22.63 8.93 22.50 8.80 22.20C8.67 21.90 9.02 21.37 9.00 20.80C8.98 20.23 8.75 19.55 8.70 18.80C8.65 18.05 8.62 17.03 8.70 16.30C8.78 15.57 9.23 14.98 9.20 14.40C9.17 13.82 8.73 13.40 8.50 12.80C8.27 12.20 8.12 10.78 7.80 10.80C7.48 10.82 6.95 12.10 6.60 12.90C6.25 13.70 5.95 14.97 5.70 15.60C5.45 16.23 5.37 16.55 5.10 16.70C4.83 16.85 4.28 16.75 4.10 16.50C3.92 16.25 3.87 15.88 4.00 15.20C4.13 14.52 4.60 13.33 4.90 12.40C5.20 11.47 5.48 10.38 5.80 9.60C6.12 8.82 6.32 8.17 6.80 7.70C7.28 7.23 8.00 7.05 8.70 6.80C9.40 6.55 10.28 6.30 11.00 6.20C11.72 6.10 12.28 6.10 13.00 6.20Z"/></g></svg>Corpo</a>
 </div></nav>
 <div id="sheet" hidden></div>
 <div id="toast" class="toast" hidden role="status"></div>
@@ -2880,6 +2941,7 @@ const Platform = (() => {
      measurement  data (AAAA-MM-DD)   medidas corporais do dia
      media        id do exercício     {asset} imagem própria do exercício
      avatar       'me'                {img, at} foto do perfil, reduzida no aparelho (JPEG 256 px)
+     photo        id da foto          {date, at, th, img} foto de evolução (JPEG até 1080 px e miniatura 3:4); fora do estado ST
      session      id do treino        treino completo (séries, cargas, notas)
 
    Cada registro tem updatedAt (gerado no aparelho) e deleted (exclusão lógica).
@@ -3058,8 +3120,11 @@ function FirebaseAdapter(){
   const fromDoc = d => { const x = d.data(); return {type: x.type, id: x.id, data: x.deleted ? null : x.data, deleted: !!x.deleted, updatedAt: x.updatedAt && x.updatedAt.toDate ? x.updatedAt.toDate().toISOString() : x.updatedAt, at: x.serverAt && x.serverAt.toMillis ? x.serverAt.toMillis() : 0}; };
   async function push(changes){
     const back = [];
-    for (let i = 0; i < changes.length; i += 400){
-      const chunk = changes.slice(i, i + 400); const b = sdk.writeBatch(db);
+    const chunks = []; let cur = [], size = 0;
+    for (const c of changes){ const n = c.data ? JSON.stringify(c.data).length : 200; if (cur.length && (cur.length >= 400 || size + n > 7e6)){ chunks.push(cur); cur = []; size = 0; } cur.push(c); size += n; }
+    if (cur.length) chunks.push(cur);
+    for (const chunk of chunks){
+      const b = sdk.writeBatch(db);
       chunk.forEach(c => b.set(ref(c.type, c.id), toDoc(c)));
       try { await b.commit(); continue; } catch (e) { if (e.code !== 'permission-denied' && e.code !== 'invalid-argument') throw fbErr(e); }
       /* algum registro foi recusado (o servidor tem versão mais nova, ou formato inválido): grava um a um */
@@ -3207,6 +3272,10 @@ const Store = (() => {
   api.saveState = () => { if (diffState()){ saveMeta(); schedule(); } };
   api.saveSession = s => { s.updatedAt = nowISO(); if (setLocal('session', s.id, JSON.parse(JSON.stringify(s)))){ saveMeta(); schedule(); } };
   api.deleteSession = id => { SESS = SESS.filter(s => s.id !== id); if (setLocal('session', id, null, true)){ saveMeta(); schedule(); } };
+  /* registros fora do estado (fotos de evolução): gravam e sincronizam como os outros */
+  api.putRec = (type, id, data) => { if (setLocal(type, id, data)){ saveMeta(); schedule(); } };
+  api.delRec = (type, id) => { if (setLocal(type, id, null, true)){ saveMeta(); schedule(); } };
+  api.recs = type => [...R.values()].filter(r => r.type === type && !r.deleted && r.data);
   api.stateSnapshot = () => JSON.parse(JSON.stringify(ST));
   api.pending = () => outbox.size;
 
@@ -3221,7 +3290,7 @@ const Store = (() => {
   }
   /* aplica registros vindos do servidor (vence a mudança mais recente) */
   function applyRemote(list, o = {}){
-    let stChanged = false; const sessIds = [];
+    let stChanged = false, photoChanged = false; const sessIds = [];
     for (const r of list){
       const k = recKey(r.type, r.id); const L = R.get(k);
       const local = outbox.has(k);
@@ -3232,13 +3301,14 @@ const Store = (() => {
       if (!L && r.deleted) continue;
       const rec = {type: r.type, id: r.id, data: r.deleted ? null : r.data, updatedAt: r.updatedAt, deleted: !!r.deleted};
       R.set(k, rec); if (rec.deleted) SIG.delete(k); else SIG.set(k, sig); outbox.delete(k); queueWrite(rec);
-      if (r.type === 'session') sessIds.push(r.id); else stChanged = true;
+      if (r.type === 'session') sessIds.push(r.id); else if (r.type === 'photo') photoChanged = true; else stChanged = true;
     }
     /* documento "estado" completo (claude.ai): o que não veio nele foi apagado em outro aparelho */
     if (o.fullState){ const keep = new Set(list.filter(r => r.type !== 'session').map(r => recKey(r.type, r.id))); R.forEach((r, k) => { if (STATE_TYPES.includes(r.type) && !r.deleted && !keep.has(k) && !outbox.has(k)){ const rec = {...r, data: null, deleted: true}; R.set(k, rec); SIG.delete(k); queueWrite(rec); stChanged = true; } }); }
     if (o.fullSessions){ const keep = new Set(list.filter(r => r.type === 'session').map(r => r.id)); R.forEach((r, k) => { if (r.type === 'session' && !r.deleted && !keep.has(r.id) && !outbox.has(k)){ const rec = {...r, data: null, deleted: true}; R.set(k, rec); SIG.delete(k); queueWrite(rec); sessIds.push(r.id); } }); }
     if (stChanged){ ST = assembleState([...R.values()].filter(r => r.type !== 'session')); fixState(); }
     if (sessIds.length) rebuildSessions(sessIds);
+    if (photoChanged && typeof photosChanged === 'function'){ photosChanged(); if (!stChanged && !sessIds.length){ if (canRerender()) render(); else renderLater = true; } }
     if (stChanged || sessIds.length){ if (stChanged) applyTheme(); if (canRerender()) render(); else renderLater = true; }
   }
   setInterval(() => { if (renderLater && canRerender()){ renderLater = false; render(); } }, 1000);
@@ -3263,7 +3333,8 @@ const Store = (() => {
         saveMeta();
       }
       for (let guard = 0; guard < 50; guard++){
-        const keys = [...outbox.keys()].slice(0, 200);
+        /* até 200 mudanças e cerca de 3 MB por envio (fotos são grandes) */
+        const keys = []; let bytes = 0; for (const k of outbox.keys()){ const r = R.get(k); const n = r && r.data ? JSON.stringify(r.data).length : 200; if (keys.length && (keys.length >= 200 || bytes + n > 3e6)) break; keys.push(k); bytes += n; }
         const changes = keys.map(k => R.get(k)).filter(Boolean).map(r => ({type: r.type, id: r.id, data: r.data, updatedAt: r.updatedAt, deleted: !!r.deleted}));
         const sent = new Map(changes.map(c => [recKey(c.type, c.id), c.updatedAt]));
         keys.forEach(k => { if (!R.get(k)) outbox.delete(k); });
@@ -3353,7 +3424,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.16.0';
+const APP_VERSION = '4.17.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -4047,11 +4118,6 @@ function vProgress(){
   const t = UI.progTab === 'ex' ? 'ex' : 'geral';
   return `<section style="margin-top:20px"><h1 class="display h1">Progresso</h1></section><section class="seg" role="tablist">${[['geral', 'Visão geral'], ['ex', 'Cargas']].map(([k, l]) => `<button role="tab" data-act="progtab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>${t === 'ex' ? progEx() : progGeneral()}`;
 }
-/* aba Corpo: plano de calorias e proteína em destaque, depois peso e medidas */
-function vBody(){
-  return `<section class="row between" style="margin-top:20px"><h1 class="display h1">Corpo</h1></section>
-  <section style="margin-top:14px">${planSummaryRow(ST.prefs.plan ? 'body' : 'tab')}</section>${progBody(true)}`;
-}
 function progGeneral(){
   const now = new Date(); if (!UI.calMonth) UI.calMonth = [now.getFullYear(), now.getMonth()];
   const [y, m] = UI.calMonth; const D = done(); const byDate = {}; D.forEach(s => (byDate[s.date] = byDate[s.date] || []).push(s));
@@ -4074,9 +4140,9 @@ function progGeneral(){
   ${r ? `<section class="card"><div class="eyebrow">Séries por músculo nesta semana</div><p class="tiny muted" style="margin:4px 0 14px">Feitas / previstas no ciclo de ${esc(r.nome)}</p><div class="stack" style="gap:10px">${rows.map(g => `<div class="mbar"><span>${MUSC[g]}</span><span class="track"><i class="${tgt[g] && (got[g] || 0) >= tgt[g] ? 'full' : ''}" style="width:${tgt[g] ? Math.min(100, (got[g] || 0) / tgt[g] * 100) : 100}%"></i></span><span class="num">${got[g] || 0}/${tgt[g] || 0}</span></div>`).join('')}</div></section>` : ''}
   <section class="card"><div class="eyebrow" style="margin-bottom:10px">Mapa de 30 dias</div>${heatBlock(regionLevels(D.filter(s => s.date >= isoDate(addDays(now, -30)))))}</section>`;
 }
-function lineChart(pts, unit){
-  const W = 360, H = 210, L = 38, Rr = 12, T = 24, B = 28;
-  const vals = pts.map(p => p.v); let lo = Math.min(...vals), hi = Math.max(...vals);
+function lineChart(pts, unit, o = {}){
+  const W = 360, H = 210, L = 38, Rr = 12, T = 24, B = 28; const goal = o.goal > 0 ? o.goal : null;
+  const vals = pts.map(p => p.v).concat(goal ? [goal] : []); let lo = Math.min(...vals), hi = Math.max(...vals);
   if (hi === lo){ hi += 1; lo = Math.max(0, lo - 1); }
   const sp = hi - lo; lo = Math.max(0, lo - sp * .2); hi += sp * .2;
   const raw = (hi - lo) / 4; const p10 = Math.pow(10, Math.floor(Math.log10(raw))); const nn = raw / p10; const step = (nn < 1.5 ? 1 : nn < 3.5 ? 2 : nn < 7.5 ? 5 : 10) * p10;
@@ -4088,6 +4154,7 @@ function lineChart(pts, unit){
   const li = pts.length - 1; const every = Math.ceil(pts.length / 5);
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução em ${unit}"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ember)" stop-opacity=".35"/><stop offset="1" stop-color="var(--ember)" stop-opacity="0"/></linearGradient></defs>
     ${ticks.map(t => `<line x1="${L}" x2="${W - Rr}" y1="${yv(t)}" y2="${yv(t)}" stroke="var(--line)"/><text x="${L - 8}" y="${yv(t) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${fmtN(Math.round(t * 10) / 10)}</text>`).join('')}
+    ${goal ? `<line x1="${L}" x2="${W - Rr}" y1="${yv(goal).toFixed(1)}" y2="${yv(goal).toFixed(1)}" stroke="var(--good)" stroke-width="1.6" stroke-dasharray="5 5"/><text x="${L + 6}" y="${(yv(goal) - 6).toFixed(1)}" font-size="11" font-weight="700" fill="var(--good)">meta ${fmtN(goal)} ${unit}</text>` : ''}
     ${area ? `<path d="${area}" fill="url(#ag)"/>` : ''}<path d="${path}" fill="none" stroke="var(--ember)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
     ${pts.map((p, i) => `<circle cx="${x(i)}" cy="${yv(p.v)}" r="${i === li ? 6 : 3.5}" fill="${i === li ? 'var(--ember)' : 'var(--s1)'}" stroke="var(--ember)" stroke-width="2"><title>${fmtD(p.date)}: ${fmtN(Math.round(p.v * 10) / 10)} ${unit}</title></circle>`).join('')}
     ${pts.map((p, i) => (i === li || (i % every === 0 && x(li) - x(i) >= 46)) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="${pts.length > 1 && i === li ? 'end' : pts.length > 1 && i === 0 ? 'start' : 'middle'}" font-size="10.5" fill="var(--muted)">${fmtD(p.date)}</text>` : '').join('')}
@@ -4134,10 +4201,11 @@ function bwDerived(){
 }
 function progBody(inTab){
   const planRow = inTab ? '' : `<section>${planSummaryRow('body')}</section>`;
-  const list = (ST.bw || []).slice().sort((a, b) => a.date.localeCompare(b.date)); const view = UI.bwView || 'resumo';
-  const last = list[list.length - 1]; const keys = Object.keys(BWF); const has = keys.filter(k => bwSeries(k).length);
+  const keys = Object.keys(BWF).filter(k => !inTab || k !== 'kg'); const has = keys.filter(k => bwSeries(k).length);
+  const list = (ST.bw || []).filter(x => keys.some(k => x[k] != null)).sort((a, b) => a.date.localeCompare(b.date)); const view = UI.bwView || 'resumo';
+  const last = list[list.length - 1];
   const head = `<section class="bm-head"><div class="grow"><div class="eyebrow">Medidas do corpo</div><div class="small muted" style="margin-top:4px">${last ? `Última medição ${relDay(last.date).toLowerCase()} · ${list.length} ${list.length === 1 ? 'registro' : 'registros'}` : 'Nenhuma medição ainda'}</div></div><button class="btn primary sm" data-act="bw-open">${I.plus}Registrar</button></section>`;
-  if (!list.length) return `${planRow}${head}<section class="empty"><b>Comece pelo peso e pela cintura</b>Para acompanhar definição, a cintura costuma dizer mais que a balança. As demais medidas são opcionais.<button class="btn primary" style="margin-top:14px" data-act="bw-open">Registrar primeira medição</button></section>`;
+  if (!list.length) return `${planRow}${head}<section class="empty"><b>${inTab ? 'Comece pela cintura' : 'Comece pelo peso e pela cintura'}</b>Para acompanhar definição, a cintura costuma dizer mais que a balança. As demais medidas são opcionais.<button class="btn primary" style="margin-top:14px" data-act="bw-open">Registrar primeira medição</button></section>`;
   const seg = `<div class="seg bm-seg">${[['resumo', 'Resumo'], ['graficos', 'Gráficos'], ['historico', 'Histórico']].map(([v, l]) => `<button data-act="bw-view" data-v="${v}" aria-pressed="${view === v}">${l}</button>`).join('')}</div>`;
   let body = '';
   if (view === 'resumo'){
@@ -4480,7 +4548,7 @@ A['ask-delete-account'] = () => { UI.sheet = {kind: 'delacc'}; openSheet(`${shee
     <button class="btn danger block" type="submit">Excluir conta e dados</button><button class="btn ghost block" type="button" data-act="close">Cancelar</button></form>`); };
 A.install = async () => { const r = await Platform.install(); if (r === 'ios') openSheet(`${sheetHead('Instalar', 'Instalar no iPhone')}<ol class="cues" style="margin-top:14px"><li>Toque em Compartilhar, na barra do Safari.</li><li>Escolha “Adicionar à Tela de Início”.</li><li>Toque em Adicionar. O Forja abre em tela cheia, como um app.</li></ol>`); else if (r === 'accepted'){ toast('Forja instalado'); render(); } else if (r === 'unavailable') toast('Use o menu do navegador: Instalar app'); };
 A['install-hide'] = () => { try { localStorage.setItem('forja.installHide', '1'); } catch (e) {} render(); };
-A['ask-wipe'] = () => confirmSheet({title: 'Apagar todos os dados?', text: 'Rotinas, treinos, medidas e perfil serão apagados deste aparelho' + (Store.mode !== 'local' ? ' e da nuvem' : '') + '. Exporte um backup antes se quiser guardar.', ok: 'Apagar tudo', danger: true, onOk: () => { const ids = SESS.map(s => s.id); ids.forEach(id => deleteSession(id)); ST = freshState(); saveState(); UI.stack = []; UI.tab = 'inicio'; render(); toast('Dados apagados'); }});
+A['ask-wipe'] = () => confirmSheet({title: 'Apagar todos os dados?', text: 'Rotinas, treinos, medidas, fotos e perfil serão apagados deste aparelho' + (Store.mode !== 'local' ? ' e da nuvem' : '') + '. Exporte um backup antes se quiser guardar.', ok: 'Apagar tudo', danger: true, onOk: () => { const ids = SESS.map(s => s.id); ids.forEach(id => deleteSession(id)); try { Store.recs('photo').forEach(r => Store.delRec('photo', r.id)); UI.photos = null; } catch (e) {} ST = freshState(); saveState(); UI.stack = []; UI.tab = 'inicio'; render(); toast('Dados apagados'); }});
 A['retro-sheet'] = el => openStartSheet(el.dataset.date);
 A.retro = el => startRetro(el.dataset.rid, el.dataset.wid, el.dataset.date);
 A['save-draft'] = () => { closeKP(); const s = curSess(); if (s) saveDraft(s); };
@@ -4637,6 +4705,7 @@ document.addEventListener('change', async ev => {
     confirmSheet({title: 'Importar backup?', text: `${j.sessoes.length} treinos e ${(j.estado.routines || []).length} rotinas. Os dados atuais serão substituídos.`, ok: 'Importar', onOk: () => { const keep = new Set(j.sessoes.map(x => x.id)); SESS.filter(x => !keep.has(x.id)).map(x => x.id).forEach(id => deleteSession(id)); ST = j.estado; fixState(); saveState(); SESS = j.sessoes.map(normSession); SESS.forEach(x => saveSession(x)); applyTheme(); render(); toast('Backup importado'); }});
   }
   if (act === 'wname'){ const w = findWorkout(t.dataset.rid, t.dataset.wid); const v = t.value.trim(); if (w && v){ w.nome = v; saveState(); } }
+  if (act === 'ph-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; addPhoto(f); return; }
   if (act === 'avatar' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; setAvatar(f); return; }
   if (act === 'media' && t.files && t.files[0]){
     const f = t.files[0]; if (f.size > 20 * 1024 * 1024){ toast('Arquivo grande demais (máx. 20 MB).'); return; }
@@ -5779,6 +5848,176 @@ function obsReminder(s){
   const notes = obInterpret(w.obs, w).notes; if (!notes.length) return '';
   return `<div class="ob-remind">${I.note}<span>${notes.map(esc).join(' · ')}</span></div>`;
 }
+
+/* Aba Corpo (v4.17): título e explicação, fotos de evolução e três partes: Peso, Medidas e Nutrição.
+   Fotos de evolução: registros "photo" do Store (imagem JPEG reduzida + miniatura). Com conta, sincronizam
+   como o resto; sem conta, ficam neste aparelho. Não entram no backup em arquivo. */
+
+/* lista em memória, montada dos registros (mais recente primeiro) */
+function photoList(){ return Store.recs('photo').map(r => ({id: r.id, ...r.data})).sort((a, b) => b.date.localeCompare(a.date) || (b.at || '').localeCompare(a.at || '')); }
+function photosChanged(){ UI.photos = null; }
+const getPhotos = () => UI.photos || (UI.photos = photoList());
+const photoById = id => { const r = Store.recs('photo').find(x => x.id === id); return r ? {id, ...r.data} : null; };
+const PHOTO_MAX_FILE = 20 * 1024 * 1024; const PHOTO_MAX_LEN = 230000; const THUMB_MAX_LEN = 38000;
+const photoCloud = () => Store.mode === 'cloud' || Store.mode === 'api';
+/* reduz a imagem: lado maior até max px (ou recorte 3:4 para a miniatura), JPEG dentro do limite de tamanho */
+async function imgJpeg(f, max, q, crop34, lim){
+  let src, close = () => {};
+  try { src = await createImageBitmap(f, {imageOrientation: 'from-image'}); close = () => src.close && src.close(); }
+  catch (e) { const url = URL.createObjectURL(f); src = await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = url; }); close = () => URL.revokeObjectURL(url); }
+  try {
+    const w = src.width, h = src.height; if (!w || !h) throw new Error('vazia');
+    let out = '';
+    for (const [k, qq] of [[1, q], [1, q - .1], [.85, q - .14], [.7, q - .18], [.55, q - .22]]){
+      const m = Math.round(max * k); let sx = 0, sy = 0, sw = w, sh = h, cw, ch;
+      if (crop34){ const r = 3 / 4; if (w / h > r){ sw = h * r; sx = (w - sw) / 2; } else { sh = w / r; sy = (h - sh) / 2; } cw = m; ch = Math.round(m / r); }
+      else { const z = Math.min(1, m / Math.max(w, h)); cw = Math.round(w * z); ch = Math.round(h * z); }
+      const c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, sx, sy, sw, sh, 0, 0, cw, ch);
+      out = c.toDataURL('image/jpeg', qq); if (out.length <= lim) break;
+    }
+    if (!/^data:image\/jpeg;base64,/.test(out) || out.length > lim) throw new Error('grande');
+    return out;
+  } finally { close(); }
+}
+async function addPhoto(f){
+  if (!/^image\//.test(f.type || '') && !/\.(jpe?g|png|webp|heic|heif|avif)$/i.test(f.name || '')){ toast('Escolha uma imagem (JPG, PNG ou WEBP).'); return; }
+  if (f.size > PHOTO_MAX_FILE){ toast('Imagem grande demais. O limite é 20 MB.'); return; }
+  toast('Preparando a foto…');
+  try {
+    const [img, th] = await Promise.all([imgJpeg(f, 1080, .8, false, PHOTO_MAX_LEN), imgJpeg(f, 300, .74, true, THUMB_MAX_LEN)]);
+    Store.putRec('photo', uid('ph'), {date: today(), at: new Date().toISOString(), th, img}); UI.photos = null;
+    render(); Platform.haptic('success'); toast(photoCloud() ? 'Foto salva na sua conta' : 'Foto salva neste aparelho');
+  } catch (e) { toast('Não consegui salvar essa imagem. Tente uma foto em JPG ou PNG.'); }
+}
+/* fotos da prévia 4.17 (guardadas à parte no aparelho) passam para os registros */
+async function migratePhotosV417(){
+  if (!window.indexedDB || lsGet('forja.phmig')) return;
+  try {
+    const dbs = indexedDB.databases ? await indexedDB.databases() : null; if (dbs && !dbs.some(d => d.name === 'forja-fotos')){ lsSet('forja.phmig', 1); return; }
+    const db = await new Promise((ok, no) => { const r = indexedDB.open('forja-fotos', 1); r.onupgradeneeded = () => { r.transaction.abort(); }; r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+    const all = (st) => new Promise((ok, no) => { const t = db.transaction(st, 'readonly'); const q = t.objectStore(st).getAll(); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); });
+    const [mini, full] = await Promise.all([all('mini'), all('full')]); const F = new Map(full.map(x => [x.id, x.img]));
+    mini.forEach(m => { const img = F.get(m.id); if (img && img.length <= PHOTO_MAX_LEN && m.th) Store.putRec('photo', m.id, {date: m.date, at: m.at || new Date().toISOString(), th: m.th, img}); });
+    db.close(); indexedDB.deleteDatabase('forja-fotos'); lsSet('forja.phmig', 1); UI.photos = null; if (mini.length) render();
+  } catch (e) { lsSet('forja.phmig', 1); }
+}
+/* peso mais próximo de uma data (até 10 dias de distância) */
+function kgNear(date){
+  const t = new Date(date + 'T12:00').getTime(); let best = null, bd = Infinity;
+  for (const p of bwSeries('kg')){ const d = Math.abs(new Date(p.date + 'T12:00').getTime() - t); if (d < bd){ bd = d; best = p; } }
+  return best && bd <= 10 * 864e5 ? best.v : null;
+}
+function photoCard(){
+  migratePhotosV417(); const L = getPhotos(); const n = L.length; const first = L[n - 1];
+  const add = `<label class="ph-add" for="ph-in">${I.camera}<span>Adicionar foto</span></label>`;
+  const thumbs = L.slice(0, 12).map(p => `<button class="ph-th" data-act="ph-open" data-id="${p.id}" aria-label="Foto de ${fmtD(p.date)}"><img src="${p.th}" alt=""><span>${fmtD(p.date)}</span></button>`).join('');
+  return `<section class="card ph-card">
+    <div class="row between" style="align-items:flex-start"><div class="grow"><div class="eyebrow">Fotos de evolução</div>
+      <div class="small muted" style="margin-top:4px">${n ? `${n} ${n === 1 ? 'foto' : 'fotos'} · desde ${fmtD(first.date)}` : 'Uma por mês já mostra muita coisa que a balança não mostra.'}</div></div>
+      ${n >= 2 ? `<button class="btn sm ghost" data-act="ph-compare">Comparar</button>` : ''}</div>
+    <div class="ph-strip">${add}${thumbs}${n > 12 ? `<button class="ph-more" data-act="ph-all">+${n - 12}</button>` : ''}</div>
+    ${!n ? '<p class="small ink2" style="margin:12px 0 0">Dica: mesma luz, mesma distância e a mesma roupa. Frente, lado e costas.</p>' : ''}
+    <input id="ph-in" type="file" accept="image/*" data-act="ph-file" hidden>
+    <p class="ph-note">* ${photoCloud() ? 'Fotos reduzidas e guardadas na sua conta. Só você vê.' : 'Fotos reduzidas e guardadas só neste aparelho. Só você vê.'}</p>
+  </section>`;
+}
+async function openPhoto(id){
+  const p = photoById(id); if (!p) return;
+  const kg = kgNear(p.date); const L = getPhotos(); const first = L[L.length - 1];
+  openSheet(`${sheetHead('Foto de evolução', fmtDLong(p.date))}
+    <div class="ph-view"><img src="${p.img || p.th}" alt="Foto de ${fmtD(p.date)}"></div>
+    <div class="row" style="gap:10px;margin-top:12px;align-items:flex-end"><label class="flabel grow"><span class="tiny muted">Data da foto</span><input class="field" type="date" value="${p.date}" max="${today()}" data-act="ph-date" data-id="${p.id}"></label>${kg != null ? `<div class="ph-kg"><span class="tiny muted">Peso perto dessa data</span><b class="num">${fmtN(kg)} kg</b></div>` : ''}</div>
+    <div class="stack" style="margin-top:16px">${first && first.id !== p.id ? `<button class="btn ghost block" data-act="ph-compare" data-id="${p.id}">Comparar com a primeira</button>` : ''}<button class="btn danger block" data-act="ph-del" data-id="${p.id}">Apagar foto</button></div>`);
+}
+async function openCompare(id){
+  const L = getPhotos(); if (L.length < 2) return;
+  const a = L[L.length - 1]; const b = id ? L.find(x => x.id === id) : L[0]; if (!b || a.id === b.id) return;
+  const days = Math.round((new Date(b.date) - new Date(a.date)) / 864e5); const ka = kgNear(a.date), kb = kgNear(b.date);
+  const col = (p, k, t) => `<figure class="ph-cmp"><img src="${p.img || p.th}" alt="${t}, ${fmtD(p.date)}"><figcaption><b>${t}</b><span>${fmtD(p.date)}${k != null ? ` · ${fmtN(k)} kg` : ''}</span></figcaption></figure>`;
+  openSheet(`${sheetHead('Antes e agora', days > 0 ? `${days} ${days === 1 ? 'dia' : 'dias'} de diferença` : 'Mesmo dia')}
+    <div class="ph-cmp-row">${col(a, ka, 'Primeira')}${col(b, kb, b === L[0] ? 'Mais recente' : 'Escolhida')}</div>
+    ${ka != null && kb != null ? `<p class="small ink2" style="margin:12px 0 0;text-align:center">Peso: ${kb - ka > 0 ? '+' : kb - ka < 0 ? '−' : ''}${fmtN(Math.abs(r1(kb - ka)))} kg no período</p>` : ''}`);
+}
+
+/* ---------- peso ---------- */
+function wGoal(){
+  const pl = ST.prefs.plan; if (pl && pl.target) return {kg: pl.target, from: pl.startKg || null, src: 'plan'};
+  if (ST.prefs.wGoal) return {kg: ST.prefs.wGoal, from: ST.prefs.wGoalFrom || null, src: 'own'};
+  return null;
+}
+const BMI_CAT = b => b < 18.5 ? {t: 'Abaixo do peso', c: 'var(--c1)'} : b < 25 ? {t: 'Peso adequado', c: 'var(--good)'} : b < 30 ? {t: 'Sobrepeso', c: 'var(--warn)'} : b < 35 ? {t: 'Obesidade grau I', c: 'var(--bad)'} : b < 40 ? {t: 'Obesidade grau II', c: 'var(--bad)'} : {t: 'Obesidade grau III', c: 'var(--bad)'};
+function weightTab(){
+  const pts = bwSeries('kg');
+  if (!pts.length) return `<section class="empty"><b>Registre seu peso</b>Com o peso e a sua altura, o app calcula o IMC, a faixa de peso saudável e acompanha a meta.<button class="btn primary" style="margin-top:14px" data-act="bw-open" data-f="kg">Registrar peso</button></section>`;
+  const lp = pts[pts.length - 1]; const cur = lp.v; const G = wGoal(); const pf = ST.profile || {}; const h = parseNum(pf.height); const age = ageFrom(pf.birth);
+  const lim = isoDate(addDays(new Date(), -30)); const base = pts.filter(x => x.date <= lim).pop() || (pts.length > 1 ? pts[0] : null);
+  const d30 = base && base !== lp ? r1(cur - base.v) : null; const sgn = v => v > 0 ? '+' : v < 0 ? '−' : '';
+  const start = G && G.src === 'plan' && G.from ? G.from : pts[0].v;
+  let goalBox = `<button class="wt-cell wt-goal" data-act="wgoal-open"><span>Meta</span><b>Definir</b><em>toque para escolher</em></button>`, diffBox = `<div class="wt-cell"><span>Desde o início</span><b class="num">${sgn(r1(cur - pts[0].v))}${fmtN(Math.abs(r1(cur - pts[0].v)))} kg</b><em>${fmtD(pts[0].date)}</em></div>`, prog = '';
+  if (G){
+    const diff = r1(G.kg - cur); const reached = Math.abs(diff) < .3 || (start > G.kg ? cur <= G.kg : start < G.kg ? cur >= G.kg : false);
+    goalBox = `<button class="wt-cell wt-goal" data-act="wgoal-open"><span>Meta</span><b class="num">${fmtN(G.kg)} kg</b><em>${G.src === 'plan' ? 'do seu plano' : 'alterar'}</em></button>`;
+    diffBox = `<div class="wt-cell"><span>Diferença</span><b class="num">${reached ? 'Atingida' : `${sgn(diff)}${fmtN(Math.abs(diff))} kg`}</b><em>${reached ? 'parabéns' : diff < 0 ? 'para perder' : 'para ganhar'}</em></div>`;
+    const tot = G.kg - start; const pr = tot ? Math.max(0, Math.min(1, (cur - start) / tot)) : 1;
+    prog = `<div class="wt-prog"><div class="goal-line"><div><b class="num">${fmtN(start)}</b><span>início</span></div><div class="gl-bar"><i style="width:${(pr * 100).toFixed(0)}%;background:var(--good)"></i><em style="left:${(pr * 100).toFixed(0)}%"></em></div><div style="text-align:right"><b class="num">${fmtN(G.kg)}</b><span>meta</span></div></div><p class="tiny muted" style="margin:8px 0 0">${Math.round(pr * 100)}% do caminho</p></div>`;
+  }
+  let h_ = `<section class="card wt-now">
+    <div class="row between" style="align-items:flex-start"><div><div class="eyebrow">Peso atual</div><div class="wt-big"><b class="num">${fmtN(cur)}</b><span>kg</span></div>
+      <div class="small muted">${relDay(lp.date)}${d30 != null ? ` · ${sgn(d30)}${fmtN(Math.abs(d30))} kg em ${base.date <= lim ? '30 dias' : 'relação à primeira pesagem'}` : ''}</div></div>
+      <button class="btn sm primary" data-act="bw-open" data-f="kg">${I.plus}Registrar</button></div>
+    <div class="wt-3">${goalBox}${diffBox}<div class="wt-cell"><span>Pesagens</span><b class="num">${pts.length}</b><em>desde ${fmtD(pts[0].date)}</em></div></div>${prog}</section>`;
+  h_ += `<section class="card stack"><div class="row between"><div class="eyebrow">Evolução do peso</div>${pts.length > 1 ? `<button class="link" data-act="bw-metric" data-m="kg">Ver tudo</button>` : ''}</div>${pts.length > 1 ? lineChart(pts.slice(-40), 'kg', {goal: G && G.kg}) : '<p class="small muted" style="margin:0">O gráfico aparece a partir da segunda pesagem.</p>'}</section>`;
+  if (!h) h_ += `<section class="card"><div class="eyebrow">IMC e peso saudável</div><p class="small ink2" style="margin:8px 0 12px">Informe sua altura no Perfil para calcular o IMC e a faixa de peso saudável para você.</p><button class="btn ghost block" data-act="profile">Informar altura</button></section>`;
+  else {
+    const m = h / 100; const bmi = cur / (m * m); const cat = BMI_CAT(bmi); const lo = 18.5 * m * m, hi = 24.9 * m * m;
+    const pos = Math.max(0, Math.min(1, (bmi - 15) / 25)); const minor = age != null && age < 18;
+    h_ += `<section class="card imc"><div class="row between"><div class="eyebrow">IMC</div><span class="tiny muted">${fmtN(cur)} kg · ${fmtN(Math.round(h))} cm</span></div>
+      <div class="imc-v"><b class="num">${(Math.round(bmi * 10) / 10).toFixed(1).replace('.', ',')}</b><span style="color:${cat.c}">${minor ? 'Para menores de 18 anos o IMC usa outra tabela' : cat.t}</span></div>
+      <div class="imc-bar" aria-hidden="true"><i style="flex:3.5;background:var(--c1)"></i><i style="flex:6.5;background:var(--good)"></i><i style="flex:5;background:var(--warn)"></i><i style="flex:10;background:var(--bad)"></i><em style="left:${(pos * 100).toFixed(1)}%"></em></div>
+      <div class="imc-ticks" aria-hidden="true"><span style="left:14%">18,5</span><span style="left:40%">25</span><span style="left:60%">30</span></div>
+      <p class="tiny muted" style="margin:12px 0 0">Peso ÷ altura², classificação da OMS para adultos. Músculo também conta, então veja junto com a cintura, em Medidas.</p></section>`;
+    const inR = cur >= lo && cur <= hi; const rp = v => Math.max(0, Math.min(100, (v - (lo - 12)) / ((hi + 12) - (lo - 12)) * 100));
+    h_ += `<section class="card hw"><div class="eyebrow">Peso saudável para você</div>
+      <div class="hw-v"><b class="num">${fmtN(r1(lo))} a ${fmtN(r1(hi))}</b><span>kg</span></div>
+      <div class="hw-bar" aria-hidden="true"><i style="left:${rp(lo).toFixed(1)}%;right:${(100 - rp(hi)).toFixed(1)}%"></i><em style="left:${rp(cur).toFixed(1)}%" title="Você"></em>${G ? `<u style="left:${rp(G.kg).toFixed(1)}%" title="Meta"></u>` : ''}</div>
+      <div class="hw-leg"><span><em></em>você: ${fmtN(cur)} kg${inR ? ', dentro da faixa' : cur > hi ? `, ${fmtN(r1(cur - hi))} kg acima` : `, ${fmtN(r1(lo - cur))} kg abaixo`}</span>${G ? `<span><u></u>meta: ${fmtN(G.kg)} kg${G.kg < lo ? ', abaixo da faixa' : G.kg > hi ? ', acima da faixa' : ''}</span>` : ''}</div>
+      <p class="tiny muted" style="margin:12px 0 0">Faixa da OMS (IMC 18,5 a 24,9). Não há um peso ideal único: com mais músculo, ficar acima dela pode não ser gordura.</p></section>`;
+  }
+  return h_;
+}
+function openGoalSheet(){
+  const G = wGoal(); const lp = bwSeries('kg').pop();
+  openSheet(`${sheetHead('Meta de peso', G && G.src === 'plan' ? 'Ligada ao seu plano de calorias' : 'Opcional')}
+    <label class="flabel" style="margin-top:14px"><span class="tiny muted">Meta (kg)</span><input id="wg-in" class="field num" inputmode="decimal" placeholder="${lp ? fmtN(lp.v) : 'ex.: 72'}" value="${G ? fmtN(G.kg) : ''}"></label>
+    <p class="tiny muted" style="margin:10px 0 0">${G && G.src === 'plan' ? 'Mudar aqui também muda a meta do plano, e a previsão de data é refeita.' : 'O app mostra a diferença, o progresso e a meta no gráfico.'}</p>
+    <div class="sheet-foot"><button class="btn primary block" data-act="wgoal-save">Salvar meta</button>${G ? '<button class="link muted" style="width:100%;margin-top:4px" data-act="wgoal-del">Remover meta</button>' : ''}</div>`);
+  setTimeout(() => { const i = $('#wg-in'); if (i) i.focus(); }, 60);
+}
+
+/* ---------- tela ---------- */
+const BODY_TABS = [['peso', 'Peso'], ['medidas', 'Medidas'], ['nutricao', 'Nutrição']];
+function vBody(){
+  const t = BODY_TABS.some(x => x[0] === UI.bodyTab) ? UI.bodyTab : 'peso';
+  const body = t === 'medidas' ? progBody(true) : t === 'nutricao' ? `<section style="margin-top:14px"><p class="small ink2" style="margin:0 4px 12px">O assistente calcula calorias, proteína e macros para o seu objetivo, com base nos seus dados e nos seus treinos, e ajusta toda semana pelo seu peso real.</p>${planSummaryRow(ST.prefs.plan ? 'body' : 'tab')}</section>` : weightTab();
+  return `<section style="margin-top:20px"><h1 class="display h1">Corpo</h1><p class="ink2 body-lead">Seu peso, suas medidas e fotos para ver a evolução, e quanto comer para chegar no objetivo.</p></section>
+  ${photoCard()}
+  <section class="seg" role="tablist" style="margin-top:16px">${BODY_TABS.map(([k, l]) => `<button role="tab" data-act="body-tab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>${body}`;
+}
+
+A['body-tab'] = el => { UI.bodyTab = el.dataset.t; render(); };
+A['ph-open'] = el => openPhoto(el.dataset.id);
+A['ph-compare'] = el => openCompare(el.dataset.id);
+A['ph-all'] = () => { const L = getPhotos(); openSheet(`${sheetHead('Fotos de evolução', `${L.length} fotos`)}<div class="ph-grid">${L.map(p => `<button class="ph-th" data-act="ph-open" data-id="${p.id}"><img src="${p.th}" alt=""><span>${fmtD(p.date)}</span></button>`).join('')}</div>`); };
+A['ph-del'] = el => { const id = el.dataset.id; confirmSheet({title: 'Apagar esta foto?', text: `Ela será apagada${photoCloud() ? ' da sua conta e de todos os aparelhos' : ' deste aparelho'} e não dá para recuperar.`, ok: 'Apagar', danger: true, onOk: () => { Store.delRec('photo', id); UI.photos = null; render(); toast('Foto apagada'); }}); };
+A['wgoal-open'] = () => openGoalSheet();
+A['wgoal-save'] = () => {
+  const v = parseNum($('#wg-in') && $('#wg-in').value); if (!(v >= 30 && v <= 250)){ toast('Digite uma meta entre 30 e 250 kg.'); return; }
+  const lp = bwSeries('kg').pop(); const pl = ST.prefs.plan;
+  if (pl){ pl.target = r1(v); if (!pl.startKg && lp) pl.startKg = lp.v; } else { ST.prefs.wGoal = r1(v); ST.prefs.wGoalFrom = lp ? lp.v : null; }
+  saveState(); closeSheet(); render(); Platform.haptic('success'); toast('Meta salva');
+};
+A['wgoal-del'] = () => { const pl = ST.prefs.plan; if (pl && pl.target) delete pl.target; delete ST.prefs.wGoal; delete ST.prefs.wGoalFrom; saveState(); closeSheet(); render(); toast('Meta removida'); };
+document.addEventListener('change', ev => { const t = ev.target; if (t && t.dataset && t.dataset.act === 'ph-date' && t.value && t.value <= today()){ const id = t.dataset.id; const p = photoById(id); if (!p || p.date === t.value) return; const {id: _, ...d} = p; Store.putRec('photo', id, {...d, date: t.value}); UI.photos = null; render(); toast('Data da foto alterada'); } });
 
 // Inicialização (carregado por último)
 Platform.onBack(handleBack, backDepth);

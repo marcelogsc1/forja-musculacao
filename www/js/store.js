@@ -14,6 +14,7 @@
      measurement  data (AAAA-MM-DD)   medidas corporais do dia
      media        id do exercício     {asset} imagem própria do exercício
      avatar       'me'                {img, at} foto do perfil, reduzida no aparelho (JPEG 256 px)
+     photo        id da foto          {date, at, th, img} foto de evolução (JPEG até 1080 px e miniatura 3:4); fora do estado ST
      session      id do treino        treino completo (séries, cargas, notas)
 
    Cada registro tem updatedAt (gerado no aparelho) e deleted (exclusão lógica).
@@ -192,8 +193,11 @@ function FirebaseAdapter(){
   const fromDoc = d => { const x = d.data(); return {type: x.type, id: x.id, data: x.deleted ? null : x.data, deleted: !!x.deleted, updatedAt: x.updatedAt && x.updatedAt.toDate ? x.updatedAt.toDate().toISOString() : x.updatedAt, at: x.serverAt && x.serverAt.toMillis ? x.serverAt.toMillis() : 0}; };
   async function push(changes){
     const back = [];
-    for (let i = 0; i < changes.length; i += 400){
-      const chunk = changes.slice(i, i + 400); const b = sdk.writeBatch(db);
+    const chunks = []; let cur = [], size = 0;
+    for (const c of changes){ const n = c.data ? JSON.stringify(c.data).length : 200; if (cur.length && (cur.length >= 400 || size + n > 7e6)){ chunks.push(cur); cur = []; size = 0; } cur.push(c); size += n; }
+    if (cur.length) chunks.push(cur);
+    for (const chunk of chunks){
+      const b = sdk.writeBatch(db);
       chunk.forEach(c => b.set(ref(c.type, c.id), toDoc(c)));
       try { await b.commit(); continue; } catch (e) { if (e.code !== 'permission-denied' && e.code !== 'invalid-argument') throw fbErr(e); }
       /* algum registro foi recusado (o servidor tem versão mais nova, ou formato inválido): grava um a um */
@@ -341,6 +345,10 @@ const Store = (() => {
   api.saveState = () => { if (diffState()){ saveMeta(); schedule(); } };
   api.saveSession = s => { s.updatedAt = nowISO(); if (setLocal('session', s.id, JSON.parse(JSON.stringify(s)))){ saveMeta(); schedule(); } };
   api.deleteSession = id => { SESS = SESS.filter(s => s.id !== id); if (setLocal('session', id, null, true)){ saveMeta(); schedule(); } };
+  /* registros fora do estado (fotos de evolução): gravam e sincronizam como os outros */
+  api.putRec = (type, id, data) => { if (setLocal(type, id, data)){ saveMeta(); schedule(); } };
+  api.delRec = (type, id) => { if (setLocal(type, id, null, true)){ saveMeta(); schedule(); } };
+  api.recs = type => [...R.values()].filter(r => r.type === type && !r.deleted && r.data);
   api.stateSnapshot = () => JSON.parse(JSON.stringify(ST));
   api.pending = () => outbox.size;
 
@@ -355,7 +363,7 @@ const Store = (() => {
   }
   /* aplica registros vindos do servidor (vence a mudança mais recente) */
   function applyRemote(list, o = {}){
-    let stChanged = false; const sessIds = [];
+    let stChanged = false, photoChanged = false; const sessIds = [];
     for (const r of list){
       const k = recKey(r.type, r.id); const L = R.get(k);
       const local = outbox.has(k);
@@ -366,13 +374,14 @@ const Store = (() => {
       if (!L && r.deleted) continue;
       const rec = {type: r.type, id: r.id, data: r.deleted ? null : r.data, updatedAt: r.updatedAt, deleted: !!r.deleted};
       R.set(k, rec); if (rec.deleted) SIG.delete(k); else SIG.set(k, sig); outbox.delete(k); queueWrite(rec);
-      if (r.type === 'session') sessIds.push(r.id); else stChanged = true;
+      if (r.type === 'session') sessIds.push(r.id); else if (r.type === 'photo') photoChanged = true; else stChanged = true;
     }
     /* documento "estado" completo (claude.ai): o que não veio nele foi apagado em outro aparelho */
     if (o.fullState){ const keep = new Set(list.filter(r => r.type !== 'session').map(r => recKey(r.type, r.id))); R.forEach((r, k) => { if (STATE_TYPES.includes(r.type) && !r.deleted && !keep.has(k) && !outbox.has(k)){ const rec = {...r, data: null, deleted: true}; R.set(k, rec); SIG.delete(k); queueWrite(rec); stChanged = true; } }); }
     if (o.fullSessions){ const keep = new Set(list.filter(r => r.type === 'session').map(r => r.id)); R.forEach((r, k) => { if (r.type === 'session' && !r.deleted && !keep.has(r.id) && !outbox.has(k)){ const rec = {...r, data: null, deleted: true}; R.set(k, rec); SIG.delete(k); queueWrite(rec); sessIds.push(r.id); } }); }
     if (stChanged){ ST = assembleState([...R.values()].filter(r => r.type !== 'session')); fixState(); }
     if (sessIds.length) rebuildSessions(sessIds);
+    if (photoChanged && typeof photosChanged === 'function'){ photosChanged(); if (!stChanged && !sessIds.length){ if (canRerender()) render(); else renderLater = true; } }
     if (stChanged || sessIds.length){ if (stChanged) applyTheme(); if (canRerender()) render(); else renderLater = true; }
   }
   setInterval(() => { if (renderLater && canRerender()){ renderLater = false; render(); } }, 1000);
@@ -397,7 +406,8 @@ const Store = (() => {
         saveMeta();
       }
       for (let guard = 0; guard < 50; guard++){
-        const keys = [...outbox.keys()].slice(0, 200);
+        /* até 200 mudanças e cerca de 3 MB por envio (fotos são grandes) */
+        const keys = []; let bytes = 0; for (const k of outbox.keys()){ const r = R.get(k); const n = r && r.data ? JSON.stringify(r.data).length : 200; if (keys.length && (keys.length >= 200 || bytes + n > 3e6)) break; keys.push(k); bytes += n; }
         const changes = keys.map(k => R.get(k)).filter(Boolean).map(r => ({type: r.type, id: r.id, data: r.data, updatedAt: r.updatedAt, deleted: !!r.deleted}));
         const sent = new Map(changes.map(c => [recKey(c.type, c.id), c.updatedAt]));
         keys.forEach(k => { if (!R.get(k)) outbox.delete(k); });

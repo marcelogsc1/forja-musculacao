@@ -82,6 +82,14 @@ service cloud.firestore {
         && d.img is string && d.img.size() <= 60000 && d.img.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')
         && optStr(d, 'at', 40);
     }
+    // foto de evolução: imagem e miniatura em JPEG reduzidos no aparelho
+    function validPhoto(d) {
+      return d.keys().hasOnly(['date', 'at', 'th', 'img'])
+        && d.date is string && isDate(d.date)
+        && d.th is string && d.th.size() <= 40000 && d.th.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')
+        && d.img is string && d.img.size() <= 240000 && d.img.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')
+        && optStr(d, 'at', 40);
+    }
     function validSession(d, i) {
       return d.size() <= 40 && d.keys().hasAll(['id', 'status', 'date', 'items'])
         && d.id == i && d.status in ['open', 'draft', 'done'] && isDate(d.date)
@@ -99,6 +107,7 @@ service cloud.firestore {
         || (t == 'measurement' && validMeasurement(d, i))
         || (t == 'media' && validMedia(d))
         || (t == 'avatar' && validAvatar(d))
+        || (t == 'photo' && validPhoto(d))
         || (t == 'session' && validSession(d, i));
     }
 
@@ -107,7 +116,7 @@ service cloud.firestore {
       let r = request.resource.data;
       return r.keys().hasOnly(['type', 'id', 'data', 'deleted', 'updatedAt', 'serverAt'])
         && r.keys().hasAll(['type', 'id', 'data', 'deleted', 'updatedAt', 'serverAt'])
-        && r.type in ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar', 'session']
+        && r.type in ['profile', 'prefs', 'routine', 'exercise', 'measurement', 'media', 'avatar', 'photo', 'session']
         && validId(r.type, r.id)
         && rid == r.type + '__' + r.id
         && r.deleted is bool

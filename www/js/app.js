@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.16.0';
+const APP_VERSION = '4.17.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -693,11 +693,6 @@ function vProgress(){
   const t = UI.progTab === 'ex' ? 'ex' : 'geral';
   return `<section style="margin-top:20px"><h1 class="display h1">Progresso</h1></section><section class="seg" role="tablist">${[['geral', 'Visão geral'], ['ex', 'Cargas']].map(([k, l]) => `<button role="tab" data-act="progtab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>${t === 'ex' ? progEx() : progGeneral()}`;
 }
-/* aba Corpo: plano de calorias e proteína em destaque, depois peso e medidas */
-function vBody(){
-  return `<section class="row between" style="margin-top:20px"><h1 class="display h1">Corpo</h1></section>
-  <section style="margin-top:14px">${planSummaryRow(ST.prefs.plan ? 'body' : 'tab')}</section>${progBody(true)}`;
-}
 function progGeneral(){
   const now = new Date(); if (!UI.calMonth) UI.calMonth = [now.getFullYear(), now.getMonth()];
   const [y, m] = UI.calMonth; const D = done(); const byDate = {}; D.forEach(s => (byDate[s.date] = byDate[s.date] || []).push(s));
@@ -720,9 +715,9 @@ function progGeneral(){
   ${r ? `<section class="card"><div class="eyebrow">Séries por músculo nesta semana</div><p class="tiny muted" style="margin:4px 0 14px">Feitas / previstas no ciclo de ${esc(r.nome)}</p><div class="stack" style="gap:10px">${rows.map(g => `<div class="mbar"><span>${MUSC[g]}</span><span class="track"><i class="${tgt[g] && (got[g] || 0) >= tgt[g] ? 'full' : ''}" style="width:${tgt[g] ? Math.min(100, (got[g] || 0) / tgt[g] * 100) : 100}%"></i></span><span class="num">${got[g] || 0}/${tgt[g] || 0}</span></div>`).join('')}</div></section>` : ''}
   <section class="card"><div class="eyebrow" style="margin-bottom:10px">Mapa de 30 dias</div>${heatBlock(regionLevels(D.filter(s => s.date >= isoDate(addDays(now, -30)))))}</section>`;
 }
-function lineChart(pts, unit){
-  const W = 360, H = 210, L = 38, Rr = 12, T = 24, B = 28;
-  const vals = pts.map(p => p.v); let lo = Math.min(...vals), hi = Math.max(...vals);
+function lineChart(pts, unit, o = {}){
+  const W = 360, H = 210, L = 38, Rr = 12, T = 24, B = 28; const goal = o.goal > 0 ? o.goal : null;
+  const vals = pts.map(p => p.v).concat(goal ? [goal] : []); let lo = Math.min(...vals), hi = Math.max(...vals);
   if (hi === lo){ hi += 1; lo = Math.max(0, lo - 1); }
   const sp = hi - lo; lo = Math.max(0, lo - sp * .2); hi += sp * .2;
   const raw = (hi - lo) / 4; const p10 = Math.pow(10, Math.floor(Math.log10(raw))); const nn = raw / p10; const step = (nn < 1.5 ? 1 : nn < 3.5 ? 2 : nn < 7.5 ? 5 : 10) * p10;
@@ -734,6 +729,7 @@ function lineChart(pts, unit){
   const li = pts.length - 1; const every = Math.ceil(pts.length / 5);
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução em ${unit}"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ember)" stop-opacity=".35"/><stop offset="1" stop-color="var(--ember)" stop-opacity="0"/></linearGradient></defs>
     ${ticks.map(t => `<line x1="${L}" x2="${W - Rr}" y1="${yv(t)}" y2="${yv(t)}" stroke="var(--line)"/><text x="${L - 8}" y="${yv(t) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${fmtN(Math.round(t * 10) / 10)}</text>`).join('')}
+    ${goal ? `<line x1="${L}" x2="${W - Rr}" y1="${yv(goal).toFixed(1)}" y2="${yv(goal).toFixed(1)}" stroke="var(--good)" stroke-width="1.6" stroke-dasharray="5 5"/><text x="${L + 6}" y="${(yv(goal) - 6).toFixed(1)}" font-size="11" font-weight="700" fill="var(--good)">meta ${fmtN(goal)} ${unit}</text>` : ''}
     ${area ? `<path d="${area}" fill="url(#ag)"/>` : ''}<path d="${path}" fill="none" stroke="var(--ember)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
     ${pts.map((p, i) => `<circle cx="${x(i)}" cy="${yv(p.v)}" r="${i === li ? 6 : 3.5}" fill="${i === li ? 'var(--ember)' : 'var(--s1)'}" stroke="var(--ember)" stroke-width="2"><title>${fmtD(p.date)}: ${fmtN(Math.round(p.v * 10) / 10)} ${unit}</title></circle>`).join('')}
     ${pts.map((p, i) => (i === li || (i % every === 0 && x(li) - x(i) >= 46)) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="${pts.length > 1 && i === li ? 'end' : pts.length > 1 && i === 0 ? 'start' : 'middle'}" font-size="10.5" fill="var(--muted)">${fmtD(p.date)}</text>` : '').join('')}
@@ -780,10 +776,11 @@ function bwDerived(){
 }
 function progBody(inTab){
   const planRow = inTab ? '' : `<section>${planSummaryRow('body')}</section>`;
-  const list = (ST.bw || []).slice().sort((a, b) => a.date.localeCompare(b.date)); const view = UI.bwView || 'resumo';
-  const last = list[list.length - 1]; const keys = Object.keys(BWF); const has = keys.filter(k => bwSeries(k).length);
+  const keys = Object.keys(BWF).filter(k => !inTab || k !== 'kg'); const has = keys.filter(k => bwSeries(k).length);
+  const list = (ST.bw || []).filter(x => keys.some(k => x[k] != null)).sort((a, b) => a.date.localeCompare(b.date)); const view = UI.bwView || 'resumo';
+  const last = list[list.length - 1];
   const head = `<section class="bm-head"><div class="grow"><div class="eyebrow">Medidas do corpo</div><div class="small muted" style="margin-top:4px">${last ? `Última medição ${relDay(last.date).toLowerCase()} · ${list.length} ${list.length === 1 ? 'registro' : 'registros'}` : 'Nenhuma medição ainda'}</div></div><button class="btn primary sm" data-act="bw-open">${I.plus}Registrar</button></section>`;
-  if (!list.length) return `${planRow}${head}<section class="empty"><b>Comece pelo peso e pela cintura</b>Para acompanhar definição, a cintura costuma dizer mais que a balança. As demais medidas são opcionais.<button class="btn primary" style="margin-top:14px" data-act="bw-open">Registrar primeira medição</button></section>`;
+  if (!list.length) return `${planRow}${head}<section class="empty"><b>${inTab ? 'Comece pela cintura' : 'Comece pelo peso e pela cintura'}</b>Para acompanhar definição, a cintura costuma dizer mais que a balança. As demais medidas são opcionais.<button class="btn primary" style="margin-top:14px" data-act="bw-open">Registrar primeira medição</button></section>`;
   const seg = `<div class="seg bm-seg">${[['resumo', 'Resumo'], ['graficos', 'Gráficos'], ['historico', 'Histórico']].map(([v, l]) => `<button data-act="bw-view" data-v="${v}" aria-pressed="${view === v}">${l}</button>`).join('')}</div>`;
   let body = '';
   if (view === 'resumo'){
@@ -1126,7 +1123,7 @@ A['ask-delete-account'] = () => { UI.sheet = {kind: 'delacc'}; openSheet(`${shee
     <button class="btn danger block" type="submit">Excluir conta e dados</button><button class="btn ghost block" type="button" data-act="close">Cancelar</button></form>`); };
 A.install = async () => { const r = await Platform.install(); if (r === 'ios') openSheet(`${sheetHead('Instalar', 'Instalar no iPhone')}<ol class="cues" style="margin-top:14px"><li>Toque em Compartilhar, na barra do Safari.</li><li>Escolha “Adicionar à Tela de Início”.</li><li>Toque em Adicionar. O Forja abre em tela cheia, como um app.</li></ol>`); else if (r === 'accepted'){ toast('Forja instalado'); render(); } else if (r === 'unavailable') toast('Use o menu do navegador: Instalar app'); };
 A['install-hide'] = () => { try { localStorage.setItem('forja.installHide', '1'); } catch (e) {} render(); };
-A['ask-wipe'] = () => confirmSheet({title: 'Apagar todos os dados?', text: 'Rotinas, treinos, medidas e perfil serão apagados deste aparelho' + (Store.mode !== 'local' ? ' e da nuvem' : '') + '. Exporte um backup antes se quiser guardar.', ok: 'Apagar tudo', danger: true, onOk: () => { const ids = SESS.map(s => s.id); ids.forEach(id => deleteSession(id)); ST = freshState(); saveState(); UI.stack = []; UI.tab = 'inicio'; render(); toast('Dados apagados'); }});
+A['ask-wipe'] = () => confirmSheet({title: 'Apagar todos os dados?', text: 'Rotinas, treinos, medidas, fotos e perfil serão apagados deste aparelho' + (Store.mode !== 'local' ? ' e da nuvem' : '') + '. Exporte um backup antes se quiser guardar.', ok: 'Apagar tudo', danger: true, onOk: () => { const ids = SESS.map(s => s.id); ids.forEach(id => deleteSession(id)); try { Store.recs('photo').forEach(r => Store.delRec('photo', r.id)); UI.photos = null; } catch (e) {} ST = freshState(); saveState(); UI.stack = []; UI.tab = 'inicio'; render(); toast('Dados apagados'); }});
 A['retro-sheet'] = el => openStartSheet(el.dataset.date);
 A.retro = el => startRetro(el.dataset.rid, el.dataset.wid, el.dataset.date);
 A['save-draft'] = () => { closeKP(); const s = curSess(); if (s) saveDraft(s); };
@@ -1283,6 +1280,7 @@ document.addEventListener('change', async ev => {
     confirmSheet({title: 'Importar backup?', text: `${j.sessoes.length} treinos e ${(j.estado.routines || []).length} rotinas. Os dados atuais serão substituídos.`, ok: 'Importar', onOk: () => { const keep = new Set(j.sessoes.map(x => x.id)); SESS.filter(x => !keep.has(x.id)).map(x => x.id).forEach(id => deleteSession(id)); ST = j.estado; fixState(); saveState(); SESS = j.sessoes.map(normSession); SESS.forEach(x => saveSession(x)); applyTheme(); render(); toast('Backup importado'); }});
   }
   if (act === 'wname'){ const w = findWorkout(t.dataset.rid, t.dataset.wid); const v = t.value.trim(); if (w && v){ w.nome = v; saveState(); } }
+  if (act === 'ph-file' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; addPhoto(f); return; }
   if (act === 'avatar' && t.files && t.files[0]){ const f = t.files[0]; t.value = ''; setAvatar(f); return; }
   if (act === 'media' && t.files && t.files[0]){
     const f = t.files[0]; if (f.size > 20 * 1024 * 1024){ toast('Arquivo grande demais (máx. 20 MB).'); return; }
