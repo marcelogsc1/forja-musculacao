@@ -183,7 +183,7 @@ function openGoalSheet(){
 const BODY_TABS = [['peso', 'Peso'], ['medidas', 'Medidas'], ['nutricao', 'Nutrição']];
 function vBody(){
   const t = BODY_TABS.some(x => x[0] === UI.bodyTab) ? UI.bodyTab : 'peso';
-  const body = t === 'medidas' ? progBody(true) : t === 'nutricao' ? `<section style="margin-top:14px"><p class="small ink2" style="margin:0 4px 12px">O assistente calcula calorias, proteína e macros para o seu objetivo, com base nos seus dados e nos seus treinos, e ajusta toda semana pelo seu peso real.</p>${planSummaryRow(ST.prefs.plan ? 'body' : 'tab')}</section>` : weightTab();
+  const body = t === 'medidas' ? progBody(true) : t === 'nutricao' ? nutritionTab() : weightTab();
   return `<section style="margin-top:20px"><h1 class="display h1">Corpo</h1><p class="ink2 body-lead">Seu peso, suas medidas e fotos para ver a evolução, e quanto comer para chegar no objetivo.</p></section>
   ${photoCard()}
   <section class="seg" role="tablist" style="margin-top:16px">${BODY_TABS.map(([k, l]) => `<button role="tab" data-act="body-tab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>${body}`;
