@@ -1179,3 +1179,18 @@ nav.tabs .fab .burst{opacity:0;animation:fab-burst 3.6s ease-out infinite}
 .ob-ex .chip{min-height:34px;font-size:13px}
 .ob-rule.static{padding:12px 14px}
 .bq-obs .ob-list{margin-top:6px}
+/* dias e treinos da semana (v4.16) */
+.dmap-head{display:flex;align-items:center;gap:10px;margin-top:16px;min-height:28px}
+.rec-badge{display:inline-flex;align-items:center;gap:5px;flex:none;height:26px;padding:0 10px;border-radius:999px;background:var(--good-soft);color:var(--good);font-size:12px;font-weight:600}
+.rec-badge svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6}
+.dmap .li{width:100%;text-align:left}
+.dm-ch{font-size:13px;font-weight:600;color:var(--muted)}
+.dm-pick{display:flex;flex-wrap:wrap;gap:6px;padding:4px 12px 14px}
+.dm-pick .chip{display:inline-flex;align-items:center;gap:7px}
+.dm-pick .chip .plate.sm{width:12px;height:12px;min-width:12px}
+.dm-pick .chip em{font-style:normal;font-size:10.5px;font-weight:600;color:var(--good);margin-left:2px}
+.dm-pick .chip[aria-pressed="true"] em{color:inherit;opacity:.8}
+.sched-row{display:flex;justify-content:flex-end;margin-top:-4px}
+.sched-row .link{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.sched-row .link svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.dm-pick .chip:not([aria-pressed="true"]){box-shadow:inset 0 0 0 1px var(--line2)}

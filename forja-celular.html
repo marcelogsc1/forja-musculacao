@@ -1202,6 +1202,21 @@ nav.tabs .fab .burst{opacity:0;animation:fab-burst 3.6s ease-out infinite}
 .ob-ex .chip{min-height:34px;font-size:13px}
 .ob-rule.static{padding:12px 14px}
 .bq-obs .ob-list{margin-top:6px}
+/* dias e treinos da semana (v4.16) */
+.dmap-head{display:flex;align-items:center;gap:10px;margin-top:16px;min-height:28px}
+.rec-badge{display:inline-flex;align-items:center;gap:5px;flex:none;height:26px;padding:0 10px;border-radius:999px;background:var(--good-soft);color:var(--good);font-size:12px;font-weight:600}
+.rec-badge svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6}
+.dmap .li{width:100%;text-align:left}
+.dm-ch{font-size:13px;font-weight:600;color:var(--muted)}
+.dm-pick{display:flex;flex-wrap:wrap;gap:6px;padding:4px 12px 14px}
+.dm-pick .chip{display:inline-flex;align-items:center;gap:7px}
+.dm-pick .chip .plate.sm{width:12px;height:12px;min-width:12px}
+.dm-pick .chip em{font-style:normal;font-size:10.5px;font-weight:600;color:var(--good);margin-left:2px}
+.dm-pick .chip[aria-pressed="true"] em{color:inherit;opacity:.8}
+.sched-row{display:flex;justify-content:flex-end;margin-top:-4px}
+.sched-row .link{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.sched-row .link svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.dm-pick .chip:not([aria-pressed="true"]){box-shadow:inset 0 0 0 1px var(--line2)}
 
 </style>
 </head>
@@ -1216,10 +1231,10 @@ nav.tabs .fab .burst{opacity:0;animation:fab-burst 3.6s ease-out infinite}
 <div id="kp" class="kp" hidden></div>
 <nav class="tabs" aria-label="Seções"><div class="in">
   <a href="#inicio" data-tab="inicio"><svg viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Início</a>
-  <a href="#rotinas" data-tab="rotinas"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg>Rotinas</a>
+  <a href="#rotinas" data-tab="rotinas"><svg viewBox="0 0 24 24"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Exercícios</a>
   <button class="tab fab" id="fab" data-act="fab" aria-label="Treinar"><span class="b"><svg class="fist" viewBox="0 0 48 48" aria-hidden="true"><g class="lift"><path class="burst" d="M24 2.6v3.4M15 5.2l1.8 2.8M33 5.2l-1.8 2.8"/><path d="M10 21h28"/><rect class="fb" x="2.6" y="15.6" width="4.4" height="10.8" rx="1.6"/><rect class="fb" x="7" y="11.4" width="6.2" height="19.2" rx="2"/><rect class="fb" x="41" y="15.6" width="4.4" height="10.8" rx="1.6"/><rect class="fb" x="34.8" y="11.4" width="6.2" height="19.2" rx="2"/><path class="fb" d="M16.8 15.6a1.8 1.8 0 0 1 3.6 0a1.8 1.8 0 0 1 3.6-.6a1.8 1.8 0 0 1 3.6 .2a1.8 1.8 0 0 1 3.6 1.2V23c0 3-1.8 4.6-2.2 6.4V46H19V29.2l-3.8-4.6c-2-2.4-1.4-6 1.6-7.2z"/><path d="M20.4 15.6v3.2M24 15v3.6M27.6 15.2v3.4M15.6 22.8h8.6"/></g></svg></span>Treinar</button>
-  <a href="#exercicios" data-tab="exercicios"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>Exercícios</a>
-  <a href="#progresso" data-tab="progresso"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V11M11 16V6.5M15.5 16v-6M20 16V8.5"/></svg>Progresso</a>
+    <a href="#progresso" data-tab="progresso"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V11M11 16V6.5M15.5 16v-6M20 16V8.5"/></svg>Progresso</a>
+  <a href="#corpo" data-tab="corpo"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.8" r="2.3"/><path d="M5 9h14M12 9v5.5M12 14.5l-3.4 6M12 14.5l3.4 6"/></svg>Corpo</a>
 </div></nav>
 <div id="sheet" hidden></div>
 <div id="toast" class="toast" hidden role="status"></div>
@@ -3338,7 +3353,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.15.1';
+const APP_VERSION = '4.16.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -3401,7 +3416,7 @@ const DIA3 = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const hasSchedule = r => !!(r && r.dias && Object.values(r.dias).some(id => r.workouts.some(w => w.id === id)));
 const scheduledOn = (r, d) => hasSchedule(r) ? r.workouts.find(w => w.id === r.dias[d.getDay()]) || null : null;
 function defaultDays(n){ return n <= 1 ? [1] : n === 2 ? [1, 4] : n === 3 ? [1, 3, 5] : n === 4 ? [1, 2, 4, 5] : n === 5 ? [1, 2, 3, 4, 5] : n === 6 ? [1, 2, 3, 4, 5, 6] : WEEK.slice(); }
-function setDays(r, days){ r.dias = {}; const ord = WEEK.filter(d => days.includes(d)); ord.forEach((d, i) => { const w = r.workouts[i % r.workouts.length]; if (w) r.dias[d] = w.id; }); if (!ord.length) delete r.dias; }
+function setDays(r, days){ const m = recDays(r, days); if (Object.keys(m).length) r.dias = m; else delete r.dias; }
 /* próximo dia (a partir de amanhã) com treino marcado */
 function nextScheduled(r, from = new Date()){ for (let k = 1; k <= 7; k++){ const d = addDays(from, k); const w = scheduledOn(r, d); if (w) return {d, w, k}; } return null; }
 /* O que o Início deve mostrar hoje */
@@ -3477,7 +3492,9 @@ function ring(v, max, size = 96, stroke = 10, color = 'var(--ember)'){
 }
 
 // ================= navegação =================
-const TABS = ['inicio', 'rotinas', 'exercicios', 'progresso'];
+const TABS = ['inicio', 'rotinas', 'progresso', 'corpo'];
+/* endereços antigos: #exercicios agora é a Biblioteca dentro de Exercícios */
+const tabFromHash = h => h === 'exercicios' ? (UI.rtab = 'biblioteca', 'rotinas') : TABS.includes(h) ? h : null;
 function push(page){ closeKP(); UI.scroll[UI.stack.length] = window.scrollY; UI.stack.push(page); closeSheet(); render(); window.scrollTo({top: 0}); }
 function pop(){ closeKP(); UI.stack.pop(); closeSheet(); render(); window.scrollTo({top: UI.scroll[UI.stack.length] || 0}); }
 function goTab(t){ closeKP(); UI.tab = t; UI.stack = []; closeSheet(); if (!Platform.isArtifact && location.hash !== '#' + t) try { history.replaceState(history.state, '', '#' + t); } catch (e) {} render(); window.scrollTo({top: 0}); }
@@ -3515,7 +3532,7 @@ function render(){
   if (p && p.type === 'auth'){ head = ''; body = vAuth(p); }
   else if (!p){
     head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar${hasPic() ? ' pic' : ''}" data-act="profile" aria-label="Perfil e ajustes">${avatarIn()}</button>`;
-    body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'exercicios' ? vLibrary() : UI.tab === 'progresso' ? vProgress() : vHome();
+    body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'progresso' ? vProgress() : UI.tab === 'corpo' ? vBody() : vHome();
   } else if (inSess){
     const s = curSess(); const live = s && s.status === 'open';
     head = live ? `<button class="hbtn" data-act="minimize" aria-label="Minimizar treino">${I.down}</button><span class="ttl"><span class="clockpill" id="clock">${fmtClock((Date.now() - new Date(s.startedAt)) / 1000)}</span></span>${R.tick ? '<span class="restmini num" id="restmini"></span>' : ''}<button class="btn primary sm" data-act="finish">Finalizar</button>`
@@ -3640,6 +3657,7 @@ function vHome(){
     const shown = picked || plan.w || (plan.kind === 'done' ? r.workouts.find(w => w.id === plan.s.workout) : null) || null;
     const days4 = w => sched ? WEEK.filter(d => r.dias[d] === w.id).map(d => DIA3[d]).join(' ') : '';
     h += `<div class="track ${n <= 5 ? 'fit' : ''}" style="--n:${n}" role="group" aria-label="Treinos da rotina">${r.workouts.map((x, j) => `<button class="tk" style="${pcs(x.cor)}" data-act="home-sel" data-wid="${x.id}" aria-pressed="${x === shown}"><span class="n"><em>${sched ? (days4(x) || '—') : pad2(j + 1)}</em><i class="${doneW.has(x.id) ? 'on' : ''}" title="${doneW.has(x.id) ? 'Feito nesta semana' : ''}"></i></span><b>${esc(x.nome)}</b></button>`).join('')}</div>`;
+    if (sched) h += `<div class="sched-row"><button class="link" data-act="days" data-rid="${r.id}">${I.cal || ''}Redistribuir dias</button></div>`;
     if (!sched) h += `<button class="sched-hint" data-act="days" data-rid="${r.id}">${I.cal || ''}<span>Defina os dias da semana de cada treino e o app mostra o certo para hoje.</span>${I.chev}</button>`;
   }
   { const pc = r ? planSummaryRow('home') : ''; if (pc) h += `<section>${pc}</section>`; }
@@ -3672,9 +3690,12 @@ function workoutRows(r, opts = {}){
     <button class="icon sm" data-act="edit-workout" data-rid="${r.id}" data-wid="${w.id}" aria-label="Editar ${esc(w.nome)}">${I.edit}</button></div>`).join('')}</div>`;
 }
 function vRoutines(){
-  const tabs = `<section class="seg" role="tablist" style="margin-top:14px">${[['minhas', 'Minhas rotinas'], ['explorar', 'Explorar']].map(([k, l]) => `<button role="tab" data-act="rtab" data-t="${k}" aria-pressed="${UI.rtab === k}">${l}</button>`).join('')}</section>`;
-  const head = `<section class="row between" style="margin-top:20px"><h1 class="display h1">Rotinas</h1><button class="icon" data-act="new-routine" aria-label="Nova rotina" title="Nova rotina">${I.plus}</button></section>${tabs}`;
-  if (UI.rtab === 'explorar') return head + vExplore();
+  const rt = ['minhas', 'explorar', 'biblioteca'].includes(UI.rtab) ? UI.rtab : 'minhas';
+  const tabs = `<section class="seg" role="tablist" style="margin-top:14px">${[['minhas', 'Rotinas'], ['explorar', 'Explorar'], ['biblioteca', 'Biblioteca']].map(([k, l]) => `<button role="tab" data-act="rtab" data-t="${k}" aria-pressed="${rt === k}">${l}</button>`).join('')}</section>`;
+  const plus = rt === 'biblioteca' ? `<button class="icon" data-act="new-ex" aria-label="Criar exercício" title="Criar exercício">${I.plus}</button>` : `<button class="icon" data-act="new-routine" aria-label="Nova rotina" title="Nova rotina">${I.plus}</button>`;
+  const head = `<section class="row between" style="margin-top:20px"><h1 class="display h1">Exercícios</h1>${plus}</section>${tabs}`;
+  if (rt === 'explorar') return head + vExplore();
+  if (rt === 'biblioteca') return head + vLibrary(true);
   const r = activeRoutine(); const others = ST.routines.filter(x => x !== r);
   return `${head}
   ${r ? `<section><div class="sec-head"><span class="eyebrow">Rotina ativa</span><button class="link" data-act="open-routine" data-rid="${r.id}">Abrir</button></div>
@@ -3719,9 +3740,9 @@ function vWorkout(p){
 
 // ================= Biblioteca =================
 function libList(){ const q = norm(UI.libQ.trim()); return [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => { const e = getEx(k); return (!UI.libM || e.m === UI.libM) && (!UI.libE || e.e === UI.libE) && (!q || norm(e.n).includes(q) || norm(MUSC[e.m] || '').includes(q)); }); }
-function vLibrary(){
-  return `<section class="row between" style="margin-top:20px"><h1 class="display h1">Exercícios</h1><button class="icon" data-act="new-ex" aria-label="Criar exercício" title="Criar exercício">${I.plus}</button></section>
-  <section class="stack" style="gap:12px"><div class="search">${svg('M11 17.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.2-4.2')}<input id="lib-q" class="field" type="search" placeholder="Buscar por nome ou músculo" value="${esc(UI.libQ)}" data-act="libq" autocomplete="off"></div>
+function vLibrary(embed){
+  return `${embed ? '' : `<section class="row between" style="margin-top:20px"><h1 class="display h1">Exercícios</h1><button class="icon" data-act="new-ex" aria-label="Criar exercício" title="Criar exercício">${I.plus}</button></section>`}
+  <section class="stack" style="gap:12px${embed ? ';margin-top:14px' : ''}"><div class="search">${svg('M11 17.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.2-4.2')}<input id="lib-q" class="field" type="search" placeholder="Buscar por nome ou músculo" value="${esc(UI.libQ)}" data-act="libq" autocomplete="off"></div>
     <div class="chips" role="group" aria-label="Músculo"><button class="chip" data-act="libm" data-m="" aria-pressed="${!UI.libM}">Todos</button>${Object.keys(MUSC).map(m => `<button class="chip" data-act="libm" data-m="${m}" aria-pressed="${UI.libM === m}">${MUSC[m]}</button>`).join('')}</div>
     <div class="chips" role="group" aria-label="Equipamento"><button class="chip" data-act="libe" data-e="" aria-pressed="${!UI.libE}">Todo equipamento</button>${Object.keys(EQUIP).map(k => `<button class="chip" data-act="libe" data-e="${k}" aria-pressed="${UI.libE === k}">${EQUIP[k]}</button>`).join('')}</div></section>
   <section id="lib-list" style="margin-top:14px">${libRows(libList())}</section>`;
@@ -4023,8 +4044,13 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 // ================= Progresso =================
 function vProgress(){
-  const t = UI.progTab;
-  return `<section style="margin-top:20px"><h1 class="display h1">Progresso</h1></section><section class="seg" role="tablist">${[['geral', 'Visão geral'], ['ex', 'Cargas'], ['corpo', 'Corpo']].map(([k, l]) => `<button role="tab" data-act="progtab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>${t === 'ex' ? progEx() : t === 'corpo' ? progBody() : progGeneral()}`;
+  const t = UI.progTab === 'ex' ? 'ex' : 'geral';
+  return `<section style="margin-top:20px"><h1 class="display h1">Progresso</h1></section><section class="seg" role="tablist">${[['geral', 'Visão geral'], ['ex', 'Cargas']].map(([k, l]) => `<button role="tab" data-act="progtab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>${t === 'ex' ? progEx() : progGeneral()}`;
+}
+/* aba Corpo: plano de calorias e proteína em destaque, depois peso e medidas */
+function vBody(){
+  return `<section class="row between" style="margin-top:20px"><h1 class="display h1">Corpo</h1></section>
+  <section style="margin-top:14px">${planSummaryRow(ST.prefs.plan ? 'body' : 'tab')}</section>${progBody(true)}`;
 }
 function progGeneral(){
   const now = new Date(); if (!UI.calMonth) UI.calMonth = [now.getFullYear(), now.getMonth()];
@@ -4106,8 +4132,8 @@ function bwDerived(){
   if (nb) out.push({k: 'bf', t: 'Gordura estimada', v: fmtN(nb.v) + '%', sub: 'Fórmula da Marinha dos EUA, com cintura, pescoço' + (sex === 'F' ? ', quadril' : '') + ' e altura'});
   return out;
 }
-function progBody(){
-  const planRow = `<section>${planSummaryRow('body')}</section>`;
+function progBody(inTab){
+  const planRow = inTab ? '' : `<section>${planSummaryRow('body')}</section>`;
   const list = (ST.bw || []).slice().sort((a, b) => a.date.localeCompare(b.date)); const view = UI.bwView || 'resumo';
   const last = list[list.length - 1]; const keys = Object.keys(BWF); const has = keys.filter(k => bwSeries(k).length);
   const head = `<section class="bm-head"><div class="grow"><div class="eyebrow">Medidas do corpo</div><div class="small muted" style="margin-top:4px">${last ? `Última medição ${relDay(last.date).toLowerCase()} · ${list.length} ${list.length === 1 ? 'registro' : 'registros'}` : 'Nenhuma medição ainda'}</div></div><button class="btn primary sm" data-act="bw-open">${I.plus}Registrar</button></section>`;
@@ -4208,14 +4234,36 @@ function openAddTo(ex){
   openSheet(`${sheetHead('Adicionar a um treino', exName(ex))}<div class="stack" style="margin-top:16px">${ST.routines.map(r => `<div><div class="eyebrow" style="margin-bottom:8px">${esc(r.nome)}</div><div class="list" style="background:var(--s2)">${r.workouts.map((w, i) => `<button class="li noimg" data-act="addto-pick" data-rid="${r.id}" data-wid="${w.id}"><span class="plate" style="${pcs(w.cor)}">${i + 1}</span><div class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios</span></div>${I.plus.replace('<svg', '<svg class="chev" style="stroke:var(--ember)"')}</button>`).join('') || '<div class="li muted small">Sem treinos</div>'}</div></div>`).join('')}</div>`);
 }
 /* Escolha dos dias: o usuário marca os dias em que treina e os treinos são distribuídos na ordem da rotina. */
+/* Distribuição recomendada: testa as ordens possíveis dos treinos nos dias marcados e escolhe a que mais
+   afasta treinos que usam os mesmos músculos, olhando até 3 dias à frente (dia seguido pesa mais). Empate fica com a ordem da rotina. */
+function wMus(w){ const m = {}; w.items.forEach(x => { const e = getEx(x.ex); if (e && e.m) m[e.m] = (m[e.m] || 0) + (x.sets || 0); }); return m; }
+function recDays(r, sel){
+  const ord = WEEK.filter(d => sel.includes(d)); const W = r.workouts; const n = W.length; if (!ord.length || !n) return {};
+  const mus = W.map(wMus); const ov = (a, b) => { let t = 0; for (const k in mus[a]) if (mus[b][k]) t += Math.min(mus[a][k], mus[b][k]); return t; };
+  const cost = p => { let c = 0; const L = ord.length; for (let i = 0; i < L; i++) for (let k = 1; k < L; k++){ const j = (i + k) % L; const gap = ((ord[j] - ord[i]) + 7) % 7 || 7; if (gap > 3) break; const a = p[i % n], b = p[j % n]; c += (a === b ? 40 : ov(a, b)) * (gap === 1 ? 1 : gap === 2 ? .4 : .12); }
+    p.forEach((x, i) => { c += Math.abs(x - i) * .01; }); return c; };
+  let best = W.map((_, i) => i), bc = cost(best);
+  if (n <= 7){ const perm = (a, k = 0) => { if (k === a.length){ const c = cost(a); if (c < bc - 1e-9){ bc = c; best = a.slice(); } return; } for (let i = k; i < a.length; i++){ [a[k], a[i]] = [a[i], a[k]]; perm(a, k + 1); [a[k], a[i]] = [a[i], a[k]]; } }; perm(W.map((_, i) => i)); }
+  const map = {}; ord.forEach((d, i) => { map[d] = W[best[i % n]].id; }); return map;
+}
+const sameMap = (a, b) => { const ka = Object.keys(a), kb = Object.keys(b); return ka.length === kb.length && ka.every(k => a[k] === b[k]); };
 function openDaysSheet(rid, fresh){
   const r = routineById(rid); if (!r || !r.workouts.length) return;
-  if (!UI.sheet || UI.sheet.kind !== 'days' || UI.sheet.rid !== rid) UI.sheet = {kind: 'days', rid, fresh: !!fresh, sel: hasSchedule(r) ? WEEK.filter(d => r.workouts.some(w => w.id === r.dias[d])) : defaultDays(r.workouts.length)};
-  const sel = UI.sheet.sel; const ord = WEEK.filter(d => sel.includes(d));
-  openSheet(`${sheetHead(r.nome, fresh ? 'Em quais dias você treina?' : 'Dias da semana')}
-    <p class="ink2 small" style="margin:10px 0 0">Marque os dias. Os treinos entram na ordem da rotina e o Início mostra o treino certo de cada dia.${ord.length > r.workouts.length ? ' Com mais dias que treinos, a sequência recomeça.' : ''}</p>
+  if (!UI.sheet || UI.sheet.kind !== 'days' || UI.sheet.rid !== rid){
+    const sel = hasSchedule(r) ? WEEK.filter(d => r.workouts.some(w => w.id === r.dias[d])) : defaultDays(r.workouts.length);
+    UI.sheet = {kind: 'days', rid, fresh: !!fresh, sel, map: hasSchedule(r) ? Object.fromEntries(sel.map(d => [d, r.dias[d]])) : recDays(r, sel), open: null};
+  }
+  const S = UI.sheet; const sel = S.sel; const ord = WEEK.filter(d => sel.includes(d)); const rec = recDays(r, sel); const isRec = sameMap(S.map, rec);
+  const wOf = d => r.workouts.find(w => w.id === S.map[d]) || r.workouts[0];
+  const missing = r.workouts.filter(w => !ord.some(d => S.map[d] === w.id));
+  openSheet(`${sheetHead(r.nome, fresh ? 'Em quais dias você treina?' : 'Dias e treinos da semana')}
+    <p class="ink2 small" style="margin:10px 0 0">Marque os dias e escolha o treino de cada um. O Início mostra o treino certo de cada dia.</p>
     <div class="daypick" role="group" aria-label="Dias de treino">${WEEK.map(d => `<button data-act="day-tog" data-d="${d}" aria-pressed="${sel.includes(d)}" aria-label="${DIAS[d]}">${DIA3[d].slice(0, 1).toUpperCase()}<small>${DIA3[d]}</small></button>`).join('')}</div>
-    <div class="list" style="background:var(--s2);margin-top:14px">${ord.length ? ord.map((d, i) => { const w = r.workouts[i % r.workouts.length]; return `<div class="li noimg" style="min-height:52px"><span class="plate" style="${pcs(w.cor)}">${DIA3[d]}</span><div class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ~${wMins(w)} min</span></div></div>`; }).join('') : '<div class="li noimg"><div class="grow muted small">Nenhum dia marcado: o app segue a sequência de treinos.</div></div>'}</div>
+    ${ord.length ? `<div class="dmap-head">${isRec ? `<span class="rec-badge">${I.check}Recomendado</span><span class="tiny muted grow">Separa os treinos que usam os mesmos músculos.</span>` : `<span class="tiny muted grow">Distribuição sua.</span><button class="link" data-act="day-rec">Usar a recomendada</button>`}</div>` : ''}
+    <div class="list dmap" style="background:var(--s2);margin-top:8px">${ord.length ? ord.map(d => { const w = wOf(d); const op = S.open === d;
+      return `<button class="li noimg" data-act="day-open" data-d="${d}" aria-expanded="${op}"><span class="plate" style="${pcs(w.cor)}">${DIA3[d]}</span><div class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ~${wMins(w)} min${rec[d] === w.id && !isRec ? ' · recomendado' : ''}</span></div><span class="dm-ch">${op ? 'Fechar' : 'Trocar'}</span></button>
+      ${op ? `<div class="dm-pick" role="group" aria-label="Treino de ${DIAS[d]}">${r.workouts.map(x => `<button class="chip" data-act="day-w" data-d="${d}" data-w="${x.id}" aria-pressed="${x.id === w.id}"><span class="plate sm" style="${pcs(x.cor)}"></span>${esc(x.nome)}${rec[d] === x.id ? '<em>recomendado</em>' : ''}</button>`).join('')}</div>` : ''}`; }).join('') : '<div class="li noimg"><div class="grow muted small">Nenhum dia marcado: o app segue a sequência de treinos.</div></div>'}</div>
+    ${ord.length && missing.length ? `<p class="tiny muted" style="margin:8px 4px 0">Fora da semana: ${missing.map(w => esc(w.nome)).join(', ')}.</p>` : ''}
     <div class="sheet-foot"><button class="btn primary block" data-act="days-save">${ord.length ? `Salvar ${ord.length} ${ord.length === 1 ? 'dia' : 'dias'}` : 'Seguir a sequência'}</button>${hasSchedule(r) && ord.length ? '<button class="link muted" style="width:100%;margin-top:4px" data-act="days-clear">Sem dias fixos (seguir a sequência)</button>' : fresh ? '<button class="link muted" style="width:100%;margin-top:4px" data-act="close">Depois</button>' : ''}</div>`);
 }
 function openStartSheet(date){
@@ -4247,9 +4295,8 @@ function vProfile(){
   const seg = (k, opts) => `<div class="seg wrapseg">${opts.map(([v, l]) => `<button data-act="pf-set" data-k="${k}" data-v="${v}" aria-pressed="${String(pf[k] || '') === String(v)}">${l}</button>`).join('')}</div>`;
   return `<section class="profile-hero"><button class="avatar xl${hasPic() ? ' pic' : ''}" data-act="avatar-menu" aria-label="${hasPic() ? 'Trocar ou remover a foto' : 'Adicionar foto'}">${avatarIn()}<span class="av-cam" aria-hidden="true">${I.camera}</span></button><input id="avatar-in" type="file" accept="image/*" data-act="avatar" hidden><div class="grow"><h1 class="display h2">${esc(pf.name || 'Seu perfil')}</h1><div class="small muted">${[pf.goal, pf.level].filter(Boolean).map(esc).join(' · ') || 'Complete seus dados abaixo'}</div></div></section>
   <section><button class="set-btn" data-act="open-settings"><span class="s-ic">${I.gear}</span><span class="grow"><b>Configurações</b><span class="sub">Treino, aparência, animações e dados</span></span>${I.chev}</button></section>
-  <section>${planSummaryRow('profile')}</section>
   <section class="card"><div class="row" style="align-items:flex-start"><span class="sync ${syncClass()}" style="margin-top:6px"></span><div class="grow"><div class="eyebrow" style="margin-bottom:6px">Conta</div><div class="small ink2">${acct}</div></div></div>
-        <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'verify' ? '<button class="btn primary block" data-act="check-verified">Já confirmei meu e-mail</button><button class="btn ghost block" data-act="resend-verify">Reenviar e-mail de confirmação</button><button class="link muted" data-act="logout">Sair desta conta</button>' : Store.mode === 'api' ? '<button class="btn ghost block" data-act="logout">Sair da conta</button>' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
+        <div class="stack" style="margin-top:14px;gap:10px">${Store.mode === 'verify' ? '<button class="btn primary block" data-act="check-verified">Já confirmei meu e-mail</button><button class="btn ghost block" data-act="resend-verify">Reenviar e-mail de confirmação</button>' : Store.mode === 'api' ? '' : Store.mode === 'cloud' ? '' : `<button class="btn primary block" data-act="login">Entrar ou criar conta</button>`}</div></section>
   ${installCard()}
   <section class="stats"><div class="stat"><b class="num">${L.n}</b><span>treinos</span></div><div class="stat"><b class="num">${fmtN(Math.round(L.hours * 10) / 10)}</b><span>horas</span></div><div class="stat ember"><b class="num">${L.vol >= 10000 ? fmtN(Math.round(L.vol / 100) / 10) : fmtInt(L.vol)}</b><span>${L.vol >= 10000 ? 'toneladas' : 'kg'} levantados</span></div></section>
   ${L.n ? `<section class="card small ink2">${L.prs} recordes batidos · ${L.sets} séries no total${L.fav ? ` · mais feito: <b style="color:var(--ink)">${esc(exName(L.fav))}</b>` : ''}${L.first ? ` · desde ${fmtDLong(L.first)}` : ''}</section>` : ''}
@@ -4297,7 +4344,7 @@ function vSettings(){
   <section class="s-group"><div class="eyebrow">Seus dados</div><div class="list">
     ${Store.adapter?.downloads || !Platform.isArtifact ? act('export', SI.dl, 'Exportar backup', 'Arquivo JSON com treinos, rotinas e medidas') : ''}
     <label class="s-row" for="import-in"><span class="s-ic">${SI.ul}</span><span class="grow"><b>Importar backup</b><span class="sub">Restaura um arquivo exportado antes</span></span>${I.chev}</label><input id="import-in" type="file" accept="application/json,.json" hidden data-act="import">
-    ${Store.mode === 'api' ? act('logout', SI.out, 'Sair da conta', Auth.user?.email ? esc(Auth.user.email) : '') : ''}
+    ${Store.mode === 'api' || Store.mode === 'verify' ? act('logout', SI.out, 'Sair da conta', Auth.user?.email ? esc(Auth.user.email) : '') : ''}
     ${act('ask-wipe', I.trash, `Apagar todos os dados${Store.mode === 'api' ? ' deste aparelho' : ''}`, '', 'danger')}
     ${Store.mode === 'api' ? act('ask-delete-account', I.trash, 'Excluir minha conta', 'Apaga a conta e tudo que está na nuvem', 'danger') : ''}</div></section>
   <section class="s-group"><div class="eyebrow">Sobre</div><div class="list">
@@ -4415,7 +4462,7 @@ A['open-settings'] = () => push({type: 'settings'});
 A['set-pick'] = el => { const k = el.dataset.k; const d = PREF_OPTS[k];
   menuSheet('Configurações', d.t, d.o.map(v => ({label: d.f(v), icon: String(ST.prefs[k]) === String(v) ? I.check : '<span class="mi-sp"></span>', run: () => { ST.prefs[k] = v; saveState(); applyTheme(); render(); }}))); };
 A['pf-set'] = el => { const k = el.dataset.k; ST.profile[k] = ST.profile[k] === el.dataset.v ? '' : el.dataset.v; saveState(); render(); };
-A['go-body'] = () => { UI.progTab = 'corpo'; goTab('progresso'); };
+A['go-body'] = () => goTab('corpo');
 A.login = () => openLogin('login');
 A['login-mode'] = el => openLogin(el.dataset.m);
 A['auth-mode'] = el => { authKeep(); UI.auth.mode = el.dataset.m; UI.auth.note = ''; render(); const f = $(UI.auth.mode === 'register' ? '#au-name' : '#au-email'); if (f && !f.value) f.focus(); };
@@ -4450,8 +4497,11 @@ A['edit-workout'] = el => push({type: 'workout', rid: el.dataset.rid, wid: el.da
 A['open-ex'] = el => { UI.exTab = 'sobre'; push({type: 'exercise', ex: el.dataset.ex}); };
 A['open-ex-sheet'] = el => { closeSheet(); A['open-ex'](el); };
 A.days = el => openDaysSheet(el.dataset.rid);
-A['day-tog'] = el => { const d = +el.dataset.d; const s = UI.sheet; s.sel = s.sel.includes(d) ? s.sel.filter(x => x !== d) : [...s.sel, d]; openDaysSheet(s.rid, s.fresh); Platform.haptic('light'); };
-A['days-save'] = () => { const s = UI.sheet; const r = routineById(s.rid); if (!r) return; setDays(r, s.sel); saveState(); closeSheet(); UI.homeSel = null; render(); toast(hasSchedule(r) ? 'Dias salvos. O Início mostra o treino de cada dia.' : 'Sem dias fixos: o app segue a sequência.'); };
+A['day-tog'] = el => { const d = +el.dataset.d; const s = UI.sheet; s.sel = s.sel.includes(d) ? s.sel.filter(x => x !== d) : [...s.sel, d]; s.map = recDays(routineById(s.rid), s.sel); s.open = null; openDaysSheet(s.rid, s.fresh); Platform.haptic('light'); };
+A['day-open'] = el => { const s = UI.sheet; const d = +el.dataset.d; s.open = s.open === d ? null : d; openDaysSheet(s.rid, s.fresh); };
+A['day-w'] = el => { const s = UI.sheet; s.map[+el.dataset.d] = el.dataset.w; s.open = null; openDaysSheet(s.rid, s.fresh); Platform.haptic('light'); };
+A['day-rec'] = () => { const s = UI.sheet; s.map = recDays(routineById(s.rid), s.sel); s.open = null; openDaysSheet(s.rid, s.fresh); Platform.haptic('light'); };
+A['days-save'] = () => { const s = UI.sheet; const r = routineById(s.rid); if (!r) return; const ord = WEEK.filter(d => s.sel.includes(d)); if (ord.length){ r.dias = {}; ord.forEach(d => { r.dias[d] = r.workouts.some(w => w.id === s.map[d]) ? s.map[d] : r.workouts[0].id; }); } else delete r.dias; saveState(); closeSheet(); UI.homeSel = null; render(); toast(hasSchedule(r) ? 'Dias salvos. O Início mostra o treino de cada dia.' : 'Sem dias fixos: o app segue a sequência.'); };
 A['days-clear'] = () => { const r = routineById(UI.sheet.rid); if (!r) return; delete r.dias; saveState(); closeSheet(); render(); toast('Sem dias fixos: o app segue a sequência.'); };
 A['go-explore'] = () => { UI.rtab = 'explorar'; goTab('rotinas'); };
 A['home-sel'] = el => { UI.homeSel = el.getAttribute('aria-pressed') === 'true' && UI.homeSel === el.dataset.wid ? null : el.dataset.wid; render(); };
@@ -4621,9 +4671,9 @@ document.addEventListener('keydown', ev => {
   const map = {Backspace: 'bk', Enter: 'next', Tab: 'next', ',': ',', '.': ',', '+': 'plus', '-': 'minus'};
   const k = /^[0-9]$/.test(ev.key) ? ev.key : map[ev.key]; if (!k) return; ev.preventDefault(); kpKey(k);
 });
-window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (TABS.includes(h)) goTab(h); });
+window.addEventListener('hashchange', () => { const t = tabFromHash(location.hash.slice(1)); if (t) goTab(t); });
 setInterval(() => { const s = curSess(); const c = $('#clock'); if (c && s) c.textContent = fmtClock((Date.now() - new Date(s.startedAt)) / 1000); }, 1000);
-{ const h = location.hash.slice(1); if (TABS.includes(h)) UI.tab = h; }
+{ const t = tabFromHash(location.hash.slice(1)); if (t) UI.tab = t; }
 
 
 /* ============================================================================
@@ -5074,6 +5124,7 @@ function planSummaryRow(where){
   const pl = ST.prefs.plan;
   if (!pl){
     if (where === 'home' && lsGet('forja.planHide') && lsGet('forja.planHide') > today()) return '';
+    if (where === 'tab') where = 'profile';
     if (where === 'body') return `<button class="lastrow" data-act="plan-open"><span class="plan-ic">${I.target}</span><div class="grow"><div class="eyebrow">Assistente de objetivo</div><b>Calorias e proteína para o seu objetivo</b></div>${I.chev}</button>`;
     return `<div class="plan-promo"><i class="glow g1" aria-hidden="true"></i><div class="eyebrow">Assistente de objetivo</div><h3>Quanto comer para ${ST.profile.goal === 'Hipertrofia' ? 'ganhar massa' : ST.profile.goal === 'Definição' ? 'secar' : 'chegar no seu objetivo'}?</h3>
       <p>Calorias, proteína e macros calculados para você, com ajuste toda semana pelo seu peso real.</p>
@@ -5271,7 +5322,7 @@ A['pw-next'] = () => { pwKeep(); const steps = pwSteps(); if (UI.pw.step >= step
 A['plan-meals'] = el => { ST.prefs.plan.meals = +el.dataset.v; saveState(); render(); };
 A['plan-apply'] = el => { const pl = ST.prefs.plan; const v = +el.dataset.v; pl.adj = (pl.adj || 0) + v; pl.ck = today(); pl.log = (pl.log || []).concat({d: today(), v}).slice(-8); saveState(); render(); toast(`Plano ajustado em ${sgn(v)}${fmtK(Math.abs(v))} kcal por dia.`); Platform.haptic('success'); };
 A['plan-skip'] = () => { const pl = ST.prefs.plan; pl.ck = today(); saveState(); render(); toast('Plano mantido. Novo check-in em 7 dias.'); };
-A['plan-weigh'] = () => { UI.progTab = 'corpo'; goTab('progresso'); openBwSheet(null, 'kg'); };
+A['plan-weigh'] = () => { goTab('corpo'); openBwSheet(null, 'kg'); };
 A['plan-del'] = () => confirmSheet({title: 'Apagar o plano?', text: 'As metas de calorias e proteína e os ajustes dos check-ins serão apagados. Seu peso e suas medidas continuam salvos.', ok: 'Apagar', danger: true, onOk: () => { delete ST.prefs.plan; saveState(); UI.stack.pop(); render(); toast('Plano apagado'); }});
 A['cal-open'] = () => calSheet();
 A['cal-w'] = el => { document.querySelectorAll('#cal-w button').forEach(b => b.setAttribute('aria-pressed', b === el)); UI.sheet.wk = +el.dataset.v; };

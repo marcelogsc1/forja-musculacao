@@ -181,6 +181,7 @@ function planSummaryRow(where){
   const pl = ST.prefs.plan;
   if (!pl){
     if (where === 'home' && lsGet('forja.planHide') && lsGet('forja.planHide') > today()) return '';
+    if (where === 'tab') where = 'profile';
     if (where === 'body') return `<button class="lastrow" data-act="plan-open"><span class="plan-ic">${I.target}</span><div class="grow"><div class="eyebrow">Assistente de objetivo</div><b>Calorias e proteína para o seu objetivo</b></div>${I.chev}</button>`;
     return `<div class="plan-promo"><i class="glow g1" aria-hidden="true"></i><div class="eyebrow">Assistente de objetivo</div><h3>Quanto comer para ${ST.profile.goal === 'Hipertrofia' ? 'ganhar massa' : ST.profile.goal === 'Definição' ? 'secar' : 'chegar no seu objetivo'}?</h3>
       <p>Calorias, proteína e macros calculados para você, com ajuste toda semana pelo seu peso real.</p>
@@ -378,7 +379,7 @@ A['pw-next'] = () => { pwKeep(); const steps = pwSteps(); if (UI.pw.step >= step
 A['plan-meals'] = el => { ST.prefs.plan.meals = +el.dataset.v; saveState(); render(); };
 A['plan-apply'] = el => { const pl = ST.prefs.plan; const v = +el.dataset.v; pl.adj = (pl.adj || 0) + v; pl.ck = today(); pl.log = (pl.log || []).concat({d: today(), v}).slice(-8); saveState(); render(); toast(`Plano ajustado em ${sgn(v)}${fmtK(Math.abs(v))} kcal por dia.`); Platform.haptic('success'); };
 A['plan-skip'] = () => { const pl = ST.prefs.plan; pl.ck = today(); saveState(); render(); toast('Plano mantido. Novo check-in em 7 dias.'); };
-A['plan-weigh'] = () => { UI.progTab = 'corpo'; goTab('progresso'); openBwSheet(null, 'kg'); };
+A['plan-weigh'] = () => { goTab('corpo'); openBwSheet(null, 'kg'); };
 A['plan-del'] = () => confirmSheet({title: 'Apagar o plano?', text: 'As metas de calorias e proteína e os ajustes dos check-ins serão apagados. Seu peso e suas medidas continuam salvos.', ok: 'Apagar', danger: true, onOk: () => { delete ST.prefs.plan; saveState(); UI.stack.pop(); render(); toast('Plano apagado'); }});
 A['cal-open'] = () => calSheet();
 A['cal-w'] = el => { document.querySelectorAll('#cal-w button').forEach(b => b.setAttribute('aria-pressed', b === el)); UI.sheet.wk = +el.dataset.v; };
