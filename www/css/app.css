@@ -1379,3 +1379,17 @@ button.wt-goal b{color:var(--good)}
 @keyframes spin-b{to{--ang:360deg}}
 @media (prefers-reduced-motion: reduce){.builder-cta.spin-b{animation:none;--ang:300deg}}
 .rt-empty{margin-top:18px}
+
+/* animação de 5 quadros (v4.20): duas camadas; a de cima mostra o próximo quadro e aparece aos poucos,
+   então cada passo é uma transição suave em vez de um corte. Sequência: início, (pausa), 1/4, meio, 3/4, fim, (pausa), volta. */
+@keyframes fr5a{0%,10%{object-position:0% 50%}20%{object-position:25% 50%}30%{object-position:50% 50%}40%{object-position:75% 50%}50%,60%{object-position:100% 50%}70%{object-position:75% 50%}80%{object-position:50% 50%}90%{object-position:25% 50%}}
+@keyframes fr5b{0%{object-position:0% 50%}10%{object-position:25% 50%}20%{object-position:50% 50%}30%{object-position:75% 50%}40%,50%{object-position:100% 50%}60%{object-position:75% 50%}70%{object-position:50% 50%}80%{object-position:25% 50%}90%{object-position:0% 50%}}
+@keyframes fr5o{0%,55%{opacity:0}100%{opacity:1}}
+.demo.rx.wide.n5 img.f0{opacity:1;animation:fr5a 2.4s steps(1,end) infinite}
+.demo.rx.wide.n5 img.f1{animation:fr5b 2.4s steps(1,end) infinite,fr5o .24s linear infinite}
+@media (prefers-reduced-motion: reduce){.demo.rx.wide.n5 img.f0{animation:none;object-position:100% 50%}.demo.rx.wide.n5 img.f1{animation:none;opacity:0}}
+@keyframes fr3a{0%,16.66%{object-position:0% 50%}33.33%{object-position:50% 50%}50%,66.66%{object-position:100% 50%}83.33%{object-position:50% 50%}}
+@keyframes fr3b{0%{object-position:0% 50%}16.66%{object-position:50% 50%}33.33%,50%{object-position:100% 50%}66.66%{object-position:50% 50%}83.33%{object-position:0% 50%}}
+.demo.rx.wide.n3 img.f0{opacity:1;animation:fr3a 2.4s steps(1,end) infinite}
+.demo.rx.wide.n3 img.f1{animation:fr3b 2.4s steps(1,end) infinite,fr5o .4s linear infinite}
+@media (prefers-reduced-motion: reduce){.demo.rx.wide.n3 img.f0{animation:none;object-position:100% 50%}.demo.rx.wide.n3 img.f1{animation:none;opacity:0}}

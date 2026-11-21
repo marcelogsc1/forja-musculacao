@@ -1062,3 +1062,161 @@ Object.assign(INS, {
   ['Cotovelos abertos.', 'Quadril baixo, virando uma flexão comum.'],
   'Pés num banco deixam mais difícil e mais parecido com o desenvolvimento.'],
 });
+/* v4.20: exercícios para casa, kettlebell e elástico */
+Object.assign(INS, {
+'remada-mochila': [
+  'Coloque livros, garrafas de água ou pacotes de arroz numa mochila resistente e feche bem. Pés na largura do quadril, joelhos levemente dobrados e tronco inclinado à frente, perto de 45°, com as costas retas.',
+  ['Segure a mochila pelas alças com os braços estendidos abaixo do peito.', 'Puxe a mochila até a barriga, levando os cotovelos para trás e perto do corpo.', 'Junte as escápulas no topo por 1 segundo.', 'Desça devagar até estender os braços.'],
+  ['Arredondar a lombar para pegar a mochila.', 'Puxar com os ombros subindo em direção às orelhas.', 'Usar o impulso do tronco para levantar o peso.'],
+  'Para progredir, ponha mais peso na mochila ou faça uma pausa de 2 segundos no topo.'],
+'remada-mesa': [
+  'Use uma mesa firme e pesada, que não tombe. Deite embaixo dela com o peito na linha da borda e segure a borda com as mãos na largura dos ombros.',
+  ['Estenda os braços, corpo reto dos calcanhares aos ombros e glúteo contraído.', 'Puxe o peito em direção à borda juntando as escápulas.', 'Pare um instante perto da mesa.', 'Desça controlando até estender os braços.'],
+  ['Deixar o quadril cair durante a puxada.', 'Usar uma mesa leve ou instável.', 'Puxar com o pescoço esticado à frente.'],
+  'Joelhos dobrados e pés no chão deixam mais fácil; pernas estendidas, mais difícil.'],
+'flexora-toalha': [
+  'Precisa de piso liso (cerâmica, porcelanato ou madeira). Deite de barriga para cima, joelhos dobrados e os calcanhares sobre uma toalha dobrada.',
+  ['Suba o quadril até alinhar com as coxas.', 'Deslize os calcanhares para longe, estendendo as pernas sem deixar o quadril cair.', 'Puxe os calcanhares de volta em direção ao glúteo.', 'Faça o movimento devagar, principalmente na ida.'],
+  ['Deixar o quadril encostar no chão no meio da série.', 'Fazer rápido e sem controle.', 'Arquear a lombar para subir o quadril.'],
+  'Comece só com a volta (puxando) se a ida estiver difícil. Uma perna de cada vez deixa bem mais intenso.'],
+'elevacao-pelvica-sofa': [
+  'Sente no chão com a parte de baixo das escápulas apoiada na borda de um sofá ou de uma cadeira firme encostada na parede. Joelhos dobrados e pés no chão, na largura do quadril.',
+  ['Empurre o chão com os calcanhares e suba o quadril.', 'No topo, tronco e coxas ficam em linha reta e as canelas na vertical.', 'Aperte o glúteo por 1 segundo.', 'Desça até perto do chão e repita.'],
+  ['Arquear a lombar em vez de estender o quadril.', 'Pés longe demais, o que joga o esforço para os posteriores.', 'Cadeira que desliza: encoste-a na parede.'],
+  'Uma mochila com peso sobre o quadril aumenta a carga quando ficar fácil.'],
+'coice-quatro': [
+  'Fique em quatro apoios: mãos sob os ombros, joelhos sob o quadril, costas retas e abdômen firme.',
+  ['Mantendo o joelho dobrado a 90°, leve um pé para cima, como se fosse pisar no teto.', 'Suba até a coxa ficar alinhada com o tronco.', 'Aperte o glúteo no topo.', 'Volte devagar sem apoiar o joelho. Termine as repetições e troque de lado.'],
+  ['Arquear a lombar para subir mais a perna.', 'Girar o quadril para o lado.', 'Fazer com balanço.'],
+  'Uma caneleira ou um elástico no pé deixa o exercício mais forte.'],
+'abducao-deitada': [
+  'Deite de lado com o corpo em linha reta, a cabeça apoiada no braço de baixo e as duas pernas estendidas, uma sobre a outra.',
+  ['Suba a perna de cima até uns 45°, com a ponta do pé apontada para frente ou levemente para baixo.', 'Segure 1 segundo no topo.', 'Desça devagar sem encostar na outra perna.', 'Termine as repetições e troque de lado.'],
+  ['Girar o pé para cima, o que tira o trabalho do glúteo médio.', 'Levar a perna para frente do corpo.', 'Rolar o quadril para trás.'],
+  'Se o quadril rolar, encoste as costas numa parede para manter o corpo alinhado.'],
+'ostra': [
+  'Deite de lado, quadril e joelhos dobrados a uns 45°, pés juntos e alinhados com o glúteo. Cabeça apoiada no braço.',
+  ['Mantendo os pés juntos, abra o joelho de cima.', 'Pare quando o quadril começar a girar para trás.', 'Feche devagar.', 'Termine as repetições e troque de lado.'],
+  ['Girar o tronco junto para abrir mais.', 'Separar os pés.', 'Fazer rápido.'],
+  'Um miniband logo acima dos joelhos aumenta bastante a dificuldade.'],
+'hidrante': [
+  'Fique em quatro apoios, mãos sob os ombros e joelhos sob o quadril, abdômen firme.',
+  ['Mantendo o joelho dobrado, leve a perna para o lado até a coxa ficar quase paralela ao chão.', 'Segure 1 segundo.', 'Volte devagar.', 'Termine as repetições e troque de lado.'],
+  ['Inclinar o tronco para o lado oposto para subir mais.', 'Deixar a lombar afundar.', 'Fazer com impulso.'],
+  'O tronco fica parado como uma mesa; só a perna se move.'],
+'abd-reverso': [
+  'Deite de barriga para cima, braços ao lado do corpo, joelhos dobrados a 90° e coxas na vertical.',
+  ['Expire e enrole o quadril para cima, tirando a lombar do chão e trazendo os joelhos em direção ao peito.', 'Pare um instante no topo.', 'Desça devagar até a lombar encostar de novo.', 'Repita sem balançar as pernas.'],
+  ['Jogar as pernas para ganhar impulso.', 'Puxar com os braços contra o chão.', 'Descer rápido.'],
+  'O movimento é pequeno: pense em enrolar a pelve, não em levantar as pernas.'],
+'canoa': [
+  'Deite de barriga para cima, braços estendidos acima da cabeça e pernas juntas e esticadas. Encoste a lombar no chão.',
+  ['Tire ombros, braços e pernas do chão, formando uma canoa com o corpo.', 'Balance para frente e para trás sem desfazer a forma.', 'A lombar continua colada no chão o tempo todo.', 'Conte as idas e voltas ou o tempo.'],
+  ['Arquear a lombar e soltá-la do chão.', 'Dobrar os joelhos e o quadril no balanço.', 'Prender a respiração.'],
+  'Se ficar difícil, traga os braços ao lado do corpo ou dobre um pouco os joelhos.'],
+'elev-y-solo': [
+  'Deite de bruços com a testa apoiada numa toalha dobrada. Braços estendidos à frente, abertos em Y, polegares para cima.',
+  ['Junte as escápulas e tire os braços do chão.', 'Suba só o quanto conseguir sem levantar o peito.', 'Segure 1 a 2 segundos.', 'Desça devagar.'],
+  ['Levantar a cabeça e o peito para compensar.', 'Encolher os ombros em direção às orelhas.', 'Dobrar os cotovelos.'],
+  'Garrafinhas de água nas mãos dão carga quando o peso do braço ficar fácil.'],
+'anjo-reverso': [
+  'Deite de bruços com a testa sobre uma toalha. Braços ao lado do corpo, palmas para baixo, um pouco acima do chão.',
+  ['Leve os braços em arco pelos lados até acima da cabeça, sem encostá-los no chão.', 'Volte pelo mesmo caminho até o lado do corpo.', 'Mantenha as escápulas juntas e para baixo.', 'Faça devagar.'],
+  ['Apoiar os braços no chão durante o arco.', 'Levantar o peito para ganhar amplitude.', 'Fazer rápido.'],
+  'Ótimo para postura e para o deltoide posterior em casa.'],
+'superman-puxada': [
+  'Deite de bruços, braços estendidos à frente e um pouco acima do chão, pernas estendidas.',
+  ['Tire o peito levemente do chão.', 'Puxe os cotovelos para baixo e para trás, rente ao corpo, como se puxasse uma barra fixa.', 'Aperte as costas por 1 segundo.', 'Estenda os braços de novo sem apoiá-los.'],
+  ['Subir o peito demais, forçando a lombar.', 'Levantar a cabeça e olhar para frente.', 'Fazer rápido, sem sentir as costas.'],
+  'Uma toalha esticada entre as mãos ajuda a manter os braços ativos.'],
+'superman': [
+  'Deite de bruços, braços estendidos à frente e pernas estendidas, olhar para o chão.',
+  ['Tire braços, peito e pernas do chão ao mesmo tempo.', 'Aperte glúteos e costas no topo.', 'Segure 2 segundos.', 'Desça devagar.'],
+  ['Jogar a cabeça para trás.', 'Subir com impulso.', 'Dobrar os joelhos.'],
+  'Comece alternando braço e perna opostos se o movimento completo incomodar a lombar.'],
+'afundo-lateral': [
+  'Em pé com os pés juntos, mãos à frente do peito ou na cintura.',
+  ['Dê um passo largo para o lado.', 'Leve o quadril para trás e dobre o joelho do lado do passo, a outra perna esticada.', 'O pé de apoio fica inteiro no chão e o joelho alinhado com ele.', 'Empurre o chão para voltar ao centro. Alterne os lados.'],
+  ['Joelho passando para dentro.', 'Tronco caindo para frente.', 'Tirar o calcanhar do chão.'],
+  'Uma mochila com peso junto ao peito deixa mais forte.'],
+'afundo-cruzado': [
+  'Em pé com os pés na largura do quadril, mãos na cintura.',
+  ['Leve uma perna para trás, cruzando-a atrás da outra, como numa reverência.', 'Desça até o joelho de trás chegar perto do chão.', 'Tronco reto e quadril de frente.', 'Suba empurrando com o pé da frente e alterne.'],
+  ['Girar o quadril junto com a perna.', 'Joelho da frente caindo para dentro.', 'Inclinar muito o tronco.'],
+  'Trabalha muito o glúteo médio, que ajuda a estabilizar o joelho.'],
+'agachamento-cossaco': [
+  'Pés bem afastados, mais que o dobro da largura dos ombros, pontas um pouco para fora.',
+  ['Desça o quadril sobre uma perna, dobrando aquele joelho.', 'A outra perna fica esticada, com a ponta do pé para cima.', 'Desça só até onde o calcanhar de apoio continua no chão.', 'Suba e passe para o outro lado.'],
+  ['Tirar o calcanhar do chão.', 'Arredondar as costas.', 'Joelho de apoio passando para dentro.'],
+  'Segure num batente de porta no começo para pegar o equilíbrio e a amplitude.'],
+'subida-degrau': [
+  'Use um degrau de escada ou um banquinho firme, com uns 20 a 40 cm de altura. Fique de lado para ele com o pé de dentro em cima.',
+  ['Empurre o degrau com o pé de cima até estender a perna.', 'Suba sem impulsionar com o pé de baixo.', 'Desça devagar, controlando com a perna de cima.', 'Termine as repetições e troque de lado.'],
+  ['Empurrar com o pé de baixo.', 'Joelho de cima indo para dentro.', 'Degrau instável ou escorregadio.'],
+  'Degrau mais alto ou uma mochila com peso deixam mais difícil.'],
+'descida-degrau': [
+  'Fique em pé num degrau firme, apoiado numa perna. A outra fica solta para fora da borda. Segure num corrimão se precisar.',
+  ['Dobre o joelho de apoio e desça a outra perna devagar.', 'Toque o calcanhar no chão de leve, sem passar o peso.', 'Suba estendendo a perna de apoio.', 'Termine as repetições e troque de lado.'],
+  ['Joelho de apoio caindo para dentro.', 'Descer rápido e apoiar o peso embaixo.', 'Inclinar o quadril para o lado.'],
+  'Exercício excelente para controle do joelho. Vá devagar: 3 segundos para descer.'],
+'bom-dia-solo': [
+  'Em pé, pés na largura do quadril, mãos atrás da cabeça ou cruzadas no peito, joelhos levemente dobrados.',
+  ['Leve o quadril para trás inclinando o tronco, com as costas retas.', 'Desça até sentir alongar atrás das coxas.', 'Volte empurrando o quadril para frente e apertando o glúteo.', 'Mantenha o peso nos calcanhares.'],
+  ['Arredondar a lombar.', 'Dobrar demais os joelhos, virando agachamento.', 'Fazer rápido.'],
+  'Uma mochila com peso nas costas aumenta a carga.'],
+'flexao-joelhos': [
+  'Mãos no chão um pouco mais largas que os ombros, joelhos apoiados (sobre uma toalha), corpo reto dos joelhos à cabeça.',
+  ['Desça o peito em direção ao chão com os cotovelos a uns 45° do tronco.', 'Pare perto do chão.', 'Empurre de volta até estender os braços.', 'Mantenha o abdômen firme.'],
+  ['Quadril alto ou caído.', 'Cotovelos abertos a 90°.', 'Descer pouco.'],
+  'Quando fizer 15 repetições bem feitas, passe para a flexão completa.'],
+'flexao-parede-invertida': [
+  'Exercício avançado: faça só se já domina o pike e consegue ficar em parada de mão na parede. Mãos no chão a um palmo da parede, na largura dos ombros, pés apoiados na parede.',
+  ['Com o corpo firme, dobre os cotovelos e desça a cabeça devagar até perto do chão (uma almofada embaixo ajuda).', 'Os cotovelos vão para frente, não para os lados.', 'Empurre de volta até estender os braços.', 'Saia da posição descendo um pé de cada vez.'],
+  ['Bater a cabeça no chão.', 'Arquear muito a lombar.', 'Fazer cansado demais para controlar a descida.'],
+  'Comece com descidas lentas e só a volta parcial antes de tentar a amplitude completa.'],
+'kb-clean': [
+  'Kettlebell no chão entre os pés, um pouco à frente. Pés na largura do quadril.',
+  ['Leve o quadril para trás e segure a alça com uma mão, costas retas.', 'Estenda o quadril com força e puxe o kettlebell rente ao corpo.', 'Gire a mão por dentro da alça e receba o kettlebell na frente do ombro, cotovelo junto ao corpo.', 'Volte com o quadril para trás e repita. Troque de lado ao fim da série.'],
+  ['Deixar o kettlebell bater no antebraço.', 'Puxar com o braço em vez de usar o quadril.', 'Arredondar as costas na descida.'],
+  'Aprenda o swing primeiro. O clean é um swing que termina no ombro.'],
+'kb-snatch': [
+  'Exercício avançado de técnica. Kettlebell entre os pés, um pouco à frente, pés na largura do quadril. Comece com carga leve.',
+  ['Balance o kettlebell entre as pernas, quadril para trás e costas retas.', 'Estenda o quadril com explosão e deixe o kettlebell subir rente ao corpo.', 'Gire a mão por dentro e termine com o braço estendido acima da cabeça.', 'Desça pelo mesmo caminho e emende a próxima.'],
+  ['Deixar o kettlebell bater no antebraço.', 'Puxar com o braço em vez de usar o quadril.', 'Terminar com o cotovelo dobrado.'],
+  'Domine o swing e o clean antes. Pare se a técnica cair.'],
+'kb-stiff': [
+  'Em pé com o kettlebell nas mãos, pés na largura do quadril, joelhos levemente dobrados.',
+  ['Leve o quadril para trás e desça o kettlebell rente às pernas.', 'Costas retas o tempo todo, peso nos calcanhares.', 'Desça até sentir alongar atrás das coxas.', 'Volte empurrando o quadril para frente e apertando o glúteo.'],
+  ['Arredondar a lombar.', 'Kettlebell longe das pernas.', 'Dobrar demais os joelhos.'],
+  'Uma perna de cada vez deixa mais difícil com o mesmo peso.'],
+'kb-afundo': [
+  'Segure o kettlebell junto ao peito pelas laterais da alça, cotovelos para baixo.',
+  ['Dê um passo à frente.', 'Desça até o joelho de trás chegar perto do chão, tronco reto.', 'Empurre com o pé da frente para voltar.', 'Alterne as pernas ou termine um lado de cada vez.'],
+  ['Joelho da frente caindo para dentro.', 'Passo curto demais, tirando o calcanhar do chão.', 'Inclinar o tronco à frente.'],
+  'O kettlebell à frente ajuda a manter o tronco reto.'],
+'kb-moinho': [
+  'Exercício de mobilidade e força. Pés um pouco mais afastados que o quadril, pontas viradas para o lado oposto ao kettlebell. Comece leve.',
+  ['Kettlebell acima da cabeça com o braço estendido, olhar nele.', 'Empurre o quadril para o lado do kettlebell e desça a outra mão pela parte de dentro da perna.', 'Vá até onde conseguir com as costas longas.', 'Volte devagar. Troque de lado ao fim.'],
+  ['Dobrar o braço de cima.', 'Tirar os olhos do kettlebell.', 'Descer arredondando as costas.'],
+  'Treine primeiro sem peso para achar a amplitude.'],
+'kb-sumo': [
+  'Pés bem afastados, pontas para fora, kettlebell no chão entre os pés.',
+  ['Desça o quadril com o peito aberto e segure a alça com as duas mãos.', 'Costas retas e joelhos apontando para os pés.', 'Empurre o chão e suba estendendo quadril e joelhos juntos.', 'Desça controlando.'],
+  ['Arredondar as costas.', 'Joelhos caindo para dentro.', 'Puxar com os braços.'],
+  'Dois kettlebells ou um mais pesado deixam mais forte.'],
+'flexora-elastico': [
+  'Prenda o elástico num ponto baixo e firme, como o pé de um móvel pesado. Deite de bruços com o elástico laçado nos tornozelos.',
+  ['Dobre os joelhos trazendo os calcanhares em direção ao glúteo.', 'Mantenha o quadril encostado no chão.', 'Segure 1 segundo.', 'Estenda as pernas devagar resistindo ao elástico.'],
+  ['Levantar o quadril para ajudar.', 'Soltar o elástico de uma vez na volta.', 'Ancoragem que pode escorregar.'],
+  'Afaste-se da ancoragem para aumentar a tensão.'],
+'ponte-marcha': [
+  'Deite de barriga para cima, joelhos dobrados, pés no chão na largura do quadril. Suba o quadril até alinhar com as coxas.',
+  ['Com o quadril no alto, tire um pé do chão levando o joelho em direção ao peito.', 'Apoie o pé e troque de lado.', 'O quadril não pode cair nem girar.', 'Conte uma repetição a cada lado.'],
+  ['Deixar o quadril cair a cada troca.', 'Arquear a lombar.', 'Fazer rápido.'],
+  'Mais devagar é mais difícil. Pare 2 segundos com cada pé no alto.'],
+'marcha': [
+  'Em pé, postura alta, abdômen firme.',
+  ['Suba um joelho até perto da altura do quadril.', 'Apoie e suba o outro, em ritmo constante.', 'Balance os braços junto com as pernas.', 'Mantenha um ritmo em que ainda dá para conversar.'],
+  ['Inclinar o tronco para trás.', 'Fazer só com os pés, sem subir os joelhos.', 'Começar forte demais.'],
+  'Bom aquecimento e cardio leve em casa. Para intensificar, passe para o skipping.'],
+});

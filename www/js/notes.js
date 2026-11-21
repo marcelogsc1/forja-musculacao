@@ -32,13 +32,13 @@ const obVocab = () => OB_VOCAB || (OB_VOCAB = new Set(Object.values(CAT).flatMap
 const ISO_P = ['quad-iso', 'fly', 'ombro-lat', 'ombro-front', 'ombro-post', 'biceps', 'martelo', 'triceps-over', 'triceps-push', 'flexora', 'pant', 'abd', 'abd-inf', 'obliquo', 'gluteo', 'adutor', 'antebraco', 'antebraco-flex', 'encolhimento'];
 /* exercícios que pedem técnica ou força avançada: só entram por troca automática se não houver outra opção */
 const OB_HARD = new Set(['flexora-nordica', 'sissy', 'paralelas', 'barra-fixa', 'agachamento-unilateral', 'pike', 'flexao-declinada']);
-const EQ_PREF = ['halter', 'barra', 'maquina', 'cabo', 'smith', 'peso', 'kettlebell', 'elastico', 'suspensao', 'outros'];
+const EQ_PREF = ['halter', 'barra', 'maquina', 'cabo', 'smith', 'peso', 'casa', 'kettlebell', 'elastico', 'suspensao', 'outros'];
 
 /* equipamento que este treino já usa: se tem máquina ou polia, está numa academia */
 function obAllowedEq(items, ban){
   const used = new Set(items.map(x => getEx(x.ex) && getEx(x.ex).e).filter(Boolean));
   const gym = ['maquina', 'cabo', 'smith', 'barra'].some(e => used.has(e));
-  const base = gym ? LOCAIS.academia.eq : [...used, 'peso'];
+  const base = gym ? LOCAIS.academia.eq : [...used, 'peso', 'casa'];
   return base.filter(e => !ban.has(e));
 }
 /* melhor substituto: mesmo padrão de movimento, equipamento permitido, ainda não está no treino */
@@ -46,8 +46,8 @@ function obAlt(ex, items, ban, prefer){
   const e = getEx(ex); if (!e) return null; const inW = new Set(items.map(x => x.ex)); const allow = new Set(obAllowedEq(items, ban));
   const rank = k => { const c = CAT[k]; return (prefer && c.e === prefer ? 0 : 10) + (allow.has(c.e) ? 0 : 100) + EQ_PREF.indexOf(c.e); };
   const ok = k => k !== ex && !inW.has(k) && !ban.has(CAT[k].e) && (allow.has(CAT[k].e) || (prefer && CAT[k].e === prefer));
-  const same = Object.keys(CAT).filter(k => ok(k) && CAT[k].p === e.p);
-  const near = Object.keys(CAT).filter(k => ok(k) && CAT[k].p !== e.p && CAT[k].m === e.m && (CAT[k].pri || [])[0] === (e.pri || [])[0] && CAT[k].m !== 'cardio');
+  const same = Object.keys(CAT).filter(k => ok(k) && !CAT[k].hid && CAT[k].p === e.p);
+  const near = Object.keys(CAT).filter(k => ok(k) && !CAT[k].hid && CAT[k].p !== e.p && CAT[k].m === e.m && (CAT[k].pri || [])[0] === (e.pri || [])[0] && CAT[k].m !== 'cardio');
   const pick = l => l.sort((a, b) => rank(a) - rank(b))[0];
   return pick(same.filter(k => !OB_HARD.has(k))) || pick(near.filter(k => !OB_HARD.has(k))) || pick(same) || pick(near) || null;
 }

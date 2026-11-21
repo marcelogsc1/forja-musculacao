@@ -10,17 +10,32 @@
    ========================================================================== */
 
 const GOALS = {hipertrofia: 'Ganhar músculo', forca: 'Ganhar força', definicao: 'Definição e perda de gordura', condicionamento: 'Condicionamento e HIIT', saude: 'Saúde e começo'};
+/* Locais: eq = tipos de equipamento (filtro da biblioteca e observações); ok = o que pode existir ali (ver exNeeds).
+   "Em casa" não supõe nenhum equipamento: só o peso do corpo e objetos comuns (cadeira, sofá, mesa, mochila, toalha, degrau, porta, parede). */
+const CASA = ['cadeira', 'parede', 'porta', 'mesa', 'toalha', 'mochila', 'degrau', 'ancora'];
 const LOCAIS = {
-  academia: {n: 'Academia', eq: ['barra', 'halter', 'cabo', 'maquina', 'smith', 'peso', 'kettlebell', 'outros'], art: 'leg-press'},
-  casa: {n: 'Em casa', eq: ['halter', 'peso', 'elastico', 'kettlebell', 'outros'], art: 'goblet', d: 'Halteres, elástico e peso do corpo'},
-  halteres: {n: 'Apenas halteres', eq: ['halter', 'peso'], art: 'rosca-martelo', d: 'Um par de halteres e um banco'},
-  peso: {n: 'Peso corporal', eq: ['peso', 'outros'], art: 'flexao', d: 'Sem equipamento, só uma barra fixa opcional'},
-  elastico: {n: 'Elástico', eq: ['elastico', 'peso'], art: 'remada-elastico', d: 'Elásticos com alças ou tubos'},
-  kettlebell: {n: 'Kettlebell', eq: ['kettlebell', 'peso'], art: 'kettlebell-swing', d: 'Um ou dois kettlebells'},
-  suspensao: {n: 'Fita de suspensão', eq: ['suspensao', 'peso', 'outros'], art: 'trx-remada', d: 'TRX ou fita presa na porta'},
-  viagem: {n: 'Em viagem', eq: ['peso', 'elastico', 'outros'], art: 'polichinelo', d: 'Quarto de hotel, peso do corpo e um elástico'},
-  cardio: {n: 'Cardio e HIIT', eq: ['peso', 'outros', 'maquina', 'kettlebell'], art: 'burpee', d: 'Intervalados, circuitos e aeróbico'},
+  academia: {n: 'Academia', eq: ['barra', 'halter', 'cabo', 'maquina', 'smith', 'peso', 'kettlebell', 'casa', 'outros'], ok: null, art: 'leg-press'},
+  casa: {n: 'Em casa', eq: ['peso', 'casa'], ok: CASA, art: 'agachamento-livre', d: 'Sem equipamento: peso do corpo e objetos da casa, como cadeira, mochila e toalha'},
+  halteres: {n: 'Apenas halteres', eq: ['halter', 'peso', 'casa'], ok: ['halter', 'banco', ...CASA], main: 'halter', art: 'rosca-martelo', d: 'Um par de halteres, um banco e o peso do corpo'},
+  peso: {n: 'Calistenia', eq: ['peso', 'casa'], ok: ['barrafixa', 'paralelas', ...CASA], art: 'flexao', d: 'Peso do corpo com barra fixa e paralelas, em casa ou na praça'},
+  elastico: {n: 'Elástico', eq: ['elastico', 'peso', 'casa'], ok: ['elastico', ...CASA], main: 'elastico', art: 'remada-elastico', d: 'Elásticos com alças ou tubos e o peso do corpo'},
+  kettlebell: {n: 'Kettlebell', eq: ['kettlebell', 'peso', 'casa'], ok: ['kettlebell', ...CASA], main: 'kettlebell', art: 'kettlebell-swing', d: 'Um ou dois kettlebells e o peso do corpo'},
+  suspensao: {n: 'Fita de suspensão', eq: ['suspensao', 'peso', 'casa'], ok: ['suspensao', ...CASA], main: 'suspensao', art: 'trx-remada', d: 'TRX ou fita presa na porta, mais o peso do corpo'},
+  viagem: {n: 'Em viagem', eq: ['peso', 'elastico', 'casa'], ok: ['elastico', ...CASA], art: 'polichinelo', d: 'Quarto de hotel: peso do corpo e um elástico na mala'},
+  cardio: {n: 'Cardio e HIIT', eq: ['peso', 'outros', 'maquina', 'kettlebell', 'casa'], ok: null, art: 'burpee', d: 'Intervalados, circuitos e aeróbico'},
 };
+/* O que cada exercício precisa para ser feito. Base pelo tipo de equipamento, mais exceções conhecidas. */
+const NEEDS_BASE = {barra: ['barra'], halter: ['halter'], cabo: ['cabo'], maquina: ['maquina'], smith: ['smith'], kettlebell: ['kettlebell'], elastico: ['elastico'], suspensao: ['suspensao'], peso: [], casa: [], outros: []};
+const NEEDS_X = {
+  'barra-fixa': ['barrafixa'], 'barra-supinada': ['barrafixa'], 'barra-neutra': ['barrafixa'], 'elev-pernas-barra': ['barrafixa'], 'remada-invertida': ['barrafixa'], 'barra-assistida-elastico': ['barrafixa', 'elastico'],
+  'paralelas': ['paralelas'], 'paralelas-peito': ['paralelas'],
+  'elev-joelhos-paralela': ['maquina'], 'hiperextensao': ['maquina'], 'abd-declinado': ['maquina'], 'pant-burrinho': ['maquina'], 'corrida': ['maquina'], 'roda': ['roda'], 'pular-corda': ['corda'], 'elev-frontal-anilha': ['anilha'],
+  'flexao-inclinada': ['cadeira'], 'flexao-declinada': ['cadeira'], 'mergulho-banco': ['cadeira'], 'elevacao-pelvica-sofa': ['cadeira'], 'remada-porta': ['porta'], 'remada-mesa': ['mesa'],
+  'flexora-nordica': ['ancora'], 'flexora-toalha': ['toalha'], 'remada-mochila': ['mochila'], 'pant-degrau': ['degrau'], 'subida-degrau': ['degrau'], 'descida-degrau': ['degrau'], 'flexao-parede-invertida': ['parede'],
+  'step-up': ['halter', 'banco'], 'pull-through-elastico': ['elastico'], 'flexora-elastico': ['elastico']
+};
+function exNeeds(id){ const x = CAT[id]; if (!x) return ['?']; return NEEDS_X[id] || NEEDS_BASE[x.e] || ['?']; }
+function exOk(id, local){ const L = LOCAIS[local]; if (!L || !L.ok) return true; return exNeeds(id).every(n => L.ok.includes(n)); }
 const NIVEIS = ['Iniciante', 'Intermediário', 'Avançado'];
 const FOCOS = {
   bracos: {n: 'Braços', reg: ['biceps', 'triceps', 'antebraco'], slots: ['bi2', 'tri2'], small: true},
@@ -34,19 +49,19 @@ const FOCOS = {
 
 // ---------- vagas de movimento: candidatos em ordem de preferência ----------
 const SLOTS = {
-  pressH: {r: 'main', c: ['supino-reto-barra', 'supino-reto-halter', 'supino-reto-maquina', 'kb-supino-solo', 'supino-elastico', 'trx-supino', 'flexao']},
+  pressH: {r: 'main', c: ['supino-reto-barra', 'supino-reto-halter', 'supino-reto-maquina', 'supino-elastico', 'trx-supino', 'flexao', 'flexao-joelhos']},
   pressH2: {r: 'comp', c: ['supino-reto-maquina', 'supino-reto-halter', 'supino-reto-smith', 'flexao-aberta', 'supino-elastico', 'flexao']},
   pressI: {r: 'comp', c: ['supino-incl-halter', 'supino-incl-maquina', 'supino-incl-barra', 'supino-incl-smith', 'flexao-declinada', 'supino-elastico']},
   fly: {r: 'iso', c: ['voador', 'crossover', 'crucifixo-halter', 'crucifixo-incl', 'flexao-aberta']},
   dip: {r: 'comp', c: ['paralelas-peito', 'mergulho-maquina', 'flexao-diamante']},
-  pullV: {r: 'comp', c: ['puxada-aberta', 'barra-fixa', 'barra-assistida-elastico', 'puxada-elastico', 'pullover-halter', 'kb-remada', 'trx-remada']},
-  pullV2: {r: 'comp', c: ['puxada-neutra', 'puxada-supinada', 'barra-supinada', 'barra-neutra', 'puxada-elastico', 'pullover-halter', 'kb-renegade']},
-  rowH: {r: 'comp', c: ['remada-curvada', 'remada-baixa', 'serrote', 'kb-remada', 'remada-elastico', 'trx-remada', 'remada-porta', 'remada-invertida']},
-  rowH2: {r: 'comp', c: ['remada-iso', 'remada-apoiada-t', 'remada-incl-halter', 'kb-renegade', 'remada-unilateral-elastico', 'trx-remada', 'remada-invertida', 'remada-porta']},
+  pullV: {r: 'comp', c: ['puxada-aberta', 'barra-fixa', 'puxada-elastico', 'pullover-halter', 'kb-remada', 'trx-remada', 'remada-mesa', 'superman-puxada']},
+  pullV2: {r: 'comp', c: ['puxada-neutra', 'puxada-supinada', 'barra-supinada', 'barra-neutra', 'puxada-elastico', 'pullover-halter', 'kb-remada', 'trx-remada', 'remada-mochila', 'superman-puxada']},
+  rowH: {r: 'comp', c: ['remada-curvada', 'remada-baixa', 'serrote', 'kb-remada', 'remada-elastico', 'trx-remada', 'remada-invertida', 'remada-mesa', 'remada-porta', 'remada-mochila']},
+  rowH2: {r: 'comp', c: ['remada-iso', 'remada-apoiada-t', 'remada-incl-halter', 'kb-renegade', 'kb-remada', 'remada-unilateral-elastico', 'trx-remada', 'remada-invertida', 'remada-mochila', 'remada-porta', 'remada-mesa']},
   ohp: {r: 'comp', c: ['desenv-halter', 'desenv-maquina', 'desenv-barra', 'kb-desenv', 'desenv-elastico', 'pike', 'flexao-declinada']},
-  lat: {r: 'small', c: ['elev-lateral-cabo', 'elev-lateral-halter', 'remada-alta-halter', 'elev-frontal-elastico']},
+  lat: {r: 'small', c: ['elev-lateral-cabo', 'elev-lateral-halter', 'remada-alta-halter', 'elev-frontal-elastico', 'elev-y-solo']},
   front: {r: 'small', c: ['elev-frontal', 'elev-frontal-cabo']},
-  rear: {r: 'small', c: ['voador-inverso', 'face-pull', 'crucifixo-inverso-halter', 'face-pull-elastico', 'crucifixo-inverso-elastico']},
+  rear: {r: 'small', c: ['voador-inverso', 'face-pull', 'crucifixo-inverso-halter', 'face-pull-elastico', 'crucifixo-inverso-elastico', 'anjo-reverso', 'elev-y-solo']},
   shrug: {r: 'iso', c: ['encolhimento-halter', 'encolhimento-barra']},
   bi: {r: 'iso', c: ['rosca-barra', 'rosca-halter', 'rosca-elastico', 'trx-rosca', 'barra-supinada']},
   bi2: {r: 'iso', c: ['rosca-inclinada', 'rosca-martelo', 'rosca-concentrada', 'rosca-elastico']},
@@ -55,21 +70,21 @@ const SLOTS = {
   tri2: {r: 'iso', c: ['triceps-frances-cabo', 'triceps-halter-deitado', 'triceps-coice', 'mergulho-banco', 'flexao-diamante']},
   tri3: {r: 'iso', c: ['triceps-testa', 'triceps-barra', 'triceps-frances-pe', 'paralelas']},
   squat: {r: 'main', c: ['agachamento', 'hack', 'goblet', 'agachamento-halter', 'agachamento-elastico', 'trx-agachamento', 'agachamento-livre']},
-  squat2: {r: 'comp', c: ['leg-press', 'hack', 'agachamento-smith', 'bulgaro', 'goblet', 'agachamento-elastico', 'trx-agachamento', 'agachamento-unilateral']},
-  lunge: {r: 'comp', c: ['bulgaro', 'afundo', 'step-up', 'afundo-caminhando']},
-  hinge: {r: 'comp', c: ['stiff-barra', 'stiff-halter', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral']},
-  dead: {r: 'main', c: ['levantamento-terra', 'terra-halter', 'kb-terra', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral']},
-  legcurl: {r: 'iso', c: ['cadeira-flexora', 'mesa-flexora', 'stiff-unilateral', 'trx-flexora', 'pull-through-elastico', 'flexora-nordica', 'ponte-unilateral']},
+  squat2: {r: 'comp', c: ['leg-press', 'hack', 'agachamento-smith', 'bulgaro', 'goblet', 'kb-afundo', 'agachamento-elastico', 'trx-agachamento', 'subida-degrau', 'agachamento-cossaco', 'agachamento-unilateral']},
+  lunge: {r: 'comp', c: ['bulgaro', 'afundo', 'step-up', 'kb-afundo', 'afundo-caminhando', 'afundo-lateral', 'afundo-cruzado', 'descida-degrau']},
+  hinge: {r: 'comp', c: ['stiff-barra', 'stiff-halter', 'kb-stiff', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral', 'bom-dia-solo']},
+  dead: {r: 'main', c: ['levantamento-terra', 'terra-halter', 'kb-terra', 'kb-sumo', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral', 'bom-dia-solo']},
+  legcurl: {r: 'iso', c: ['cadeira-flexora', 'mesa-flexora', 'stiff-unilateral', 'trx-flexora', 'flexora-elastico', 'flexora-toalha', 'flexora-nordica', 'ponte-unilateral']},
   legext: {r: 'iso', c: ['extensora', 'extensora-elastico', 'sissy']},
-  glute: {r: 'comp', c: ['elevacao-pelvica', 'hip-thrust-halter', 'ponte', 'pull-through', 'ponte-elastico', 'coice-elastico', 'ponte-unilateral', 'ponte-solo']},
-  abduct: {r: 'small', c: ['abducao', 'abducao-elastico', 'monster-walk']},
+  glute: {r: 'comp', c: ['elevacao-pelvica', 'hip-thrust-halter', 'kettlebell-swing', 'ponte', 'pull-through', 'ponte-elastico', 'coice-elastico', 'elevacao-pelvica-sofa', 'ponte-unilateral', 'ponte-solo', 'coice-quatro']},
+  abduct: {r: 'small', c: ['abducao', 'abducao-elastico', 'monster-walk', 'abducao-deitada', 'hidrante', 'ostra']},
   adduct: {r: 'small', c: ['adutora']},
-  calf: {r: 'small', c: ['pant-pe', 'pant-sentado', 'pant-halter', 'pant-elastico', 'pant-degrau']},
-  core: {r: 'core', c: ['abd-polia', 'abd-maquina', 'elev-pernas', 'pallof', 'prancha']},
-  core2: {r: 'core', c: ['lenhador', 'elev-pernas-barra', 'abd-russo', 'dead-bug', 'prancha-lateral']},
-  hiit: {r: 'circ', c: ['burpee', 'kb-thruster', 'agachamento-salto', 'escalador']},
+  calf: {r: 'small', c: ['pant-pe', 'pant-sentado', 'pant-halter', 'pant-degrau']},
+  core: {r: 'core', c: ['abd-polia', 'abd-maquina', 'elev-pernas', 'pallof', 'prancha', 'abd-reverso']},
+  core2: {r: 'core', c: ['lenhador', 'elev-pernas-barra', 'kb-moinho', 'abd-russo', 'dead-bug', 'prancha-lateral', 'canoa']},
+  hiit: {r: 'circ', c: ['burpee', 'kb-snatch', 'agachamento-salto', 'escalador']},
   hiit2: {r: 'circ', c: ['polichinelo', 'skater', 'skipping', 'urso']},
-  cardio: {r: 'cardio', c: ['caminhada-inclinada', 'bike', 'eliptico', 'pular-corda', 'corrida']},
+  cardio: {r: 'cardio', c: ['caminhada-inclinada', 'bike', 'eliptico', 'corrida', 'marcha', 'polichinelo']},
 };
 // esquema de séries por objetivo e papel: [séries, reps mín, reps máx, descanso s]
 const SCHEMES = {
@@ -107,13 +122,16 @@ const SPLITS = {
 const DUR_N = {30: 4, 45: 5, 60: 6, 75: 7};
 const FOCUS_DAY = {peito: 'FUP', costas: 'FUB', bracos: 'FUPB', ombros: 'FUP', gluteos: 'FL', pernas: 'FL', abdomen: 'FULPB'};
 
-// exercícios que exigem barra fixa ou paralelas: só na academia e na calistenia
-const NEEDS_BAR = ['barra-fixa', 'barra-supinada', 'barra-neutra', 'elev-pernas-barra', 'paralelas', 'paralelas-peito', 'elev-joelhos-paralela', 'hiperextensao', 'barra-assistida-elastico'];
-function pickEx(slot, eq, used, prefMachine, local){
-  let c = SLOTS[slot].c;
-  if (local && local !== 'academia' && local !== 'peso') c = c.filter(x => !NEEDS_BAR.includes(x));
+/* Escolhe o exercício da vaga: só o que dá para fazer no local; com o equipamento principal do local primeiro
+   (num programa de kettlebell, o kettlebell vem antes do peso do corpo). */
+/* pedem força ou técnica avançada: fora dos programas de iniciante */
+const HARD = ['sissy', 'agachamento-unilateral', 'flexora-nordica', 'flexao-parede-invertida', 'flexao-arqueiro', 'paralelas', 'paralelas-peito', 'kb-snatch', 'elev-pernas-barra'];
+function pickEx(slot, eq, used, prefMachine, local, beginner){
+  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)));
+  const main = local && LOCAIS[local] && LOCAIS[local].main;
+  if (main) c = [...c].sort((a, b) => (CAT[b].e === main) - (CAT[a].e === main));
   if (prefMachine) c = [...c].sort((a, b) => (/maquina|cabo/.test(CAT[b].e) ? 1 : 0) - (/maquina|cabo/.test(CAT[a].e) ? 1 : 0));
-  return c.find(x => CAT[x] && eq.includes(CAT[x].e) && !used.has(x)) || null;
+  return c.find(x => !used.has(x)) || null;
 }
 /* Gera um programa. o = {goal, local, dias, nivel, dur, foco, split} */
 function genProgram(o){
@@ -129,11 +147,11 @@ function genProgram(o){
     const used = new Set(); const items = [];
     for (const s of slots){
       if (items.length >= n + extra) break;
-      const ex = pickEx(s, eq, used, beginner && o.local === 'academia', o.local); if (!ex) continue; used.add(ex);
+      const ex = pickEx(s, eq, used, beginner && o.local === 'academia', o.local, beginner); if (!ex) continue; used.add(ex);
       const role = SLOTS[s].r === 'circ' ? 'comp' : SLOTS[s].r === 'cardio' ? 'comp' : SLOTS[s].r;
       let [sets, rmin, rmax, rest] = sch[role] || sch.comp;
       if (beginner){ sets = Math.max(2, sets - 1); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 10); rmax = Math.max(rmax, 15); } }
-      if (CAT[ex].e === 'peso' && o.goal !== 'forca' && /comp|main/.test(role)){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 20); }
+      if ((CAT[ex].e === 'peso' || CAT[ex].e === 'casa') && o.goal !== 'forca' && /comp|main/.test(role)){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 20); rest = Math.min(rest, 90); }
       if (CAT[ex].e === 'elastico'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 20); }
       items.push({ex, sets, rmin, rmax, rest, nota: ''});
     }
@@ -174,25 +192,25 @@ const GEN_LIST = [
   G('g-hal-ul4', 'Halteres Upper Lower 4x', {goal: 'hipertrofia', local: 'halteres', dias: 4, nivel: 'Intermediário', dur: 60}, {tag: ['UPPER', 'LOWER'], art: 'supino-incl-halter', desc: 'Superiores e inferiores duas vezes por semana usando apenas halteres.'}),
   G('g-hal-ppl', 'Halteres Push Pull Legs 3x', {goal: 'hipertrofia', local: 'halteres', split: 'ppl3', nivel: 'Intermediário', dur: 45}, {tag: ['PUSH', 'PULL', 'LEGS'], art: 'serrote', desc: 'Empurrar, puxar e pernas com halteres. Ideal para academia de prédio ou home gym.'}),
   G('g-hal-def', 'Halteres Definição 3x', {goal: 'definicao', local: 'halteres', dias: 3, nivel: 'Intermediário', dur: 45}, {tag: ['DEFINIÇÃO', 'CASA'], art: 'terra-halter', desc: 'Bi-sets com halteres e um bloco de cardio sem equipamento no fim.'}),
-  G('g-casa3', 'Em Casa Completo 3x', {goal: 'hipertrofia', local: 'casa', dias: 3, nivel: 'Iniciante', dur: 45}, {tag: ['EM', 'CASA'], art: 'goblet', desc: 'Halteres, elástico e peso do corpo combinados. Cobre todos os grupos musculares em três treinos.'}),
-  G('g-casa4', 'Em Casa Upper Lower 4x', {goal: 'hipertrofia', local: 'casa', dias: 4, nivel: 'Intermediário', dur: 45}, {tag: ['UPPER', 'LOWER'], art: 'remada-elastico', desc: 'Divisão de superiores e inferiores para treinar em casa com halteres e elástico.'}),
-  G('g-casa-glute', 'Glúteos em Casa 3x', {goal: 'hipertrofia', local: 'casa', split: 'glute3', nivel: 'Iniciante', dur: 45, foco: 'gluteos'}, {tag: ['GLÚTEOS', 'CASA'], art: 'ponte-elastico', desc: 'Elevação de quadril, abdução com elástico e agachamentos, com um dia de corpo inteiro.'}),
+  G('g-casa3', 'Em Casa Completo 3x', {goal: 'hipertrofia', local: 'casa', dias: 3, nivel: 'Iniciante', dur: 45}, {tag: ['EM', 'CASA'], art: 'agachamento-livre', desc: 'Sem nenhum equipamento: peso do corpo, uma cadeira firme, a mesa, a mochila e a toalha. Cobre todos os grupos musculares em três treinos.'}),
+  G('g-casa4', 'Em Casa Upper Lower 4x', {goal: 'hipertrofia', local: 'casa', dias: 4, nivel: 'Intermediário', dur: 45}, {tag: ['UPPER', 'LOWER'], art: 'remada-mesa', desc: 'Superiores e inferiores em casa, sem equipamento. Remada embaixo da mesa, flexões, pike e variações de agachamento e afundo.'}),
+  G('g-casa-glute', 'Glúteos em Casa 3x', {goal: 'hipertrofia', local: 'casa', split: 'glute3', nivel: 'Iniciante', dur: 45, foco: 'gluteos'}, {tag: ['GLÚTEOS', 'CASA'], art: 'elevacao-pelvica-sofa', desc: 'Sem equipamento: elevação pélvica no sofá, abduções no chão, afundos e agachamentos, com um dia de corpo inteiro.'}),
   // peso corporal
-  G('g-cal-fb3', 'Calistenia Iniciante 3x', {goal: 'hipertrofia', local: 'peso', dias: 3, nivel: 'Iniciante', dur: 45}, {tag: ['CALIS', 'TENIA'], art: 'flexao', desc: 'Flexões, agachamentos, remada invertida e core. Progrida aumentando repetições e depois variações mais difíceis.'}),
+  G('g-cal-fb3', 'Calistenia Iniciante 3x', {goal: 'hipertrofia', local: 'peso', dias: 3, nivel: 'Iniciante', dur: 45}, {tag: ['CALIS', 'TENIA'], art: 'flexao', desc: 'Peso do corpo com barra fixa: flexões, barras, agachamentos e remada invertida. Progrida aumentando repetições e depois variações mais difíceis.'}),
   G('g-cal-ul4', 'Calistenia Upper Lower 4x', {goal: 'hipertrofia', local: 'peso', dias: 4, nivel: 'Intermediário', dur: 45}, {tag: ['UPPER', 'LOWER'], art: 'barra-fixa', desc: 'Peso do corpo com barra fixa. Inclui variações como flexão arqueiro e agachamento unilateral.'}),
-  G('g-hiit-pc', 'HIIT Sem Equipamento 3x', {goal: 'condicionamento', local: 'peso', split: 'circ3', nivel: 'Iniciante', dur: 30}, {tag: ['HIIT', '30 MIN'], art: 'burpee', desc: 'Circuito de 30 minutos com força e intervalados. Pode ser feito na sala de casa.'}),
+  G('g-hiit-pc', 'HIIT Sem Equipamento 3x', {goal: 'condicionamento', local: 'casa', split: 'circ3', nivel: 'Iniciante', dur: 30}, {tag: ['HIIT', '30 MIN'], art: 'burpee', desc: 'Circuito de 30 minutos com força e intervalados. Pode ser feito na sala de casa.'}),
   // elástico
   G('g-el-fb3', 'Elástico Corpo Inteiro 3x', {goal: 'hipertrofia', local: 'elastico', dias: 3, nivel: 'Iniciante', dur: 45}, {tag: ['ELÁSTICO', 'TOTAL'], art: 'agachamento-elastico', desc: 'Treino completo com elásticos e peso do corpo. Para casa, viagem ou recuperação.'}),
   G('g-el-ul4', 'Elástico Upper Lower 4x', {goal: 'hipertrofia', local: 'elastico', dias: 4, nivel: 'Intermediário', dur: 45}, {tag: ['UPPER', 'LOWER'], art: 'puxada-elastico', desc: 'Superiores e inferiores com elástico. Use elásticos mais fortes conforme ficar fácil.'}),
   // kettlebell
-  G('g-kb-fb3', 'Kettlebell Corpo Inteiro 3x', {goal: 'hipertrofia', local: 'kettlebell', dias: 3, nivel: 'Intermediário', dur: 45}, {tag: ['KETTLE', 'BELL'], art: 'kettlebell-swing', desc: 'Swing, goblet, remada, desenvolvimento e levantamento turco. Força e condicionamento com uma ferramenta só.'}),
-  G('g-kb-hiit', 'Kettlebell Condicionamento 3x', {goal: 'condicionamento', local: 'kettlebell', split: 'circ3', nivel: 'Intermediário', dur: 30}, {tag: ['KB', 'HIIT'], art: 'kb-thruster', desc: 'Circuitos curtos e intensos com kettlebell.'}),
+  G('g-kb-fb3', 'Kettlebell Corpo Inteiro 3x', {goal: 'hipertrofia', local: 'kettlebell', dias: 3, nivel: 'Intermediário', dur: 45}, {tag: ['KETTLE', 'BELL'], art: 'kettlebell-swing', desc: 'Swing, goblet, terra, remada e desenvolvimento com kettlebell, completados com o peso do corpo. Força e condicionamento com uma ferramenta só.'}),
+  G('g-kb-hiit', 'Kettlebell Condicionamento 3x', {goal: 'condicionamento', local: 'kettlebell', split: 'circ3', nivel: 'Intermediário', dur: 30}, {tag: ['KB', 'HIIT'], art: 'kb-snatch', desc: 'Circuitos curtos e intensos com kettlebell: swing, snatch, goblet e remada.'}),
   // fita de suspensão
   G('g-trx-fb3', 'TRX Corpo Inteiro 3x', {goal: 'hipertrofia', local: 'suspensao', dias: 3, nivel: 'Iniciante', dur: 45}, {tag: ['FITA DE', 'SUSPENSÃO'], art: 'trx-remada', desc: 'Remada, supino, agachamento, flexora e braços na fita. Ajuste a dificuldade mudando a inclinação do corpo.'}),
   G('g-trx-ul4', 'TRX Upper Lower 4x', {goal: 'hipertrofia', local: 'suspensao', dias: 4, nivel: 'Intermediário', dur: 45}, {tag: ['TRX', 'UPPER LOWER'], art: 'trx-supino', desc: 'Superiores e inferiores com a fita de suspensão e o peso do corpo.'}),
   // viagem
   G('g-viagem3', 'Hotel 30 Minutos 3x', {goal: 'hipertrofia', local: 'viagem', dias: 3, nivel: 'Iniciante', dur: 30}, {tag: ['EM', 'VIAGEM'], art: 'polichinelo', desc: 'Para o quarto de hotel: peso do corpo e um elástico que cabe na mala.'}),
-  G('g-viagem-hiit', 'Viagem HIIT 2x', {goal: 'condicionamento', local: 'viagem', split: 'circ3', nivel: 'Intermediário', dur: 30}, {tag: ['HIIT', 'VIAGEM'], art: 'skater', desc: 'Dois ou três circuitos por semana para manter o condicionamento longe de casa.'}),
+  G('g-viagem-hiit', 'Viagem HIIT 3x', {goal: 'condicionamento', local: 'viagem', split: 'circ3', nivel: 'Intermediário', dur: 30}, {tag: ['HIIT', 'VIAGEM'], art: 'skater', desc: 'Três circuitos curtos por semana para manter o condicionamento longe de casa. Peso do corpo e um elástico.'}),
   // cardio
   G('g-cardio-ac', 'Musculação + Cardio 3x', {goal: 'definicao', local: 'academia', dias: 3, nivel: 'Intermediário', dur: 75}, {tag: ['CARDIO', 'FORÇA'], art: 'bike', desc: 'Corpo inteiro com bi-sets e cardio moderado de 15 a 20 minutos ao final de cada treino.', locExtra: ['cardio']}),
 ];
@@ -211,7 +229,7 @@ const HAND = [
     {nome: 'Upper Força', cor: 0, items: [Y('remada-curvada', 3, 3, 5, 180), Y('barra-fixa', 2, 6, 10, 120), Y('supino-reto-halter', 3, 3, 5, 180), Y('paralelas-peito', 2, 6, 10, 120), Y('desenv-halter', 3, 6, 10, 120), Y('rosca-w', 3, 6, 10, 90), Y('triceps-testa', 3, 6, 10, 90)]},
     {nome: 'Lower Força', cor: 1, items: [Y('agachamento', 3, 3, 5, 240), Y('hack', 2, 6, 10, 150), Y('extensora', 2, 6, 10, 90), Y('stiff-barra', 3, 5, 8, 150), Y('mesa-flexora', 2, 6, 10, 90), Y('pant-pe', 3, 6, 10, 60), Y('pant-sentado', 2, 6, 10, 60)]},
     {nome: 'Costas e Ombros', cor: 2, items: [Y('remada-curvada', 4, 8, 10, 120, 'Cerca de 85% da carga do dia de força.'), Y('puxada-aberta', 3, 8, 12, 90), Y('remada-baixa', 3, 8, 12, 90), Y('serrote', 2, 12, 15, 60), Y('puxada-neutra', 2, 15, 20, 60), Y('desenv-halter', 3, 8, 12, 90), Y('remada-alta', 2, 12, 15, 60), Y('elev-lateral-halter', 3, 12, 20, 60)]},
-    {nome: 'Pernas Hipertrofia', cor: 3, items: [Y('agachamento', 4, 8, 10, 150, 'Cerca de 85% da carga do dia de força.'), Y('hack', 3, 8, 12, 120), Y('leg-press', 2, 12, 15, 90), Y('extensora', 3, 15, 20, 60), Y('stiff-barra', 3, 8, 12, 120), Y('mesa-flexora', 2, 12, 15, 60), Y('cadeira-flexora', 2, 15, 20, 60), Y('pant-burrinho', 4, 10, 15, 60), Y('pant-sentado', 3, 15, 20, 60)]},
+    {nome: 'Pernas Hipertrofia', cor: 3, items: [Y('agachamento', 4, 8, 10, 150, 'Cerca de 85% da carga do dia de força.'), Y('hack', 3, 8, 12, 120), Y('leg-press', 2, 12, 15, 90), Y('extensora', 3, 15, 20, 60), Y('stiff-barra', 3, 8, 12, 120), Y('mesa-flexora', 2, 12, 15, 60), Y('cadeira-flexora', 2, 15, 20, 60), Y('pant-pe', 4, 10, 15, 60), Y('pant-sentado', 3, 15, 20, 60)]},
     {nome: 'Peito e Braços', cor: 4, items: [Y('supino-reto-halter', 4, 8, 10, 120, 'Cerca de 85% da carga do dia de força.'), Y('supino-incl-halter', 3, 8, 12, 90), Y('supino-reto-maquina', 3, 12, 15, 90), Y('crossover', 2, 15, 20, 60), Y('rosca-scott', 3, 8, 12, 60), Y('rosca-concentrada', 2, 12, 15, 60), Y('rosca-spider', 2, 15, 20, 60), Y('triceps-frances-pe', 3, 8, 12, 60), Y('triceps-corda', 2, 12, 15, 60), Y('triceps-coice', 2, 15, 20, 45)]}]},
   {id: 'c-gbr', nome: 'Upper Lower Clássico (GBR)', goal: ['hipertrofia'], local: ['academia'], nivel: 'Intermediário', freq: 4, dur: 60, tag: ['UPPER', 'LOWER'], art: 'agachamento-frontal',
    desc: 'Generic Bulking Routine de Lyle McDonald: 4 dias, compostos pesados de 6 a 8 reps e acessórios de 10 a 15. Ajuste séries pelo cansaço. Estrutura conforme a Legion Athletics.', workouts: [
@@ -265,7 +283,7 @@ const HAND = [
     {nome: 'D: Ombros e Abdômen', cor: 2, items: [Y('desenv-halter', 4, 8, 12, 120), Y('elev-lateral-cabo', 4, 12, 20, 60), Y('voador-inverso', 3, 12, 20, 60), Y('encolhimento-halter', 3, 10, 15, 60), Y('abd-polia', 3, 10, 15, 60), Y('elev-pernas-barra', 3, 10, 15, 60)]}]},
   {id: 'c-abcde', nome: 'ABCDE (um grupo por dia)', goal: ['hipertrofia'], local: ['academia'], nivel: 'Avançado', freq: 5, dur: 60, tag: ['ABCDE', 'SPLIT'], art: 'rosca-scott',
    desc: 'O "bro split": peito, costas, ombros, braços e pernas, um por dia. Muito volume por sessão e cada grupo 1x por semana, por isso funciona melhor para avançados.', workouts: [
-    {nome: 'A: Peito', cor: 0, items: [Y('supino-reto-barra', 4, 6, 10, 150), Y('supino-incl-halter', 4, 8, 12, 90), Y('supino-decl-maquina', 3, 8, 12, 90), Y('voador', 3, 12, 15, 60), Y('crossover', 3, 12, 15, 60)]},
+    {nome: 'A: Peito', cor: 0, items: [Y('supino-reto-barra', 4, 6, 10, 150), Y('supino-incl-halter', 4, 8, 12, 90), Y('supino-decl-barra', 3, 8, 12, 90), Y('voador', 3, 12, 15, 60), Y('crossover', 3, 12, 15, 60)]},
     {nome: 'B: Costas', cor: 3, items: [Y('barra-fixa', 4, 6, 10, 120), Y('remada-curvada', 4, 8, 10, 120), Y('puxada-neutra', 3, 10, 12, 90), Y('remada-unilateral-cabo', 3, 10, 12, 60), Y('pulldown-estendido', 3, 12, 15, 60)]},
     {nome: 'C: Ombros', cor: 2, items: [Y('desenv-barra', 4, 6, 10, 150), Y('arnold', 3, 8, 12, 90), Y('elev-lateral-halter', 4, 12, 20, 60), Y('elev-lateral-cabo', 3, 12, 20, 45), Y('face-pull', 3, 12, 20, 60), Y('encolhimento-barra', 3, 10, 15, 60)]},
     {nome: 'D: Braços', cor: 5, items: [Y('rosca-barra', 4, 8, 12, 60), Y('supino-fechado', 4, 6, 10, 90), Y('rosca-inclinada', 3, 10, 12, 60), Y('triceps-frances-cabo', 3, 10, 15, 60), Y('rosca-martelo', 3, 10, 15, 45), Y('triceps-corda', 3, 12, 15, 45), Y('rosca-punho', 2, 15, 20, 45)]},
@@ -275,9 +293,9 @@ const HAND = [
     {nome: 'Adaptação A', cor: 3, items: [Y('leg-press', 2, 12, 15, 90), Y('supino-reto-maquina', 2, 12, 15, 90), Y('puxada-aberta', 2, 12, 15, 90), Y('cadeira-flexora', 2, 12, 15, 60), Y('prancha', 2, 20, 30, 60, 'Segundos de prancha nas repetições.')]},
     {nome: 'Adaptação B', cor: 5, items: [Y('extensora', 2, 12, 15, 60), Y('remada-iso', 2, 12, 15, 90), Y('desenv-maquina', 2, 12, 15, 90), Y('elevacao-pelvica', 2, 12, 15, 90), Y('dead-bug', 2, 10, 12, 60)]}]},
   {id: 'c-abs', nome: 'Abdômen e Core', goal: ['definicao', 'saude'], local: ['academia', 'casa', 'peso'], nivel: 'Iniciante', freq: 3, dur: 15, tag: ['CORE', '15 MIN'], art: 'abd-bicicleta', comp: true,
-   desc: 'Complemento de 15 minutos para fazer no fim de 2 a 3 treinos. Combina flexão do tronco, rotação, anti-rotação e estabilidade.', workouts: [
+   desc: 'Complemento de 15 minutos para fazer no fim de 2 a 3 treinos, na academia ou em casa, sem equipamento. Combina flexão do tronco, rotação e estabilidade.', workouts: [
     {nome: 'Core A', cor: 4, items: [Y('elev-pernas', 3, 10, 15, 45), Y('abd-bicicleta', 3, 20, 30, 45), Y('prancha', 3, 30, 45, 45, 'Segundos nas repetições.'), Y('dead-bug', 2, 10, 12, 45)]},
-    {nome: 'Core B', cor: 6, items: [Y('abd-polia', 3, 10, 15, 45), Y('lenhador', 3, 10, 12, 45, 'Repetições em cada lado.'), Y('prancha-lateral', 2, 20, 40, 45, 'Segundos em cada lado.'), Y('roda', 3, 8, 12, 60)]}]},
+    {nome: 'Core B', cor: 6, items: [Y('abd-reverso', 3, 10, 15, 45), Y('abd-russo', 3, 10, 12, 45, 'Repetições em cada lado.'), Y('prancha-lateral', 2, 20, 40, 45, 'Segundos em cada lado.'), Y('canoa', 3, 10, 15, 45)]}]},
   {id: 'c-pernas-comp', nome: 'Pernas Fortes (complemento)', goal: ['hipertrofia'], local: ['academia'], nivel: 'Intermediário', freq: 1, dur: 45, tag: ['PERNAS', '+1'], art: 'hack', comp: true,
    desc: 'Um dia extra de inferiores para somar ao seu plano por 6 a 8 semanas quando as pernas estão atrás.', workouts: [
     {nome: 'Pernas extra', cor: 1, items: [Y('hack', 3, 8, 12, 150), Y('bulgaro', 3, 8, 12, 90, 'Repetições em cada perna.'), Y('mesa-flexora', 3, 10, 15, 60), Y('extensora', 2, 12, 20, 60), Y('adutora', 2, 12, 15, 60), Y('pant-sentado', 3, 12, 20, 45)]}]},
@@ -299,19 +317,19 @@ const HAND = [
   {id: 'c-avulso-bracos', nome: 'Braços Bombados', goal: ['hipertrofia'], local: ['academia', 'halteres'], nivel: 'Iniciante', freq: 1, dur: 30, tag: ['BRAÇOS', '30 MIN'], art: 'rosca-martelo', avulso: true,
    desc: 'Treino avulso de bíceps e tríceps em bi-sets.', workouts: [{nome: 'Braços', cor: 6, items: [Y('rosca-halter', 3, 8, 12, 0, 'Bi-set com o próximo.'), Y('triceps-frances-halter', 3, 10, 12, 75), Y('rosca-martelo', 3, 10, 12, 0, 'Bi-set com o próximo.'), Y('triceps-coice', 3, 12, 15, 75), Y('rosca-concentrada', 2, 12, 15, 45)]}]},
   {id: 'c-avulso-pc', nome: 'Corpo Inteiro Sem Equipamento', goal: ['condicionamento', 'saude'], local: ['peso', 'viagem', 'casa'], nivel: 'Iniciante', freq: 1, dur: 25, tag: ['ZERO', 'EQUIP.'], art: 'agachamento-livre', avulso: true,
-   desc: 'Treino avulso de 25 minutos em circuito, em qualquer lugar.', workouts: [{nome: 'Circuito', cor: 7, items: [Y('agachamento-livre', 3, 15, 20, 0, 'Circuito: em sequência, 90 s de descanso ao fim da volta.'), Y('flexao', 3, 8, 15, 0), Y('remada-invertida', 3, 8, 12, 0), Y('afundo-caminhando', 3, 10, 12, 0), Y('prancha', 3, 30, 45, 0, 'Segundos.'), Y('polichinelo', 3, 20, 30, 90)]}]},
-  {id: 'c-avulso-elastico', nome: 'Elástico 25 Minutos', goal: ['hipertrofia', 'saude'], local: ['elastico', 'viagem', 'casa'], nivel: 'Iniciante', freq: 1, dur: 25, tag: ['ELÁSTICO', '25 MIN'], art: 'puxada-elastico', avulso: true,
+   desc: 'Treino avulso de 25 minutos em circuito, em qualquer lugar.', workouts: [{nome: 'Circuito', cor: 7, items: [Y('agachamento-livre', 3, 15, 20, 0, 'Circuito: em sequência, 90 s de descanso ao fim da volta.'), Y('flexao', 3, 8, 15, 0), Y('remada-mesa', 3, 8, 12, 0, 'Embaixo de uma mesa firme. Dobre os joelhos para facilitar.'), Y('afundo-caminhando', 3, 10, 12, 0), Y('prancha', 3, 30, 45, 0, 'Segundos.'), Y('polichinelo', 3, 20, 30, 90)]}]},
+  {id: 'c-avulso-elastico', nome: 'Elástico 25 Minutos', goal: ['hipertrofia', 'saude'], local: ['elastico', 'viagem'], nivel: 'Iniciante', freq: 1, dur: 25, tag: ['ELÁSTICO', '25 MIN'], art: 'puxada-elastico', avulso: true,
    desc: 'Treino avulso de corpo inteiro com um elástico.', workouts: [{nome: 'Elástico total', cor: 3, items: [Y('agachamento-elastico', 3, 12, 20, 60), Y('supino-elastico', 3, 12, 20, 60), Y('remada-elastico', 3, 12, 20, 60), Y('desenv-elastico', 2, 12, 20, 45), Y('ponte-elastico', 3, 15, 20, 45), Y('rosca-elastico', 2, 12, 20, 45)]}]},
-  {id: 'c-avulso-kb', nome: 'Kettlebell 20 Minutos', goal: ['condicionamento'], local: ['kettlebell', 'casa', 'cardio'], nivel: 'Intermediário', freq: 1, dur: 20, tag: ['KB', '20 MIN'], art: 'kettlebell-swing', avulso: true,
+  {id: 'c-avulso-kb', nome: 'Kettlebell 20 Minutos', goal: ['condicionamento'], local: ['kettlebell', 'cardio'], nivel: 'Intermediário', freq: 1, dur: 20, tag: ['KB', '20 MIN'], art: 'kettlebell-swing', avulso: true,
    desc: 'Circuito avulso: swing, goblet, remada e desenvolvimento.', workouts: [{nome: 'KB circuito', cor: 4, items: [Y('kettlebell-swing', 4, 15, 20, 0, 'Circuito: 60 s de descanso ao fim da volta.'), Y('goblet', 4, 10, 12, 0), Y('kb-remada', 4, 10, 12, 0, 'Repetições em cada lado.'), Y('kb-desenv', 4, 8, 10, 60)]}]},
-  {id: 'c-avulso-hiit', nome: 'HIIT 20 Minutos', goal: ['condicionamento', 'definicao'], local: ['peso', 'cardio', 'viagem'], nivel: 'Intermediário', freq: 1, dur: 20, tag: ['HIIT', '20 MIN'], art: 'escalador', avulso: true,
+  {id: 'c-avulso-hiit', nome: 'HIIT 20 Minutos', goal: ['condicionamento', 'definicao'], local: ['casa', 'peso', 'cardio', 'viagem'], nivel: 'Intermediário', freq: 1, dur: 20, tag: ['HIIT', '20 MIN'], art: 'escalador', avulso: true,
    desc: 'Intervalado de alta intensidade: 40 s de trabalho e 20 s de pausa em cada exercício.', workouts: [{nome: 'HIIT', cor: 0, items: [Y('burpee', 4, 8, 12, 0, '40 s de trabalho, 20 s de pausa. Repita o bloco 4 vezes.'), Y('agachamento-salto', 4, 10, 15, 0), Y('escalador', 4, 20, 30, 0), Y('skater', 4, 16, 20, 0), Y('skipping', 4, 30, 40, 60)]}]},
 ];
 
 // ---------- monta a biblioteca final ----------
 (function buildLibrary(){
   const meta = {
-    't-hip5': {goal: ['hipertrofia'], local: ['academia'], nivel: 'Intermediário', freq: 5, dur: 75, tag: ['HIPER', '5 DIAS'], art: 'supino-reto-barra', foco: ['bracos', 'peito', 'costas'], destaque: true},
+    't-hip5': {goal: ['hipertrofia'], local: ['academia'], nivel: 'Intermediário', freq: 5, dur: 75, tag: ['HIPER', '5 DIAS'], art: 'supino-reto-barra', destaque: true},
     't-ul4': {goal: ['hipertrofia'], local: ['academia'], nivel: 'Intermediário', freq: 4, dur: 60, tag: ['UPPER', 'LOWER'], art: 'remada-curvada'},
     't-ppl': {goal: ['hipertrofia'], local: ['academia'], nivel: 'Avançado', freq: 6, dur: 75, tag: ['PUSH', 'PULL', 'LEGS'], art: 'desenv-halter'},
     't-fb3': {goal: ['hipertrofia', 'saude'], local: ['academia'], nivel: 'Iniciante', freq: 3, dur: 60, tag: ['FULL', 'BODY'], art: 'agachamento'},
@@ -320,8 +338,9 @@ const HAND = [
     't-express': {goal: ['hipertrofia', 'definicao'], local: ['academia'], nivel: 'Intermediário', freq: 3, dur: 45, tag: ['EXPRESS', '45 MIN'], art: 'goblet'},
   };
   TEMPLATES.forEach(t => Object.assign(t, {foco: [], ...meta[t.id]}));
-  const focoHand = {'c-phat': ['bracos'], 'c-arnold': ['peito', 'costas', 'bracos'], 'c-abcde': ['bracos', 'ombros'], 'c-abcd': ['ombros'], 'c-abs': ['abdomen'], 'c-pernas-comp': ['pernas'], 'c-gbr': ['pernas'],
-    'c-avulso-peito': ['peito'], 'c-avulso-costas': ['costas'], 'c-avulso-ombro': ['ombros'], 'c-avulso-pernas': ['pernas'], 'c-avulso-gluteo': ['gluteos'], 'c-avulso-bracos': ['bracos'], 'c-avulso-pc': ['abdomen']};
+  /* foco só para quem de fato prioriza um grupo (especializações, complementos e avulsos de um grupo); divisões equilibradas ficam sem foco */
+  const focoHand = {'c-abs': ['abdomen'], 'c-pernas-comp': ['pernas'],
+    'c-avulso-peito': ['peito'], 'c-avulso-costas': ['costas'], 'c-avulso-ombro': ['ombros'], 'c-avulso-pernas': ['pernas'], 'c-avulso-gluteo': ['gluteos'], 'c-avulso-bracos': ['bracos']};
   HAND.forEach(t => { t.foco = focoHand[t.id] || []; });
   HAND.forEach(t => TEMPLATES.push({dias: t.freq + 'x por semana', foco: [], ...t}));
   GEN_LIST.forEach(g => { const w = genProgram(g.gen); TEMPLATES.push({dias: g.freq + 'x por semana', workouts: w, ...g, local: [...g.local, ...(g.locExtra || [])]}); });

@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.19.0';
+const APP_VERSION = '4.20.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
 let ST = freshState();
 let SESS = [];
@@ -34,7 +34,7 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return 
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 /* Tela de entrada na primeira abertura: só com Firebase configurado, sem conta e sem nenhum dado no aparelho. */
 const shouldWelcome = () => Auth.kind === 'firebase' && !lsGet('forja.welcome') && !(Store.hasAccount && Store.hasAccount()) && !Auth.user && !SESS.length && !ST.routines.length && !ST.profile.name;
-function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); else if (shouldWelcome()) UI.stack = [{type: 'auth', first: true}]; render(); }
+function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; sessResume(30000); const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); else if (shouldWelcome()) UI.stack = [{type: 'auth', first: true}]; render(); }
 function isTyping(){ const a = document.activeElement; return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT'); }
 function canRerender(){ return !isTyping() && !KP.open && $('#sheet').hidden && !DRAG; }
 
@@ -115,7 +115,8 @@ function regionLevels(sessions){
 }
 
 // ================= peças visuais =================
-/* Ilustrações: Open Exercise Illustrations (CC0). Cada arquivo é um sprite [início | fim].
+/* Ilustrações: Open Exercise Illustrations (CC0). Cada arquivo é um sprite [início | fim], ou de 5 quadros
+   [início | 1/4 | meio | 3/4 | fim] quando há quadros intermediários (FIGN, gerado por tools/frames.py).
    window.FORJA_FIG (versão arquivo único) traz os arquivos embutidos. */
 const figSrc = f => (window.FORJA_FIG && window.FORJA_FIG[f]) || `fig/${f}.webp`;
 function thumb(ex, cls = ''){
@@ -123,7 +124,7 @@ function thumb(ex, cls = ''){
   if (media) return `<span class="demo own ${cls}" aria-hidden="true"><img src="/_blob/${esc(media)}" alt="" loading="lazy"></span>`;
   const c = CAT[ex];
   if (c && c.ph && ST.prefs.pics === 'foto' && !window.FORJA_FIG && !window.FORJA_NOPHOTO){ const src = `img/${ex}.jpg`; return `<span class="demo ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
-  if (c && c.f){ const src = figSrc(c.f); return `<span class="demo rx ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
+  if (c && c.f){ const src = figSrc(c.f); const nf = typeof FIGN !== 'undefined' && FIGN[c.f] ? ` n${FIGN[c.f]}` : ''; return `<span class="demo rx${nf} ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
   return `<span class="demo custom ${cls}" aria-hidden="true">${esc((getEx(ex).n || '?').slice(0, 2).toUpperCase())}</span>`;
 }
 function muscleBlock(pri, sec, list = true){
@@ -181,7 +182,7 @@ function render(){
     body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'progresso' ? vProgress() : UI.tab === 'corpo' ? vBody() : vHome();
   } else if (inSess){
     const s = curSess(); const live = s && s.status === 'open';
-    head = live ? `<button class="hbtn" data-act="minimize" aria-label="Minimizar treino">${I.down}</button><span class="ttl"><span class="clockpill" id="clock">${fmtClock((Date.now() - new Date(s.startedAt)) / 1000)}</span></span>${R.tick ? '<span class="restmini num" id="restmini"></span>' : ''}<button class="btn primary sm" data-act="finish">Finalizar</button>`
+    head = live ? `<button class="hbtn" data-act="minimize" aria-label="Minimizar treino">${I.down}</button><span class="ttl"><span class="clockpill" id="clock">${fmtClock(sessElapsed(s) / 1000)}</span></span>${R.tick ? '<span class="restmini num" id="restmini"></span>' : ''}<button class="btn primary sm" data-act="finish">Finalizar</button>`
       : `<button class="hbtn" data-act="back" aria-label="Voltar">${I.back}</button><span class="ttl">${s && s.status === 'draft' ? 'Registrar treino' : 'Editar treino'}</span><button class="btn primary sm" data-act="${s && s.status === 'draft' ? 'save-draft' : 'back'}">${s && s.status === 'draft' ? 'Salvar' : 'Concluir'}</button>`;
     body = vSession();
   } else {
@@ -250,6 +251,20 @@ function focusLine(w){
   return top.map(([m]) => (MUSC[m] || m).toLowerCase()).join(' e ');
 }
 function relDay(iso){ const n = Math.round((new Date(today() + 'T12:00') - new Date(iso + 'T12:00')) / 864e5); return n <= 0 ? 'hoje' : n === 1 ? 'ontem' : n < 7 ? `há ${n} dias` : fmtD(iso); }
+/* Tempo de treino: do início até agora, sem os períodos em que o app ficou fechado */
+const sessElapsed = (s, now = Date.now()) => s.startedAt ? Math.max(0, now - new Date(s.startedAt) - (s.pausedMs || 0)) : 0;
+/* Pausa automática. Enquanto há treino aberto, o app deixa um "batimento" neste aparelho.
+   Ao reabrir (app recarregado), o intervalo desde o último batimento vira pausa: o tempo continua de onde parou.
+   Se a tela só ficou bloqueada ou em segundo plano, o descanso conta normalmente; acima de 10 minutos, vira pausa. */
+const BEAT_K = 'forja.beat';
+function sessBeat(){ const s = openSession(); try { if (s) localStorage.setItem(BEAT_K, JSON.stringify({id: s.id, t: Date.now()})); else localStorage.removeItem(BEAT_K); } catch (e) {} }
+function sessResume(minGap){
+  const s = openSession(); if (!s){ sessBeat(); return; } let b = null; try { b = JSON.parse(localStorage.getItem(BEAT_K) || 'null'); } catch (e) {}
+  if (b && b.id === s.id && b.t){ const gap = Date.now() - b.t;
+    if (gap > minGap){ s.pausedMs = (s.pausedMs || 0) + gap; saveSession(s); const m = Math.round(gap / 60000);
+      setTimeout(() => toast(`Treino pausado enquanto o app ficou fechado${m >= 1 ? ` (${m} min)` : ''}. O tempo continua de onde parou.`), 400); } }
+  sessBeat();
+}
 const sessMins = s => s.dur != null ? s.dur : s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : null;
 /* nome em destaque: o tamanho acompanha a palavra mais longa para nunca estourar o cartão */
 function heroName(name, tag = 'h2', key = ''){
@@ -288,7 +303,7 @@ function vHome(){
   const afterTxt = a => a && a.w ? (a.d ? `Próximo: ${a.k <= 2 ? whenLabel(a.k) : DIAS[a.d.getDay()]}, ${esc(a.w.nome)}` : `Próximo da sequência: ${esc(a.w.nome)}`) : '';
   if (open){
     const st = stats(open); const total = open.items.reduce((a, e) => a + e.sets.length, 0); const exDone = open.items.filter(e => e.sets.length && e.sets.every(x => x.ok)).length;
-    h += `<section class="hero home-hero" style="${pcs(open.cor)}">${glow()}<div class="hero-top"><span class="hero-lbl live">Em andamento</span><span class="hero-rt mono">${fmtClock((Date.now() - new Date(open.startedAt)) / 1000)}</span></div>
+    h += `<section class="hero home-hero" style="${pcs(open.cor)}">${glow()}<div class="hero-top"><span class="hero-lbl live">Em andamento</span><span class="hero-rt mono">${fmtClock(sessElapsed(open) / 1000)}</span></div>
       ${heroTitle(open.wname, wkType(open.items, open.wname), {key: 'home', words: badgeWords(wkType(open.items, open.wname), open.items), week: {done: weekSess.length, total: Math.max(goal, weekSess.length + 1), today: true}})}
       <div class="hero-stats"><div><b>${pad2(st.sets)}<small class="muted">/${pad2(total)}</small></b><span>séries feitas</span></div><div><b>${pad2(exDone)}<small class="muted">/${pad2(open.items.length)}</small></b><span>exercícios</span></div><div><b>${st.vol >= 10000 ? fmtN(Math.round(st.vol / 100) / 10) : fmtInt(st.vol)}<small class="muted">${st.vol >= 10000 ? 't' : 'kg'}</small></b><span>volume</span></div></div>
       <div class="hero-act"><button class="btn primary" data-act="open-session">${I.play}Continuar treino</button></div></section>`;
@@ -428,7 +443,7 @@ function restCard(r, w){
 
 
 // ================= Biblioteca =================
-function libList(){ const q = norm(UI.libQ.trim()); return [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => { const e = getEx(k); return (!UI.libM || e.m === UI.libM) && (!UI.libE || e.e === UI.libE) && (!q || norm(e.n).includes(q) || norm(MUSC[e.m] || '').includes(q)); }); }
+function libList(){ const q = norm(UI.libQ.trim()); return [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => { const e = getEx(k); if (e.hid) return false; return (!UI.libM || e.m === UI.libM) && (!UI.libE || e.e === UI.libE) && (!q || norm(e.n).includes(q) || norm(MUSC[e.m] || '').includes(q)); }); }
 function vLibrary(embed){
   return `${embed ? '' : `<section class="row between" style="margin-top:20px"><h1 class="display h1">Exercícios</h1><button class="icon" data-act="new-ex" aria-label="Criar exercício" title="Criar exercício">${I.plus}</button></section>`}
   <section class="stack" style="gap:12px${embed ? ';margin-top:14px' : ''}"><div class="search">${svg('M11 17.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.2-4.2')}<input id="lib-q" class="field" type="search" placeholder="Buscar por nome ou músculo" value="${esc(UI.libQ)}" data-act="libq" autocomplete="off"></div>
@@ -464,7 +479,7 @@ function vExercise(p){
   } else {
     h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos trabalhados</div>${muscleBlock(e.pri, e.sec)}</section>
     ${e.d && e.d.length ? `<section class="card"><div class="sec-head" style="margin-bottom:12px"><span class="eyebrow">Pontos-chave</span><button class="link" data-act="extab" data-t="inst">Instrução completa</button></div><ol class="cues">${e.d.map(c => `<li>${esc(c)}</li>`).join('')}</ol></section>` : ''}`;
-    const sim = Object.keys(CAT).filter(k => k !== p.ex && CAT[k].p === e.p).slice(0, 6);
+    const sim = Object.keys(CAT).filter(k => k !== p.ex && CAT[k].p === e.p && !CAT[k].hid).slice(0, 6);
     if (sim.length) h += `<section><div class="sec-head"><span class="eyebrow">Variações do mesmo movimento</span></div><div class="list">${sim.map(k => `<button class="li" data-act="open-ex" data-ex="${k}">${thumb(k)}<div class="grow"><b>${esc(CAT[k].n)}</b><span class="sub">${EQUIP[CAT[k].e]}</span></div>${I.chev}</button>`).join('')}</div></section>`;
   }
   h += `<section class="row wrap"><button class="btn primary grow" data-act="add-to-workout" data-ex="${p.ex}">${I.plus}Adicionar a um treino</button>${ST.custom[p.ex] ? `<button class="btn danger" data-act="ask-del-custom" data-ex="${p.ex}">Excluir</button>` : ''}</section>`;
@@ -648,7 +663,7 @@ function barbellCard(n, fresh){
     <div class="bb-cap"><span><b>${n} ${n === 1 ? 'série' : 'séries'}</b> na barra${n > 16 ? ' (ela mostra até 16)' : ''}</span><span>uma anilha por série</span></div></section>`;
 }
 function finishSession(s){
-  s.status = 'done'; s.finishedAt = new Date().toISOString(); s.dur = Math.max(1, Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000));
+  s.status = 'done'; s.dur = Math.max(1, Math.round(sessElapsed(s) / 60000)); s.finishedAt = new Date().toISOString(); delete s.pausedAt;
   saveSession(s); stopRest(); closeKP(); closeSheet(); Platform.keepAwake(false);
   UI.stack = [{type: 'past', sid: s.id, fresh: true}]; render(); window.scrollTo({top: 0}); Platform.haptic('success');
 }
@@ -732,7 +747,9 @@ function drawRest(){
   el.hidden = false; el.className = 'rest' + (over ? ' over' : '');
   el.innerHTML = `<div class="rring">${ring(over ? R.total : R.total - Math.max(0, left), R.total, 52, 6, over ? 'var(--good)' : 'var(--ember)')}</div><div class="grow"><div class="clock num">${over ? '+' + fmtClock(-left) : fmtClock(left)}</div><div class="lbl">${over ? 'Descanso concluído · próxima série' : esc(R.label || 'Descanso')}</div></div><button data-act="rest-sub" aria-label="Menos 15 segundos">−15</button><button data-act="rest-add" aria-label="Mais 15 segundos">+15</button><button data-act="rest-stop">${over ? 'Ok' : 'Pular'}</button>`;
 }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && openSession() && ST.prefs.awake) Platform.keepAwake(true); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ if (booted){ sessResume(10 * 60000); render(); } if (openSession() && ST.prefs.awake) Platform.keepAwake(true); } else sessBeat(); });
+window.addEventListener('pagehide', () => sessBeat());
+setInterval(() => { if (booted && document.visibilityState === 'visible') sessBeat(); }, 10000);
 
 // ================= Progresso =================
 function vProgress(){
@@ -881,7 +898,7 @@ function openPicker(mode){ UI.sheet = {...mode, q: '', m: '', sel: []}; drawPick
 function pickerBody(){
   const sh = UI.sheet; const q = norm(sh.q.trim());
   const opt = k => { const e = getEx(k); const on = sh.sel.includes(k); return `<button class="opt" data-act="pick" data-ex="${k}" ${sh.multi ? `aria-pressed="${on}"` : ''}>${thumb(k)}<span class="grow"><b>${esc(e.n)}</b><span class="s">${MUSC[e.m] || ''} · ${EQUIP[e.e] || ''}</span></span>${sh.multi ? `<span class="tick">${I.check}</span>` : ''}</button>`; };
-  const all = [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => k !== sh.cur);
+  const all = [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => k !== sh.cur && !getEx(k).hid);
   if (q || sh.m){ const hits = all.filter(k => { const e = getEx(k); return (!sh.m || e.m === sh.m) && (!q || norm(e.n).includes(q)); }); return hits.length ? `<div class="stack" style="gap:8px">${hits.map(opt).join('')}</div>` : '<p class="muted">Nada encontrado.</p>'; }
   if (sh.cur){ const c = getEx(sh.cur); const same = all.filter(k => getEx(k).p === c.p && c.p !== 'custom'); const musc = all.filter(k => getEx(k).m === c.m && !same.includes(k));
     return `<div class="eyebrow" style="margin:6px 0 10px">Mesmo movimento</div><div class="stack" style="gap:8px">${same.map(opt).join('') || '<p class="small muted">Sem outra opção do mesmo movimento.</p>'}</div><div class="eyebrow" style="margin:18px 0 10px">Mesmo músculo, outro ângulo</div><div class="stack" style="gap:8px">${musc.map(opt).join('') || '<p class="small muted">Sem outras opções.</p>'}</div>`; }
@@ -1367,7 +1384,7 @@ document.addEventListener('keydown', ev => {
   const k = /^[0-9]$/.test(ev.key) ? ev.key : map[ev.key]; if (!k) return; ev.preventDefault(); kpKey(k);
 });
 window.addEventListener('hashchange', () => { const t = tabFromHash(location.hash.slice(1)); if (t) goTab(t); });
-setInterval(() => { const s = curSess(); const c = $('#clock'); if (c && s) c.textContent = fmtClock((Date.now() - new Date(s.startedAt)) / 1000); }, 1000);
+setInterval(() => { const s = curSess(); const c = $('#clock'); if (c && s) c.textContent = fmtClock(sessElapsed(s) / 1000); }, 1000);
 { const t = tabFromHash(location.hash.slice(1)); if (t) UI.tab = t; }
 A['w-rest'] = el => { const w = findWorkout(el.dataset.rid, el.dataset.wid); if (!w) return; const v = +el.dataset.v; const before = w.items.map(x => x.rest);
   w.items.forEach(x => { x.rest = v; }); saveState(); render(); Platform.haptic('light');
