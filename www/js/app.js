@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.21.0';
+const APP_VERSION = '4.22.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1};
 let ST = freshState();
 let SESS = [];
@@ -124,8 +124,20 @@ const figSrc = f => (window.FORJA_FIG && window.FORJA_FIG[f]) || `fig/${f}.webp`
 const ANIM_SET = (() => { const A = typeof ANIM !== 'undefined' ? ANIM : {}; const o = {}; for (const g of ['m', 'f']){ o[g] = new Map(); (A[g] || []).forEach((k, i) => o[g].set(k, i)); } o.cols = A.cols || 16; return o; })();
 /* figura disponível? No artefato só vão as figuras que ainda fazem falta (limite de arquivos): FORJA_FIGS lista quais. */
 const figOk = c => !!(c && c.f && (!window.FORJA_FIGS || window.FORJA_FIGS.includes(c.f)));
+/* Animações disponíveis neste endereço? O site público (Vercel, publicado do GitHub) não leva os vídeos, que têm licença
+   comprada: lá o app volta às ilustrações. Guarda a última resposta para não piscar na próxima abertura. */
+let animAvail = (() => { try { return localStorage.getItem('forja-anim') !== '0'; } catch (e) { return true; } })();
+function probeAnim(){
+  const g = ANIM_SET.m.size ? 'm' : ANIM_SET.f.size ? 'f' : null;
+  if (window.FORJA_FIG || !g || typeof fetch !== 'function') return Promise.resolve(animAvail);
+  return fetch(`anim/${g}/thumbs.webp`, {method: 'HEAD', cache: 'no-store'}).then(r => {
+    const ok = r.ok && /image/.test(r.headers.get('content-type') || 'image');
+    if (ok !== animAvail){ animAvail = ok; try { localStorage.setItem('forja-anim', ok ? '1' : '0'); } catch (e) {} if (canRerender()) render(); }
+    return ok;
+  }).catch(() => animAvail);   /* sem internet: mantém o que já sabia */
+}
 function animOf(ex, force){
-  if (window.FORJA_FIG || (ST.prefs.pics !== 'anim' && !force)) return null;
+  if (window.FORJA_FIG || !animAvail || (ST.prefs.pics !== 'anim' && !force)) return null;
   const fem = ST.profile && (ST.profile.sex === 'Feminino' || ST.profile.sex === 'F');
   const g = (fem ? ['f', 'm'] : ['m', 'f']).find(g => ANIM_SET[g].has(ex));
   return g ? {src: `anim/${g}/${ex}`, g, i: ANIM_SET[g].get(ex)} : null;
@@ -149,7 +161,7 @@ function thumb(ex, cls = ''){
 /* Opções de imagem que este exercício tem, e qual está aparecendo */
 function picOpts(ex){
   const o = []; const c = CAT[ex]; if (!c || window.FORJA_FIG) return o;
-  if (ANIM_SET.m.has(ex) || ANIM_SET.f.has(ex)) o.push(['anim', 'Animação']);
+  if (animAvail && (ANIM_SET.m.has(ex) || ANIM_SET.f.has(ex))) o.push(['anim', 'Animação']);
   if (figOk(c)) o.push(['fig', 'Ilustração']);
   if (c.ph && !window.FORJA_NOPHOTO) o.push(['foto', 'Foto real']);
   return o;
@@ -1067,7 +1079,7 @@ const PREF_OPTS = {
   inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
   bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
   theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
-  pics: {t: 'Imagens dos exercícios', o: () => ['anim', 'fig'].concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => ({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D'},
+  pics: {t: 'Imagens dos exercícios', o: () => (animAvail ? ['anim', 'fig'] : ['fig']).concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => (v === 'anim' && !animAvail ? 'Ilustração' : ({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D')},
 };
 function vSettings(){
   const P = ST.prefs;

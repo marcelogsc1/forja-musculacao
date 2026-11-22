@@ -1400,3 +1400,14 @@ button.wt-goal b{color:var(--good)}
 .demo.an video{object-fit:cover;background:transparent}
 .demo.an .at{background-repeat:no-repeat}
 .demo.an.wide{aspect-ratio:1/1;max-height:min(92vw,440px);margin-inline:auto;border-radius:24px}
+
+/* puxar para atualizar */
+html,body{overscroll-behavior-y:contain}
+.ptr{position:fixed;left:50%;top:env(safe-area-inset-top,0px);z-index:80;width:40px;height:40px;margin-left:-20px;border-radius:50%;display:grid;place-items:center;background:var(--s2);color:var(--ink2);border:1px solid var(--line2);box-shadow:0 6px 18px rgba(0,0,0,.28);transform:translateY(-56px);opacity:0;pointer-events:none;will-change:transform}
+.ptr svg{width:20px;height:20px}
+.ptr.ready{color:var(--ember);border-color:var(--ember)}
+.ptr.busy{color:var(--ember)}
+.ptr.busy svg{animation:ptrspin .8s linear infinite}
+.ptr.back{transition:transform .25s ease,opacity .25s ease}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.ptr.busy svg{animation-duration:2s}}
