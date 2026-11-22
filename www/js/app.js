@@ -1,6 +1,6 @@
 // ================= estado =================
-const APP_VERSION = '4.25.0';
-const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1};
+const APP_VERSION = '4.26.0';
+const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura'};
 let ST = freshState();
 let SESS = [];
 const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '', progTab: 'geral', progEx: null, progMetric: 'kg', calMonth: null, calSel: today(), bwMetric: 'kg', exTab: 'sobre', expand: {}, rtab: 'minhas', xf: {}, tplOpt: {}, bld: null };
@@ -16,7 +16,16 @@ const routineById = id => ST.routines.find(r => r.id === id);
 const activeRoutine = () => routineById(ST.active) || ST.routines[0];
 function findWorkout(rid, wid){ const r = routineById(rid); return r && r.workouts.find(w => w.id === wid); }
 function isDark(){ const t = ST.prefs?.theme || 'system'; return t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); }
-function applyTheme(){ const t = ST.prefs?.theme || 'system'; const root = document.documentElement; if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t); Platform.themeColor(isDark()); }
+function applyTheme(){ const t = ST.prefs?.theme || 'system'; const root = document.documentElement; if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t); Platform.themeColor(isDark()); applyLbg(); }
+/* v4.26: fundo do tema claro (Aparência). A cor do treino do dia entra como --day: do treino aberto ou do sugerido para hoje. */
+const LBG = ['aura', 'tinta', 'nitido', 'faixa'];
+function applyLbg(){
+  const root = document.documentElement; const v = LBG.includes(ST.prefs?.lightbg) ? ST.prefs.lightbg : 'aura';
+  if (isDark()) root.removeAttribute('data-lbg'); else root.setAttribute('data-lbg', v);
+  if (!document.getElementById('lbg') && document.body){ const d = document.createElement('div'); d.id = 'lbg'; d.setAttribute('aria-hidden', 'true'); document.body.prepend(d); }
+  let cor = null; try { const p = curPage(); const sx = p && p.type === 'session' ? curSess() : openSession(); if (sx && sx.cor != null) cor = sx.cor; else { const r = activeRoutine(); const w = r && suggested(r); if (w) cor = w.cor; } } catch (e) {}
+  const val = cor != null ? `var(--c${cor})` : 'var(--ember)'; if (root.style.getPropertyValue('--day') !== val) root.style.setProperty('--day', val);
+}
 try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if ((ST.prefs?.theme || 'system') === 'system') applyTheme(); }); } catch (e) {}
 function normSession(s){
   if (s.routine === undefined) s.routine = 'r-hip5';
@@ -246,6 +255,7 @@ function render(){
     head = `<button class="hbtn" data-act="back" aria-label="Voltar">${I.back}</button><span class="ttl">${esc((PAGES[p.type] ? PAGES[p.type].title(p) : (titles[p.type] || (() => ''))()) || '')}</span>${sync}<span style="width:12px"></span>`;
     body = PAGES[p.type] ? PAGES[p.type].view(p) : p.type === 'routine' ? vRoutine(p) : p.type === 'template' ? vTemplate(p) : p.type === 'workout' ? vWorkout(p) : p.type === 'exercise' ? vExercise(p) : p.type === 'past' ? vPast(p) : p.type === 'profile' ? vProfile() : '';
   }
+  applyLbg();
   morph($('#top'), head);
   morph($('#view'), body || `<div class="empty" style="margin-top:24px"><b>Este item não existe mais.</b></div>`);
   fitNames();
@@ -1082,6 +1092,7 @@ const PREF_OPTS = {
   rest: {t: 'Descanso padrão', o: [60, 90, 120, 180], f: v => fmtRest(v), s: 'Para exercícios novos e treino livre'},
   inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
   bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
+  lightbg: {t: 'Fundo do tema claro', o: LBG, f: v => ({aura: 'Gradiente do dia', tinta: 'Tinta do dia', nitido: 'Branco nítido', faixa: 'Faixa de energia'})[v] || 'Gradiente do dia', s: 'Usa a cor do treino do dia'},
   theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
   pics: {t: 'Imagens dos exercícios', o: () => ['anim'].concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => (({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D')},
 };
@@ -1092,7 +1103,7 @@ function vSettings(){
   const act = (a, ic, t, sub = '', cls = '', extra = '') => `<button class="s-row ${cls}" data-act="${a}" ${extra}><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span>${cls ? '' : I.chev}</button>`;
   const picsOk = !window.FORJA_FIG;
   return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}</div></section>
-  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}
+  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}${row('lightbg', SI.img)}
     <button class="s-row" data-act="motion-open"><span class="s-ic">${SI.spark}</span><span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${motionPreview(motionMode())}${I.chev}</button>
     ${picsOk ? row('pics', SI.img) : ''}</div></section>
   <section class="s-group"><div class="eyebrow">Objetivo e corpo</div><div class="list">${act('plan-open', I.flame, 'Assistente de objetivo', ST.prefs.plan ? 'Calorias, proteína e ritmo do seu plano' : 'Calcule calorias e proteína para o seu objetivo')}${act('go-body', I.note, 'Peso e medidas', 'Registros do corpo e gráficos')}</div></section>
