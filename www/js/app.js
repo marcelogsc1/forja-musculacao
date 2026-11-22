@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.22.0';
+const APP_VERSION = '4.23.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1};
 let ST = freshState();
 let SESS = [];
@@ -512,8 +512,7 @@ function vExercise(p){
     ${Store.adapter?.assets ? `<div class="row wrap" style="margin-top:10px"><label class="btn sm" for="media-in" style="cursor:pointer">${ST.media[p.ex] ? 'Trocar minha imagem' : 'Usar minha imagem ou GIF'}</label><input id="media-in" type="file" accept="image/*" hidden data-act="media" data-ex="${p.ex}">${ST.media[p.ex] ? `<button class="link muted" data-act="media-del" data-ex="${p.ex}">Voltar à foto padrão</button>` : ''}</div>` : ''}</section>
   <section class="seg" role="tablist">${[['sobre', 'Sobre'], ['hist', 'Histórico'], ['inst', 'Instrução']].map(([k, l]) => `<button role="tab" data-act="extab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>`;
   if (t === 'hist'){
-    h += hist.length ? `<section class="stats"><div class="stat"><b class="num">${fmtN(Math.max(...hist.map(x => x.kg)))}</b><span>kg máximo</span></div><div class="stat ember"><b class="num">${fmtN(Math.round(Math.max(...hist.map(x => x.rm)) * 10) / 10)}</b><span>1RM estimado</span></div><div class="stat"><b class="num">${hist.length}</b><span>treinos</span></div></section>
-      <section class="card">${chartBlock(hist, UI.progMetric)}</section><section class="card"><div class="eyebrow" style="margin-bottom:10px">Registros</div><div class="tablewrap"><table class="hist"><thead><tr><th>Data</th><th>Séries (kg × reps)</th><th>Máx.</th></tr></thead><tbody>${hist.slice().reverse().map(x => `<tr><td>${fmtD(x.date)}</td><td>${x.sets.map(y => `${fmtN(y.kg)}×${y.reps}`).join(' · ')}</td><td>${fmtN(x.kg)}</td></tr>`).join('')}</tbody></table></div></section>` : '<section class="empty"><b>Sem registros ainda</b>Faça este exercício num treino para ver o histórico.</section>';
+    h += progExBody(p.ex);
   } else if (t === 'inst'){
     h += instBlock(p.ex, e);
   } else {
@@ -792,31 +791,18 @@ window.addEventListener('pagehide', () => sessBeat());
 setInterval(() => { if (booted && document.visibilityState === 'visible') sessBeat(); }, 10000);
 
 // ================= Progresso =================
-function vProgress(){
-  const t = UI.progTab === 'ex' ? 'ex' : 'geral';
-  return `<section style="margin-top:20px"><h1 class="display h1">Progresso</h1></section><section class="seg" role="tablist">${[['geral', 'Visão geral'], ['ex', 'Cargas']].map(([k, l]) => `<button role="tab" data-act="progtab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>${t === 'ex' ? progEx() : progGeneral()}`;
-}
-function progGeneral(){
+function progCalendar(){
   const now = new Date(); if (!UI.calMonth) UI.calMonth = [now.getFullYear(), now.getMonth()];
   const [y, m] = UI.calMonth; const D = done(); const byDate = {}; D.forEach(s => (byDate[s.date] = byDate[s.date] || []).push(s));
   const first = new Date(y, m, 1); const lead = first.getDay(); const dim = new Date(y, m + 1, 0).getDate();
   let cells = ''; for (let k = 0; k < lead; k++) cells += '<button class="out" tabindex="-1" aria-hidden="true"></button>';
   for (let d = 1; d <= dim; d++){ const ds = `${y}-${pad(m + 1)}-${pad(d)}`; const l = byDate[ds] || []; cells += `<button class="${l.length ? 'has' : ''} ${ds === today() ? 'today' : ''} ${ds === UI.calSel ? 'sel' : ''}" style="--pc:${l.length ? col(l[0].cor) : 'transparent'};--pci:${l.length ? colInk(l[0].cor) : 'inherit'}" data-act="calsel" data-date="${ds}" aria-label="${d} de ${MESL[m]}${l.length ? ', ' + l.map(s => s.wname).join(' e ') : ''}"><span>${d}</span><span class="dots">${l.slice(0, 3).map(s => `<i style="${pcs(s.cor)}"></i>`).join('')}</span></button>`; }
   const sel = byDate[UI.calSel] || []; const [, sm, sd] = UI.calSel.split('-'); const future = UI.calSel > today(); const r = activeRoutine();
-  const mon = mondayOf(now); const weeks = [...Array(8)].map((_, i) => { const a = addDays(mon, -7 * (7 - i)); const n = D.filter(s => s.date >= isoDate(a) && s.date <= isoDate(addDays(a, 6))).length; return {a, n}; });
-  const maxN = Math.max(5, ...weeks.map(w => w.n));
-  const tgt = {}; if (r) r.workouts.forEach(w => w.items.forEach(x => { const g = getEx(x.ex).m; tgt[g] = (tgt[g] || 0) + x.sets; }));
-  const weekS = D.filter(s => s.date >= isoDate(mon)); const got = {}; weekS.forEach(s => (s.items || []).forEach(e => { const g = getEx(e.ex).m; const n = workSets(e).length; if (n) got[g] = (got[g] || 0) + n; }));
-  const rows = Object.keys(MUSC).filter(g => tgt[g] || got[g]);
-  return `<section class="card"><div class="row between"><button class="icon sm" data-act="calnav" data-d="-1" aria-label="Mês anterior">${I.back}</button><h2 class="display h3">${MESL[m]} ${y}</h2><button class="icon sm" data-act="calnav" data-d="1" aria-label="Próximo mês">${svg('M9 5l7 7-7 7')}</button></div>
+  return `<section class="card pg-card"><div class="eyebrow" style="margin-bottom:10px">Calendário</div><div class="row between"><button class="icon sm" data-act="calnav" data-d="-1" aria-label="Mês anterior">${I.back}</button><h2 class="display h3">${MESL[m]} ${y}</h2><button class="icon sm" data-act="calnav" data-d="1" aria-label="Próximo mês">${svg('M9 5l7 7-7 7')}</button></div>
     <div class="cal">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(w => `<span class="wd">${w}</span>`).join('')}${cells}</div>
     <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px"><div class="eyebrow">${+sd} de ${MESL[+sm - 1].toLowerCase()}</div>
     ${sel.length ? `<div style="margin:8px -14px 0">${sel.map(s => { const st = stats(s); return `<button class="li noimg" data-act="open-past" data-sid="${s.id}"><span class="plate" style="${pcs(s.cor)}">${esc((s.wname || '?').slice(0, 1))}</span><div class="grow"><b>${esc(s.wname)}</b><span class="sub num">${s.quick ? 'marcado sem séries' : `${st.sets} séries · ${fmtVol(st.vol)}`}</span></div>${I.chev}</button>`; }).join('')}</div>` : `<p class="small muted" style="margin:8px 0 0">${future ? 'Esse dia ainda não chegou.' : 'Nenhum treino neste dia.'}</p>`}
-    ${!future ? `<div style="margin-top:14px" class="stack"><button class="btn ${sel.length ? 'ghost' : 'primary'} block" data-act="retro-sheet" data-date="${UI.calSel}">${I.plus}Registrar treino ${UI.calSel === today() ? 'de hoje' : 'neste dia'}</button>${r ? `<div><div class="tiny muted" style="margin-bottom:8px">Ou só marcar como feito, sem séries:</div><div class="row wrap" style="gap:6px">${r.workouts.map(w => `<button class="chip" data-act="quick" data-rid="${r.id}" data-wid="${w.id}"><span class="plate sm" style="${pcs(w.cor)}"></span>${esc(w.nome)}</button>`).join('')}</div></div>` : ''}</div>` : ''}</div></section>
-  <section class="card"><div class="eyebrow" style="margin-bottom:12px">Treinos por semana</div>
-    <svg class="chart" viewBox="0 0 360 150" role="img" aria-label="Treinos por semana nas últimas 8 semanas">${weeks.map((w, i) => { const x = 8 + i * 44; const hh = w.n / maxN * 92; return `<rect x="${x}" y="${116 - hh}" width="34" height="${Math.max(hh, 3)}" rx="8" fill="${i === 7 ? 'var(--ember)' : 'var(--s3)'}"><title>${w.n} treinos</title></rect><text x="${x + 17}" y="${109 - hh}" text-anchor="middle" font-size="12" font-weight="800" fill="var(--ink)">${w.n || ''}</text><text x="${x + 17}" y="136" text-anchor="middle" font-size="10" fill="var(--muted)">${i === 7 ? 'atual' : fmtD(isoDate(w.a))}</text>`; }).join('')}</svg></section>
-  ${r ? `<section class="card"><div class="eyebrow">Séries por músculo nesta semana</div><p class="tiny muted" style="margin:4px 0 14px">Feitas / previstas no ciclo de ${esc(r.nome)}</p><div class="stack" style="gap:10px">${rows.map(g => `<div class="mbar"><span>${MUSC[g]}</span><span class="track"><i class="${tgt[g] && (got[g] || 0) >= tgt[g] ? 'full' : ''}" style="width:${tgt[g] ? Math.min(100, (got[g] || 0) / tgt[g] * 100) : 100}%"></i></span><span class="num">${got[g] || 0}/${tgt[g] || 0}</span></div>`).join('')}</div></section>` : ''}
-  <section class="card"><div class="eyebrow" style="margin-bottom:10px">Mapa de 30 dias</div>${heatBlock(regionLevels(D.filter(s => s.date >= isoDate(addDays(now, -30)))))}</section>`;
+    ${!future ? `<div style="margin-top:14px" class="stack"><button class="btn ${sel.length ? 'ghost' : 'primary'} block" data-act="retro-sheet" data-date="${UI.calSel}">${I.plus}Registrar treino ${UI.calSel === today() ? 'de hoje' : 'neste dia'}</button>${r ? `<div><div class="tiny muted" style="margin-bottom:8px">Ou só marcar como feito, sem séries:</div><div class="row wrap" style="gap:6px">${r.workouts.map(w => `<button class="chip" data-act="quick" data-rid="${r.id}" data-wid="${w.id}"><span class="plate sm" style="${pcs(w.cor)}"></span>${esc(w.nome)}</button>`).join('')}</div></div>` : ''}</div>` : ''}</div></section>`;
 }
 function lineChart(pts, unit, o = {}){
   const W = 360, H = 210, L = 38, Rr = 12, T = 24, B = 28; const goal = o.goal > 0 ? o.goal : null;
@@ -1374,6 +1360,7 @@ document.addEventListener('input', ev => {
   const t = ev.target; const act = t.dataset && t.dataset.act;
   if (act === 'pickq'){ UI.sheet.q = t.value; $('#pick-body').innerHTML = pickerBody(); return; }
   if (act === 'libq'){ UI.libQ = t.value; $('#lib-list').innerHTML = libRows(libList()); }
+  if (act === 'progq'){ UI.progQ = t.value; const el = $('#prog-list'); if (el) el.innerHTML = progExRows(); }
 });
 document.addEventListener('change', async ev => {
   const t = ev.target; const act = t.dataset && t.dataset.act;
