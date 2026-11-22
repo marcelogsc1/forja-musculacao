@@ -1393,3 +1393,10 @@ button.wt-goal b{color:var(--good)}
 .demo.rx.wide.n3 img.f0{opacity:1;animation:fr3a 2.4s steps(1,end) infinite}
 .demo.rx.wide.n3 img.f1{animation:fr3b 2.4s steps(1,end) infinite,fr5o .4s linear infinite}
 @media (prefers-reduced-motion: reduce){.demo.rx.wide.n3 img.f0{animation:none;object-position:100% 50%}.demo.rx.wide.n3 img.f1{animation:none;opacity:0}}
+
+/* Animações 3D (v4.21): fundo claro igual ao do vídeo, para o recorte não aparecer */
+.demo.an{background:#fcfcff}
+.demo.an video,.demo.an .at{position:absolute;inset:0;width:100%;height:100%;display:block;border:0}
+.demo.an video{object-fit:cover;background:transparent}
+.demo.an .at{background-repeat:no-repeat}
+.demo.an.wide{aspect-ratio:1/1;max-height:min(92vw,440px);margin-inline:auto;border-radius:24px}

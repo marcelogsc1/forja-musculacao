@@ -6,3 +6,6 @@ android/
 .vercel/
 .firebase/
 *-debug.log
+
+# Animações 3D de licença comprada: fora do repositório público
+www/anim/

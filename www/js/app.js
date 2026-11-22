@@ -1,6 +1,6 @@
 // ================= estado =================
-const APP_VERSION = '4.20.0';
-const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'fig'};
+const APP_VERSION = '4.21.0';
+const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1};
 let ST = freshState();
 let SESS = [];
 const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '', progTab: 'geral', progEx: null, progMetric: 'kg', calMonth: null, calSel: today(), bwMetric: 'kg', exTab: 'sobre', expand: {}, rtab: 'minhas', xf: {}, tplOpt: {}, bld: null };
@@ -9,7 +9,7 @@ const PAGES = {};
 function freshState(){ return { v: 4, routines: [], active: null, custom: {}, media: {}, bw: [], prefs: {...DEFAULT_PREFS}, profile: {createdAt: new Date().toISOString()} }; }
 /* nomes antigos gerados pelo app, com tradução entre parênteses; nomes escritos pelo usuário não são tocados */
 const OLD_WNAMES = {'Push (empurrar)': 'Push', 'Pull (puxar)': 'Pull', 'Legs (pernas)': 'Legs', 'Pull (Terra)': 'Pull A', 'Push (Supino)': 'Push A', 'Pull (Remada)': 'Pull B', 'Push (Desenvolvimento)': 'Push B'};
-function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
+function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; const oldPv = (ST.prefs || {}).picsV; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); if (!oldPv){ if (ST.prefs.pics === 'fig') ST.prefs.pics = 'anim'; ST.prefs.picsV = 1; } ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
 function getEx(id){ return CAT[id] || ST.custom[id] || {n: 'Exercício removido', m: 'peito', p: 'custom', e: 'outros', pri: [], sec: [], d: []}; }
 const exName = id => getEx(id).n;
 const routineById = id => ST.routines.find(r => r.id === id);
@@ -119,14 +119,42 @@ function regionLevels(sessions){
    [início | 1/4 | meio | 3/4 | fim] quando há quadros intermediários (FIGN, gerado por tools/frames.py).
    window.FORJA_FIG (versão arquivo único) traz os arquivos embutidos. */
 const figSrc = f => (window.FORJA_FIG && window.FORJA_FIG[f]) || `fig/${f}.webp`;
+/* Animações 3D (ANIM, gerado por tools/anim.py): anim/<m|f>/<exercício>.mp4 e as miniaturas num atlas só
+   (anim/<m|f>/thumbs.webp). Usa a versão do sexo do perfil quando existe e cai para a outra. Fora da versão arquivo único. */
+const ANIM_SET = (() => { const A = typeof ANIM !== 'undefined' ? ANIM : {}; const o = {}; for (const g of ['m', 'f']){ o[g] = new Map(); (A[g] || []).forEach((k, i) => o[g].set(k, i)); } o.cols = A.cols || 16; return o; })();
+/* figura disponível? No artefato só vão as figuras que ainda fazem falta (limite de arquivos): FORJA_FIGS lista quais. */
+const figOk = c => !!(c && c.f && (!window.FORJA_FIGS || window.FORJA_FIGS.includes(c.f)));
+function animOf(ex, force){
+  if (window.FORJA_FIG || (ST.prefs.pics !== 'anim' && !force)) return null;
+  const fem = ST.profile && (ST.profile.sex === 'Feminino' || ST.profile.sex === 'F');
+  const g = (fem ? ['f', 'm'] : ['m', 'f']).find(g => ANIM_SET[g].has(ex));
+  return g ? {src: `anim/${g}/${ex}`, g, i: ANIM_SET[g].get(ex)} : null;
+}
+function animThumb(a){
+  const C = ANIM_SET.cols, rows = Math.ceil(ANIM_SET[a.g].size / C);
+  const x = C > 1 ? (a.i % C) / (C - 1) * 100 : 0, y = rows > 1 ? Math.floor(a.i / C) / (rows - 1) * 100 : 0;
+  return `<i class="at" style="background-image:url(anim/${a.g}/thumbs.webp);background-size:${C * 100}% auto;background-position:${+x.toFixed(4)}% ${+y.toFixed(4)}%"></i>`;
+}
+const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 function thumb(ex, cls = ''){
   const media = ST.media[ex];
   if (media) return `<span class="demo own ${cls}" aria-hidden="true"><img src="/_blob/${esc(media)}" alt="" loading="lazy"></span>`;
-  const c = CAT[ex];
+  const c = CAT[ex]; const an = animOf(ex) || (!figOk(c) ? animOf(ex, true) : null);
+  if (an && cls.includes('wide')) return `<span class="demo an ${cls}">${animThumb(an)}<video src="${an.src}.mp4" ${reduceMotion() ? 'controls' : 'autoplay loop'} muted playsinline preload="auto" aria-label="Animação de ${esc(c ? c.n : '')}"></video></span>`;
+  if (an) return `<span class="demo an ${cls}" aria-hidden="true">${animThumb(an)}</span>`;
   if (c && c.ph && ST.prefs.pics === 'foto' && !window.FORJA_FIG && !window.FORJA_NOPHOTO){ const src = `img/${ex}.jpg`; return `<span class="demo ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
-  if (c && c.f){ const src = figSrc(c.f); const nf = typeof FIGN !== 'undefined' && FIGN[c.f] ? ` n${FIGN[c.f]}` : ''; return `<span class="demo rx${nf} ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
+  if (figOk(c)){ const src = figSrc(c.f); const nf = typeof FIGN !== 'undefined' && FIGN[c.f] ? ` n${FIGN[c.f]}` : ''; return `<span class="demo rx${nf} ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
   return `<span class="demo custom ${cls}" aria-hidden="true">${esc((getEx(ex).n || '?').slice(0, 2).toUpperCase())}</span>`;
 }
+/* Opções de imagem que este exercício tem, e qual está aparecendo */
+function picOpts(ex){
+  const o = []; const c = CAT[ex]; if (!c || window.FORJA_FIG) return o;
+  if (ANIM_SET.m.has(ex) || ANIM_SET.f.has(ex)) o.push(['anim', 'Animação']);
+  if (figOk(c)) o.push(['fig', 'Ilustração']);
+  if (c.ph && !window.FORJA_NOPHOTO) o.push(['foto', 'Foto real']);
+  return o;
+}
+function picCur(ex){ const o = picOpts(ex).map(x => x[0]); return o.includes(ST.prefs.pics) ? ST.prefs.pics : o.includes('fig') ? 'fig' : o[0]; }
 function muscleBlock(pri, sec, list = true){
   return `${BODY(pri, sec)}<div class="legend"><span style="--pc:var(--m-pri)"><i></i>Principal</span><span style="--pc:var(--m-sec)"><i></i>Secundário</span></div>
     ${list ? `<div class="mlist">${pri.map(m => `<span class="pri">${REG[m]}</span>`).join('')}${sec.map(m => `<span class="sec">${REG[m]}</span>`).join('')}</div>` : ''}`;
@@ -468,7 +496,7 @@ function vExercise(p){
   const e = getEx(p.ex); const hist = exHistory(p.ex); const t = UI.exTab;
   let h = `<section><div class="eyebrow">${MUSC[e.m] || ''} · ${EQUIP[e.e] || ''}</div><h1 class="display h1" style="margin-top:6px">${esc(e.n)}</h1></section>
   <section>${ST.media[p.ex] ? `<span class="demo own wide"><img src="/_blob/${esc(ST.media[p.ex])}" alt="Demonstração de ${esc(e.n)}"></span>` : CAT[p.ex] ? thumb(p.ex, 'wide') : ''}
-    ${CAT[p.ex] && CAT[p.ex].ph && !ST.media[p.ex] && !window.FORJA_FIG && !window.FORJA_NOPHOTO ? `<div class="seg" style="margin-top:10px">${[['fig', 'Ilustração'], ['foto', 'Foto real']].map(([k, l]) => `<button data-act="pics" data-v="${k}" aria-pressed="${ST.prefs.pics === k}">${l}</button>`).join('')}</div>` : ''}
+    ${picOpts(p.ex).length > 1 && !ST.media[p.ex] ? `<div class="seg" style="margin-top:10px">${picOpts(p.ex).map(([k, l]) => `<button data-act="pics" data-v="${k}" aria-pressed="${picCur(p.ex) === k}">${l}</button>`).join('')}</div>` : ''}
     ${Store.adapter?.assets ? `<div class="row wrap" style="margin-top:10px"><label class="btn sm" for="media-in" style="cursor:pointer">${ST.media[p.ex] ? 'Trocar minha imagem' : 'Usar minha imagem ou GIF'}</label><input id="media-in" type="file" accept="image/*" hidden data-act="media" data-ex="${p.ex}">${ST.media[p.ex] ? `<button class="link muted" data-act="media-del" data-ex="${p.ex}">Voltar à foto padrão</button>` : ''}</div>` : ''}</section>
   <section class="seg" role="tablist">${[['sobre', 'Sobre'], ['hist', 'Histórico'], ['inst', 'Instrução']].map(([k, l]) => `<button role="tab" data-act="extab" data-t="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</section>`;
   if (t === 'hist'){
@@ -1039,14 +1067,14 @@ const PREF_OPTS = {
   inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
   bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
   theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
-  pics: {t: 'Imagens dos exercícios', o: ['fig', 'foto'], f: v => ({fig: 'Ilustração', foto: 'Foto real'})[v] || 'Ilustração'},
+  pics: {t: 'Imagens dos exercícios', o: () => ['anim', 'fig'].concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => ({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D'},
 };
 function vSettings(){
   const P = ST.prefs;
   const row = (k, ic) => { const d = PREF_OPTS[k]; return `<button class="s-row" data-act="set-pick" data-k="${k}"><span class="s-ic">${ic}</span><span class="grow"><b>${d.t}</b>${d.s ? `<span class="sub">${d.s}</span>` : ''}</span><em>${esc(d.f(P[k]))}</em>${I.chev}</button>`; };
   const tg = (k, ic, t, sub) => `<button class="s-row toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b><span class="sub">${sub}</span></span><i></i></button>`;
   const act = (a, ic, t, sub = '', cls = '', extra = '') => `<button class="s-row ${cls}" data-act="${a}" ${extra}><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span>${cls ? '' : I.chev}</button>`;
-  const picsOk = !window.FORJA_FIG && !window.FORJA_NOPHOTO;
+  const picsOk = !window.FORJA_FIG;
   return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}</div></section>
   <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}
     <button class="s-row" data-act="motion-open"><span class="s-ic">${SI.spark}</span><span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${motionPreview(motionMode())}${I.chev}</button>
@@ -1171,7 +1199,7 @@ A['share-session'] = el => { const s = SESS.find(x => x.id === el.dataset.sid); 
   if (navigator.share) Platform.share(txt); else { try { navigator.clipboard.writeText(txt).then(() => toast('Resumo copiado'), () => toast('Não deu para compartilhar daqui')); } catch (e) { toast('Não deu para compartilhar daqui'); } } };
 A['open-settings'] = () => push({type: 'settings'});
 A['set-pick'] = el => { const k = el.dataset.k; const d = PREF_OPTS[k];
-  menuSheet('Configurações', d.t, d.o.map(v => ({label: d.f(v), icon: String(ST.prefs[k]) === String(v) ? I.check : '<span class="mi-sp"></span>', run: () => { ST.prefs[k] = v; saveState(); applyTheme(); render(); }}))); };
+  menuSheet('Configurações', d.t, (typeof d.o === 'function' ? d.o() : d.o).map(v => ({label: d.f(v), icon: String(ST.prefs[k]) === String(v) ? I.check : '<span class="mi-sp"></span>', run: () => { ST.prefs[k] = v; saveState(); applyTheme(); render(); }}))); };
 A['pf-set'] = el => { const k = el.dataset.k; ST.profile[k] = ST.profile[k] === el.dataset.v ? '' : el.dataset.v; saveState(); render(); };
 A['go-body'] = () => goTab('corpo');
 A.login = () => openLogin('login');
