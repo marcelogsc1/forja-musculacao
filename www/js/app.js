@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.26.0';
+const APP_VERSION = '4.27.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura'};
 let ST = freshState();
 let SESS = [];
@@ -22,7 +22,10 @@ const LBG = ['aura', 'tinta', 'nitido', 'faixa'];
 function applyLbg(){
   const root = document.documentElement; const v = LBG.includes(ST.prefs?.lightbg) ? ST.prefs.lightbg : 'aura';
   if (isDark()) root.removeAttribute('data-lbg'); else root.setAttribute('data-lbg', v);
-  if (!document.getElementById('lbg') && document.body){ const d = document.createElement('div'); d.id = 'lbg'; d.setAttribute('aria-hidden', 'true'); document.body.prepend(d); }
+  if (!document.getElementById('lbg') && document.body){ const d = document.createElement('div'); d.id = 'lbg'; d.setAttribute('aria-hidden', 'true'); document.body.prepend(d);
+    /* faixa de energia: o cabeçalho fica branco só enquanto ainda está em cima da faixa */
+    const top = () => root.classList.toggle('lbg-top', window.scrollY < 150); top(); window.addEventListener('scroll', top, {passive: true}); }
+  root.classList.toggle('lbg-top', window.scrollY < 150);
   let cor = null; try { const p = curPage(); const sx = p && p.type === 'session' ? curSess() : openSession(); if (sx && sx.cor != null) cor = sx.cor; else { const r = activeRoutine(); const w = r && suggested(r); if (w) cor = w.cor; } } catch (e) {}
   const val = cor != null ? `var(--c${cor})` : 'var(--ember)'; if (root.style.getPropertyValue('--day') !== val) root.style.setProperty('--day', val);
 }
@@ -233,7 +236,7 @@ function render(){
   const a = document.activeElement; const fid = a && a.id; const sel = a && a.selectionStart != null ? [a.selectionStart, a.selectionEnd] : null;
   const p = curPage(); const inSess = p && p.type === 'session';
   document.body.classList.toggle('in-session', !!inSess);
-  document.body.classList.toggle('auth-mode', !!(p && p.type === 'auth'));
+  { const am = !!(p && p.type === 'auth'); if (document.body.classList.contains('auth-mode') !== am){ document.body.classList.toggle('auth-mode', am); Platform.themeColor(am || isDark()); } }
   if (p && p.type === 'auth' && p.first && (Store.mode === 'cloud' || Store.mode === 'api')){ UI.stack.pop(); return render(); }
   document.querySelectorAll('nav.tabs a').forEach(x => x.setAttribute('aria-current', !p && x.dataset.tab === UI.tab ? 'page' : 'false'));
   { const fab = $('#fab'); const o = openSession(); fab.classList.toggle('live', !!o); const [pc, pci] = homeAccent(o);

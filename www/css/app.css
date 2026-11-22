@@ -1565,34 +1565,39 @@ body.auth-mode{color-scheme:dark;
   --m-skin:#2A2E34; --m-off:#3A4047; --m-pri:#FF5A2E; --m-sec:#A8553A; --m-border:#5B626B;
   --m-l1:#6B3A2A; --m-l2:#C2502C; --m-l3:#FF6A2B;;background:#0E0F11;color:var(--ink)}
 
-/* ===== v4.26: fundos do tema claro, com a cor do treino do dia (--day) ===== */
+/* ===== v4.26/4.27: fundos do tema claro, com a cor do treino do dia (--day) =====
+   A cor fica só no topo da página, some aos poucos para baixo e sobe junto com a rolagem. */
 #lbg{display:none}
 html[data-lbg] body{background:transparent}
-html[data-lbg] #lbg{display:block;position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:var(--bg)}
+html[data-lbg] #lbg{display:block;position:absolute;left:0;right:0;top:0;height:min(560px,70vh);z-index:-1;overflow:hidden;pointer-events:none;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 100%)}
 html[data-lbg] #lbg::before,html[data-lbg] #lbg::after{content:"";position:absolute;pointer-events:none}
-body.auth-mode #lbg{display:none}
-html[data-lbg] header.top{background:color-mix(in srgb,var(--bg) 55%,transparent)}
-/* A: gradiente diagonal entre a cor do dia e o laranja da Forja, andando devagar */
-:root[data-lbg="aura"]{--bg:#F8F7F5;--s1:rgba(255,255,255,.76);--line:rgba(23,24,26,.07)}
-html[data-lbg="aura"] #lbg::before{inset:-60%;background:linear-gradient(135deg,var(--day) 0%,var(--day) 44%,#E8541A 62%,#F59E2A 74%,rgba(245,158,42,0) 90%);opacity:.32;animation:lbg-diag 18s ease-in-out infinite alternate;will-change:transform}
-html[data-lbg="aura"] #lbg::after{inset:0;background:linear-gradient(180deg,rgba(248,247,245,0) 0%,rgba(248,247,245,.35) 45%,rgba(248,247,245,.85) 100%)}
-@keyframes lbg-diag{from{transform:translate(-14%,-12%)}to{transform:translate(12%,14%)}}
-/* B: o fundo todo levemente tingido, com pontos no topo */
+html[data-lbg] header.top{background:color-mix(in srgb,var(--bg) 70%,transparent)}
+/* A: gradiente só da cor do dia, diagonal e sutil, mudando de intensidade devagar */
+:root[data-lbg="aura"]{--bg:#F8F7F5;--s1:#FFFFFF;--line:rgba(23,24,26,.07)}
+html[data-lbg="aura"] #lbg::before{left:0;top:0;width:200%;height:100%;background:linear-gradient(120deg,color-mix(in srgb,var(--day) 22%,transparent) 0%,color-mix(in srgb,var(--day) 6%,transparent) 30%,color-mix(in srgb,var(--day) 16%,transparent) 55%,color-mix(in srgb,var(--day) 4%,transparent) 80%,color-mix(in srgb,var(--day) 14%,transparent) 100%);animation:lbg-slide 22s ease-in-out infinite alternate;will-change:transform}
+@keyframes lbg-slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* B: véu leve da cor do dia, com pontos bem discretos */
 :root[data-lbg="tinta"]{--bg:#FBFAF8;--s1:#FFFFFF;--s2:#F3F2EF}
-html[data-lbg="tinta"] #lbg::before{inset:0;background:var(--day);opacity:.09}
-html[data-lbg="tinta"] #lbg::after{inset:0 0 auto 0;height:420px;background-image:radial-gradient(rgba(23,24,26,.10) 1px,transparent 1.2px);background-size:16px 16px;-webkit-mask-image:linear-gradient(180deg,#000,transparent);mask-image:linear-gradient(180deg,#000,transparent)}
-/* C: branco frio, cartões brancos com sombra; a cor só numa linha no topo e num brilho */
+html[data-lbg="tinta"] #lbg::before{inset:0;background:color-mix(in srgb,var(--day) 11%,transparent)}
+html[data-lbg="tinta"] #lbg::after{inset:0;background-image:radial-gradient(rgba(23,24,26,.07) 1px,transparent 1.2px);background-size:16px 16px}
+/* C: branco frio; a cor só numa linha fina no topo e num brilho bem leve */
 :root[data-lbg="nitido"]{--bg:#F2F3F5;--s1:#FFFFFF;--s2:#EFF0F3;--s3:#E3E5E9;--line:rgba(16,24,40,.07)}
-html[data-lbg="nitido"] #lbg::before{inset:0 0 auto 0;height:4px;background:var(--day)}
-html[data-lbg="nitido"] #lbg::after{left:-20%;right:-20%;top:60px;height:340px;border-radius:50%;background:radial-gradient(closest-side,var(--day),transparent 70%);opacity:.13}
+html[data-lbg="nitido"] #lbg::before{inset:0 0 auto 0;height:3px;background:var(--day)}
+html[data-lbg="nitido"] #lbg::after{left:-25%;right:-25%;top:-140px;height:420px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--day) 14%,transparent),transparent)}
 html[data-lbg="nitido"] .card,html[data-lbg="nitido"] .list{border-color:transparent;box-shadow:0 1px 2px rgba(16,24,40,.05),0 12px 28px -18px rgba(16,24,40,.2)}
-/* D: faixa na cor do dia no topo, com brilho correndo; títulos do topo em branco */
+/* D: faixa na cor do dia que rola junto com a página; o cabeçalho só fica branco enquanto está sobre ela */
 :root[data-lbg="faixa"]{--bg:#F5F5F4;--s1:#FFFFFF}
-html[data-lbg="faixa"] #lbg::before{left:0;top:0;width:220%;height:250px;background:linear-gradient(115deg,var(--day) 0%,var(--day) 45%,#F59E2A 100%);animation:lbg-sheen 14s ease-in-out infinite alternate;will-change:transform}
-html[data-lbg="faixa"] #lbg::after{left:0;right:0;top:222px;height:60px;background:var(--bg);border-radius:28px 28px 0 0;box-shadow:0 -12px 24px -14px rgba(0,0,0,.18)}
+html[data-lbg="faixa"] #lbg{height:250px;-webkit-mask-image:none;mask-image:none}
+html[data-lbg="faixa"] #lbg::before{left:0;top:0;width:220%;height:250px;background:linear-gradient(115deg,var(--day) 0%,var(--day) 50%,color-mix(in srgb,var(--day) 70%,#fff) 100%);animation:lbg-sheen 16s ease-in-out infinite alternate;will-change:transform}
+html[data-lbg="faixa"] #lbg::after{left:0;right:0;top:222px;height:60px;background:var(--bg);border-radius:28px 28px 0 0}
 @keyframes lbg-sheen{from{transform:translateX(0)}to{transform:translateX(-54%)}}
-html[data-lbg="faixa"] header.top{background:transparent;border-color:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;--ink:#FFFFFF;--ink2:rgba(255,255,255,.85);--muted:rgba(255,255,255,.82);--s1:rgba(255,255,255,.18);--s2:rgba(255,255,255,.18);--line:rgba(255,255,255,.3);--line2:rgba(255,255,255,.4)}
+html[data-lbg="faixa"].lbg-top header.top{background:transparent;border-color:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;--ink:#FFFFFF;--ink2:rgba(255,255,255,.85);--muted:rgba(255,255,255,.82);--s1:rgba(255,255,255,.18);--s2:rgba(255,255,255,.18);--line:rgba(255,255,255,.3);--line2:rgba(255,255,255,.4)}
+html[data-lbg="faixa"] header.top{transition:background-color .2s}
 html[data-lbg="faixa"] .greet>*,html[data-lbg="faixa"] .greet p,html[data-lbg="faixa"] #view>section:first-child>:is(h1,.eyebrow,.meta,p){color:#FFFFFF}
 html[data-lbg="faixa"] .greet p{opacity:.85}
 html[data-lbg="faixa"] #view>section:first-child>.hero-lbl{color:#FFFFFF;--pc:#FFFFFF}
 @media (prefers-reduced-motion: reduce){html[data-lbg] #lbg::before{animation:none}}
+/* entrada sempre escura, com qualquer tema e qualquer fundo */
+html:has(body.auth-mode),html[data-lbg] body.auth-mode{background:#0E0F11}
+body.auth-mode #lbg{display:none}
