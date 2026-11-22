@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.23.0';
+const APP_VERSION = '4.24.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1};
 let ST = freshState();
 let SESS = [];
@@ -140,7 +140,7 @@ function animOf(ex, force){
   if (window.FORJA_FIG || !animAvail || (ST.prefs.pics !== 'anim' && !force)) return null;
   const fem = ST.profile && (ST.profile.sex === 'Feminino' || ST.profile.sex === 'F');
   const g = (fem ? ['f', 'm'] : ['m', 'f']).find(g => ANIM_SET[g].has(ex));
-  return g ? {src: `anim/${g}/${ex}`, g, i: ANIM_SET[g].get(ex)} : null;
+  return g ? {src: `anim/${g}/${ex}`, g, ex, i: ANIM_SET[g].get(ex)} : null;
 }
 function animThumb(a){
   const C = ANIM_SET.cols, rows = Math.ceil(ANIM_SET[a.g].size / C);
@@ -148,11 +148,26 @@ function animThumb(a){
   return `<i class="at" style="background-image:url(anim/${a.g}/thumbs.webp);background-size:${C * 100}% auto;background-position:${+x.toFixed(4)}% ${+y.toFixed(4)}%"></i>`;
 }
 const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* No artefato do Claude (limite de 512 arquivos), os vídeos de um sexo podem vir juntos em poucos pacotes:
+   window.FORJA_APACK = {f: {ex: {id: [pacote, início, tamanho]}}}. Cada pacote é baixado uma vez e
+   o trecho do exercício vira um endereço blob. Fora do artefato, cada vídeo é um arquivo .mp4. */
+const APK = {packs: {}, urls: {}};
+function animVideoSrc(an){
+  const P = window.FORJA_APACK && FORJA_APACK[an.g]; const e = P && P.ex[an.ex];
+  if (!e) return an.src + '.mp4';
+  const key = an.g + '/' + an.ex; if (APK.urls[key]) return APK.urls[key];
+  const pk = an.g + e[0];
+  (APK.packs[pk] || (APK.packs[pk] = fetch(`anim/${an.g}/pack${e[0]}.mp4`).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })))
+    .then(buf => { APK.urls[key] = APK.urls[key] || URL.createObjectURL(new Blob([buf.slice(e[1], e[1] + e[2])], {type: 'video/mp4'}));
+      document.querySelectorAll(`video[data-apk="${key}"]`).forEach(v => { v.src = APK.urls[key]; v.removeAttribute('data-apk'); if (v.autoplay) v.play().catch(() => {}); }); })
+    .catch(() => { delete APK.packs[pk]; });
+  return null;
+}
 function thumb(ex, cls = ''){
   const media = ST.media[ex];
   if (media) return `<span class="demo own ${cls}" aria-hidden="true"><img src="/_blob/${esc(media)}" alt="" loading="lazy"></span>`;
   const c = CAT[ex]; const an = animOf(ex) || (!figOk(c) ? animOf(ex, true) : null);
-  if (an && cls.includes('wide')) return `<span class="demo an ${cls}">${animThumb(an)}<video src="${an.src}.mp4" ${reduceMotion() ? 'controls' : 'autoplay loop'} muted playsinline preload="auto" aria-label="Animação de ${esc(c ? c.n : '')}"></video></span>`;
+  if (an && cls.includes('wide')){ const vs = animVideoSrc(an); return `<span class="demo an ${cls}">${animThumb(an)}<video ${vs ? `src="${vs}"` : `data-apk="${an.g}/${an.ex}"`} ${reduceMotion() ? 'controls' : 'autoplay loop'} muted playsinline preload="auto" aria-label="Animação de ${esc(c ? c.n : '')}"></video></span>`; }
   if (an) return `<span class="demo an ${cls}" aria-hidden="true">${animThumb(an)}</span>`;
   if (c && c.ph && ST.prefs.pics === 'foto' && !window.FORJA_FIG && !window.FORJA_NOPHOTO){ const src = `img/${ex}.jpg`; return `<span class="demo ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
   if (figOk(c)){ const src = figSrc(c.f); const nf = typeof FIGN !== 'undefined' && FIGN[c.f] ? ` n${FIGN[c.f]}` : ''; return `<span class="demo rx${nf} ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
