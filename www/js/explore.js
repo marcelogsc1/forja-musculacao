@@ -29,12 +29,15 @@ const tplMeta = t => t.avulso ? `Treino avulso · ${t.workouts[0].items.length} 
 
 // ---------- peças visuais ----------
 /* Capa: fundo escuro com brilho na cor do objetivo, atleta à direita e título à esquerda */
+/* v4.25: capas com figura feminina para quem marcou sexo feminino no perfil (ext2/figf, feitas das animações femininas) */
+const isFem = () => !!(ST.profile && (ST.profile.sex === 'Feminino' || ST.profile.sex === 'F'));
+const covSrc = (art, ex) => isFem() && !window.FORJA_FIG && typeof FIGF !== 'undefined' && FIGF.includes(art) ? `figf/${art}.webp` : figSrc(ex.f);
 function coverArt(t, cls = 'row', o = {}){
   const ac = GOAL_COLOR[t.goal[0]] || 'var(--ember)'; const ex = CAT[t.art];
   const eb = o.eb != null ? o.eb : (t.avulso ? 'Treino avulso' : t.comp ? 'Complemento' : GOALS[t.goal[0]]);
   const meta = o.meta != null ? o.meta : (t.avulso ? `${t.workouts[0].items.length} exercícios · ~${t.dur} min` : `${t.freq}x por semana · ~${t.dur} min`);
   const chips = o.chips || (t.nivel ? [t.nivel] : []);
-  return `<span class="cov ${cls}" style="--ac:${ac}">${ex ? `<span class="cov-img"><img src="${figSrc(ex.f)}" alt="" loading="lazy" decoding="async"></span>` : ''}
+  return `<span class="cov ${cls}" style="--ac:${ac}">${ex ? `<span class="cov-img"><img src="${covSrc(t.art, ex)}" alt="" loading="lazy" decoding="async"></span>` : ''}
     <span class="cov-txt">${eb ? `<span class="cov-eb">${esc(eb)}</span>` : ''}<b class="cov-tt">${esc(o.title || t.nome)}</b>${meta ? `<span class="cov-m">${esc(meta)}</span>` : ''}${chips.length ? `<span class="cov-ch">${chips.map(c => `<i>${esc(c)}</i>`).join('')}</span>` : ''}</span></span>`;
 }
 const pcard = t => `<button class="pcard" data-act="open-template" data-tid="${t.id}">${coverArt(t, 'row')}</button>`;

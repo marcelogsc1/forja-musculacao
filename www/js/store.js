@@ -110,8 +110,10 @@ const FB = (() => {
     o.sdk = sdk; o.app = sdk.initializeApp(cfg);
     const c = window.FORJA_CONFIG || {}; const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
     if (c.appCheckSiteKey && !native && !window.FORJA_FIREBASE_SDK){ try { const ac = await import(new URL(FIREBASE_DIR + 'firebase-app-check.js', document.baseURI).href); ac.initializeAppCheck(o.app, {provider: new ac.ReCaptchaV3Provider(c.appCheckSiteKey), isTokenAutoRefreshEnabled: true}); } catch (e) { console.warn('App Check indisponível', e); } }
-    /* initializeAuth sem popup/redirect: funciona igual no navegador e no WebView do Android */
-    o.auth = sdk.initializeAuth(o.app, {persistence: [sdk.indexedDBLocalPersistence, sdk.browserLocalPersistence]});
+    /* v4.25: no navegador entra o resolvedor de popup (login com Google). No WebView do Android ele fica de fora:
+       lá o popup do Google não abre, e o botão do Google não aparece. */
+    const ao = {persistence: [sdk.indexedDBLocalPersistence, sdk.browserLocalPersistence]}; if (!native && sdk.browserPopupRedirectResolver) ao.popupRedirectResolver = sdk.browserPopupRedirectResolver;
+    o.auth = sdk.initializeAuth(o.app, ao);
     o.auth.languageCode = 'pt-BR';
     o.db = sdk.initializeFirestore(o.app, {ignoreUndefinedProperties: true});   // cache em memória: o app já guarda tudo no IndexedDB
     await new Promise(ok => { const un = sdk.onAuthStateChanged(o.auth, () => { un(); ok(); }); });
@@ -125,6 +127,9 @@ function fbErr(e){
   const c = (e && e.code) || '';
   const m = {'auth/invalid-credential': [401, 'E-mail ou senha incorretos.'], 'auth/wrong-password': [401, 'E-mail ou senha incorretos.'], 'auth/user-not-found': [401, 'E-mail ou senha incorretos.'], 'auth/invalid-login-credentials': [401, 'E-mail ou senha incorretos.'],
     'auth/email-already-in-use': [409, 'Já existe uma conta com este e-mail.'], 'auth/invalid-email': [400, 'E-mail inválido.'], 'auth/weak-password': [400, 'Senha fraca. Use pelo menos 8 caracteres.'], 'auth/password-does-not-meet-requirements': [400, 'A senha não atende aos requisitos.'],
+    'auth/popup-blocked': [400, 'O navegador bloqueou a janela do Google. Libere janelas pop-up para este site e tente de novo.'], 'auth/unauthorized-domain': [400, 'Este endereço ainda não está autorizado para login com Google no Firebase.'],
+    'auth/operation-not-allowed': [400, 'O login com Google não está ativo no Firebase.'], 'auth/credential-already-in-use': [409, 'Essa conta Google já está ligada a outra conta do Forja.'], 'auth/provider-already-linked': [409, 'O Google já está vinculado a esta conta.'],
+    'auth/account-exists-with-different-credential': [409, 'Já existe uma conta com este e-mail.'], 'auth/popup-closed-by-user': [499, ''], 'auth/cancelled-popup-request': [499, ''], 'auth/user-cancelled': [499, ''], 'auth/user-mismatch': [403, 'Escolha a mesma conta Google desta conta do Forja.'],
     'auth/too-many-requests': [429, 'Muitas tentativas. Aguarde alguns minutos.'], 'auth/network-request-failed': [0, 'Sem conexão.'], 'auth/requires-recent-login': [401, 'Confirme sua senha de novo.'], 'unavailable': [0, 'Sem conexão.'], 'permission-denied': [403, 'Acesso negado.']}[c];
   return Object.assign(new Error(m ? m[1] : (e && e.message) || 'Erro'), {status: m ? m[0] : 500, code: c});
 }
@@ -149,11 +154,29 @@ const Auth = (() => {
     get kind(){ return backendKind(); },
     get token(){ return data && data.token; },
     get user(){
-      if (fb()){ const u = FB.auth && FB.auth.currentUser; return u ? {id: u.uid, email: u.email, name: u.displayName || '', verified: u.emailVerified} : null; }
+      if (fb()){ const u = FB.auth && FB.auth.currentUser; if (!u) return null; const pv = (u.providerData || []).map(x => x.providerId);
+        return {id: u.uid, email: u.email, name: u.displayName || '', verified: u.emailVerified, google: pv.includes('google.com'), password: pv.includes('password') || !pv.length}; }
       return data && data.user;
     },
+    /* v4.25: Google. Só no navegador (no app Android o popup não abre). */
+    get googleOk(){ const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform(); return fb() && !native; },
+    pending: null,   // credencial do Google esperando o login com senha da conta que já tem o e-mail
+    async google(){
+      await FB.ready(); const sdk = FB.sdk; const pr = new sdk.GoogleAuthProvider(); pr.setCustomParameters({prompt: 'select_account'});
+      try { const r = await sdk.signInWithPopup(FB.auth, pr); this.pending = null; return {isNew: !!(sdk.getAdditionalUserInfo && (sdk.getAdditionalUserInfo(r) || {}).isNewUser)}; }
+      catch (e) {
+        if (e && e.code === 'auth/account-exists-with-different-credential'){ this.pending = sdk.GoogleAuthProvider.credentialFromError(e); const er = fbErr(e); er.email = (e.customData && e.customData.email) || ''; throw er; }
+        throw fbErr(e);
+      }
+    },
+    async linkGoogle(){
+      await FB.ready(); const sdk = FB.sdk; const u = FB.auth.currentUser; if (!u) throw Object.assign(new Error('sem conta'), {status: 401});
+      const pr = new sdk.GoogleAuthProvider(); pr.setCustomParameters({prompt: 'select_account', login_hint: u.email || ''});
+      try { await sdk.linkWithPopup(u, pr); await u.reload().catch(() => {}); } catch (e) { throw fbErr(e); }
+    },
+    async unlinkGoogle(){ const u = FB.auth && FB.auth.currentUser; if (!u) return; try { await FB.sdk.unlink(u, 'google.com'); await u.reload().catch(() => {}); } catch (e) { throw fbErr(e); } },
     async login(email, password){
-      if (fb()){ await FB.ready(); try { await FB.sdk.signInWithEmailAndPassword(FB.auth, email, password); } catch (e) { throw fbErr(e); } return; }
+      if (fb()){ await FB.ready(); try { const r = await FB.sdk.signInWithEmailAndPassword(FB.auth, email, password); if (this.pending){ const pc = this.pending; this.pending = null; try { await FB.sdk.linkWithCredential(r.user, pc); this.linked = true; } catch (e) { console.warn('não vinculou o Google', e); } } } catch (e) { throw fbErr(e); } return; }
       save(await call('/auth/login', {email, password}));
     },
     async register(name, email, password){
@@ -243,7 +266,9 @@ function FirebaseAdapter(){
     async deleteMe(password){
       const u = auth.currentUser; if (!u) throw Object.assign(new Error('sem conta'), {status: 401});
       try {
-        await sdk.reauthenticateWithCredential(u, sdk.EmailAuthProvider.credential(u.email, password));
+        /* sem senha (conta só com Google): confirma pelo Google */
+        if (password == null) await sdk.reauthenticateWithPopup(u, new sdk.GoogleAuthProvider());
+        else await sdk.reauthenticateWithCredential(u, sdk.EmailAuthProvider.credential(u.email, password));
         for (;;){ const snap = await sdk.getDocs(sdk.query(col(), sdk.limit(400))); if (!snap.docs.length) break; const b = sdk.writeBatch(db); snap.docs.forEach(d => b.delete(d.ref)); await b.commit(); }
         await sdk.deleteUser(u);
       } catch (e) { const er = fbErr(e); if (er.status === 401) er.status = 403; throw er; }

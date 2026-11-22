@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.24.0';
+const APP_VERSION = '4.25.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1};
 let ST = freshState();
 let SESS = [];
@@ -9,7 +9,7 @@ const PAGES = {};
 function freshState(){ return { v: 4, routines: [], active: null, custom: {}, media: {}, bw: [], prefs: {...DEFAULT_PREFS}, profile: {createdAt: new Date().toISOString()} }; }
 /* nomes antigos gerados pelo app, com tradução entre parênteses; nomes escritos pelo usuário não são tocados */
 const OLD_WNAMES = {'Push (empurrar)': 'Push', 'Pull (puxar)': 'Pull', 'Legs (pernas)': 'Legs', 'Pull (Terra)': 'Pull A', 'Push (Supino)': 'Push A', 'Pull (Remada)': 'Pull B', 'Push (Desenvolvimento)': 'Push B'};
-function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; const oldPv = (ST.prefs || {}).picsV; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); if (!oldPv){ if (ST.prefs.pics === 'fig') ST.prefs.pics = 'anim'; ST.prefs.picsV = 1; } ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
+function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; const oldPv = (ST.prefs || {}).picsV; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); if (ST.prefs.pics === 'fig') ST.prefs.pics = 'anim'; if (!oldPv) ST.prefs.picsV = 1; ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
 function getEx(id){ return CAT[id] || ST.custom[id] || {n: 'Exercício removido', m: 'peito', p: 'custom', e: 'outros', pri: [], sec: [], d: []}; }
 const exName = id => getEx(id).n;
 const routineById = id => ST.routines.find(r => r.id === id);
@@ -166,22 +166,23 @@ function animVideoSrc(an){
 function thumb(ex, cls = ''){
   const media = ST.media[ex];
   if (media) return `<span class="demo own ${cls}" aria-hidden="true"><img src="/_blob/${esc(media)}" alt="" loading="lazy"></span>`;
-  const c = CAT[ex]; const an = animOf(ex) || (!figOk(c) ? animOf(ex, true) : null);
+  const c = CAT[ex]; const photo = c && c.ph && !window.FORJA_FIG && !window.FORJA_NOPHOTO;
+  /* v4.25: exercícios só com animação 3D ou foto real; as figuras brancas ficaram só nas capas */
+  const an = animOf(ex) || (!(photo && ST.prefs.pics === 'foto') ? animOf(ex, true) : null);
   if (an && cls.includes('wide')){ const vs = animVideoSrc(an); return `<span class="demo an ${cls}">${animThumb(an)}<video ${vs ? `src="${vs}"` : `data-apk="${an.g}/${an.ex}"`} ${reduceMotion() ? 'controls' : 'autoplay loop'} muted playsinline preload="auto" aria-label="Animação de ${esc(c ? c.n : '')}"></video></span>`; }
   if (an) return `<span class="demo an ${cls}" aria-hidden="true">${animThumb(an)}</span>`;
-  if (c && c.ph && ST.prefs.pics === 'foto' && !window.FORJA_FIG && !window.FORJA_NOPHOTO){ const src = `img/${ex}.jpg`; return `<span class="demo ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
-  if (figOk(c)){ const src = figSrc(c.f); const nf = typeof FIGN !== 'undefined' && FIGN[c.f] ? ` n${FIGN[c.f]}` : ''; return `<span class="demo rx${nf} ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
+  if (photo){ const src = `img/${ex}.jpg`; return `<span class="demo ${cls}" aria-hidden="true"><img class="f0" src="${src}" alt="" loading="lazy" decoding="async"><img class="f1" src="${src}" alt="" loading="lazy" decoding="async"></span>`; }
+  if (c && c.pri && typeof bodyThumb === 'function'){ const back = ['costas', 'posteriores', 'gluteos', 'triceps', 'panturrilha'].includes(c.m); return `<span class="demo mus ${cls}" aria-hidden="true">${bodyThumb(c.pri, back)}</span>`; }
   return `<span class="demo custom ${cls}" aria-hidden="true">${esc((getEx(ex).n || '?').slice(0, 2).toUpperCase())}</span>`;
 }
 /* Opções de imagem que este exercício tem, e qual está aparecendo */
 function picOpts(ex){
   const o = []; const c = CAT[ex]; if (!c || window.FORJA_FIG) return o;
   if (animAvail && (ANIM_SET.m.has(ex) || ANIM_SET.f.has(ex))) o.push(['anim', 'Animação']);
-  if (figOk(c)) o.push(['fig', 'Ilustração']);
   if (c.ph && !window.FORJA_NOPHOTO) o.push(['foto', 'Foto real']);
   return o;
 }
-function picCur(ex){ const o = picOpts(ex).map(x => x[0]); return o.includes(ST.prefs.pics) ? ST.prefs.pics : o.includes('fig') ? 'fig' : o[0]; }
+function picCur(ex){ const o = picOpts(ex).map(x => x[0]); return o.includes(ST.prefs.pics) ? ST.prefs.pics : o[0]; }
 function muscleBlock(pri, sec, list = true){
   return `${BODY(pri, sec)}<div class="legend"><span style="--pc:var(--m-pri)"><i></i>Principal</span><span style="--pc:var(--m-sec)"><i></i>Secundário</span></div>
     ${list ? `<div class="mlist">${pri.map(m => `<span class="pri">${REG[m]}</span>`).join('')}${sec.map(m => `<span class="sec">${REG[m]}</span>`).join('')}</div>` : ''}`;
@@ -466,6 +467,7 @@ function vWorkout(p){
     ${w.items.length ? `<p class="hero-focus">${esc(groupsOf(w.items))}</p>` : ''}
     <div class="hero-stats"><div><b>${pad2(w.items.length)}</b><span>exercícios</span></div><div><b>${pad2(wSets(w))}</b><span>séries</span></div><div><b>${w.items.length ? wMins(w) : 0}′</b><span>estimados</span></div></div>
     ${w.items.length ? `<p class="tiny muted" style="margin:14px 0 0">Equipamentos: ${esc(equipOf(w.items))}</p>` : ''}</section>`;
+  if (!ed && w.items.length) h += adjBar(`data-rid="${r.id}" data-wid="${w.id}"`);
   if (ed && w.items.length) h += obsCard(r, w, true);
   if (ed && w.items.length) h += restCard(r, w);
   if (ed) h += `<section class="card"><div class="eyebrow" style="margin-bottom:12px">Cor do treino</div><div class="swatches">${[...Array(COLORS)].map((_, k) => `<button style="${pcs(k)}" data-act="wcolor" data-rid="${r.id}" data-wid="${w.id}" data-c="${k}" aria-pressed="${w.cor === k}" aria-label="Cor ${k + 1}"></button>`).join('')}</div></section>`;
@@ -473,12 +475,12 @@ function vWorkout(p){
     ${w.items.length ? `<div class="list" data-drag-kind="items" data-drag-id="${r.id}|${w.id}">${w.items.map((x, j) => { const pp = lastPerf(x.ex); return `<div class="li" data-drag-row>
       ${ed ? `<button class="handle" aria-label="Arrastar">${I.grip}</button>` : `<span class="ord">${j + 1}</span>`}
       <button style="background:none;border:0;padding:0;flex:none" data-act="open-ex" data-ex="${x.ex}" aria-label="Ver ${esc(exName(x.ex))}">${thumb(x.ex)}</button>
-      <div class="grow"><b>${esc(exName(x.ex))}</b><span class="sub num">${target(x)}</span>${!ed && pp ? `<span class="sub num">Última: ${perfStr(pp)}</span>` : ''}${x.nota && !ed ? `<span class="sub" style="color:var(--ink2)">${esc(x.nota)}</span>` : ''}</div>
+      <div class="grow"><b>${esc(exName(x.ex))}</b>${ed ? `<span class="istep"><button data-act="w-sets" data-j="${j}" data-d="-1" ${x.sets > 1 ? '' : 'disabled'} aria-label="Uma série a menos">−</button><output class="num">${x.sets} ${x.sets === 1 ? 'série' : 'séries'}</output><button data-act="w-sets" data-j="${j}" data-d="1" ${x.sets < 10 ? '' : 'disabled'} aria-label="Uma série a mais">+</button><em class="num">${x.rmin}–${x.rmax} reps</em></span>` : `<span class="sub num">${target(x)}</span>`}${!ed && pp ? `<span class="sub num">Última: ${perfStr(pp)}</span>` : ''}${x.nota && !ed ? `<span class="sub" style="color:var(--ink2)">${esc(x.nota)}</span>` : ''}</div>
       ${ed ? `<button class="icon sm" data-act="i-edit" data-j="${j}" aria-label="Editar exercício">${I.more}</button>` : ''}</div>`; }).join('')}</div>` : '<div class="empty"><b>Treino vazio</b>Adicione exercícios da biblioteca.</div>'}
     ${ed || !w.items.length ? `<button class="btn ghost block" style="margin-top:12px" data-act="i-add">${I.plus}Adicionar exercícios</button>` : ''}</section>`;
   if (ed) h += `<section class="row wrap"><button class="btn ghost sm" data-act="dup-workout" data-rid="${r.id}" data-wid="${w.id}">Duplicar treino</button><button class="btn danger sm" data-act="ask-del-workout" data-rid="${r.id}" data-wid="${w.id}">Excluir treino</button></section>`;
   if (!ed && w.items.length && w.restEx != null) h += `<p class="tiny muted" style="margin:10px 4px 0">Entre exercícios: ${w.restEx ? fmtRest(w.restEx) : 'sem pausa extra'}.</p>`;
-  if (!ed && w.items.length) h += obsCard(r, w);
+  if (!ed && w.items.length && w.obs) h += obsCard(r, w);
   h += `<section class="card"><div class="eyebrow" style="margin-bottom:10px">Músculos deste treino</div>${muscleBlock(m.pri, m.sec)}</section>`;
   if (!ed) h += `<div style="position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));margin-top:18px;z-index:5"><button class="btn primary block" data-act="start" data-rid="${r.id}" data-wid="${w.id}" ${open || !w.items.length ? 'disabled' : ''}>${I.play}${open ? 'Há um treino em andamento' : 'Começar treino'}</button></div>`;
   return h;
@@ -574,7 +576,7 @@ function repeatSession(src){
 }
 function openSess(id){ closeKP(); closeSheet(); UI.stack = [{type: 'session', sid: id}]; render(); window.scrollTo({top: 0}); }
 function planItem(s, e){ const w = findWorkout(s.routine, s.workout); return w && w.items.find(x => x.uid === e.uid); }
-function itemTarget(s, e){ const p = planItem(s, e); const t = p ? {...p} : {sets: e.sets.length, rmin: 8, rmax: 12, rest: ST.prefs.rest, nota: ''}; if (e.rest != null) t.rest = e.rest; return t; }
+function itemTarget(s, e){ const p = planItem(s, e); const t = p ? {...p} : {sets: e.sets.length, rmin: 8, rmax: 12, rest: ST.prefs.rest, nota: ''}; if (e.rest != null) t.rest = e.rest; if (e.rmin != null){ t.rmin = e.rmin; t.rmax = e.rmax; } if (p && p.ex !== e.ex && e.ex !== e.planned) t.nota = ''; const n = e.sets.filter(x => x.t !== 'w').length; if (n) t.sets = n; return t; }
 /* Progressão dupla: bateu o topo da faixa em todas as séries, a carga sobe um passo e as repetições voltam ao início da faixa.
    O app diz quanto subir e aplica com um toque. */
 function nextLoad(p){ const top = Math.max(0, ...p.sets.map(x => +x.kg || 0)); if (!top) return 0; const step = ST.prefs.inc || 2.5; return Math.round((top + step) / step) * step; }
@@ -596,7 +598,7 @@ function vSession(){
   const cur = s.items.findIndex(e => e.sets.some(x => !x.ok));
   let h = `<section style="margin-top:16px"><div class="hero-lbl ${live ? 'live' : ''}" style="${pcs(s.cor)}">${live ? `${fmtD(s.date)} · em andamento` : s.status === 'draft' ? 'Registro de treino passado' : 'Editando treino salvo'}</div><h1 class="display h1" style="margin-top:10px">${esc(s.wname)}</h1>
     ${live ? obsReminder(s) : ''}${live ? '' : `<div class="formgrid" style="margin-top:14px"><label class="flabel"><span class="tiny muted">Data</span><input id="ss-date" class="field" type="date" max="${today()}" value="${s.date}" data-act="ss-date"></label><label class="flabel"><span class="tiny muted">Duração (min)</span><input id="ss-dur" class="field num" inputmode="numeric" value="${s.dur ?? (s.startedAt && s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : '')}" data-act="ss-dur" placeholder="opcional"></label></div>`}
-    <div class="meta mono" style="margin-top:12px;font-size:12.5px"><span><b>${pad2(st.sets)}</b>/${pad2(total)} séries</span><span><b>${fmtVol(st.vol)}</b> de volume</span></div><div class="progress" style="margin-top:12px;${pcs(s.cor)}"><i style="width:${total ? st.sets / total * 100 : 0}%;background:var(--pc)"></i></div>
+    <div class="meta mono" style="margin-top:12px;font-size:12.5px"><span><b>${pad2(st.sets)}</b>/${pad2(total)} séries</span><span><b>${fmtVol(st.vol)}</b> de volume</span></div><div class="progress" style="margin-top:12px;${pcs(s.cor)}"><i style="width:${total ? st.sets / total * 100 : 0}%;background:var(--pc)"></i></div>${live && s.items.length ? adjBar(`data-sid="${s.id}"`, true) : ''}
     ${live ? '' : '<p class="tiny muted" style="margin:10px 0 0">Toque nos campos de kg e reps para anotar e no ✓ para confirmar cada série. Só séries confirmadas entram no histórico.</p>'}</section><section class="stack sess" style="${pcs(s.cor)}">`;
   s.items.forEach((e, k) => {
     const t = itemTarget(s, e); const l = lastItem(e.ex, s.id); const prevSets = l ? l.e.sets.filter(x => x.ok) : [];
@@ -620,7 +622,7 @@ function vSession(){
         <button class="cell ${cellCls(x, 'kg')} ${act && KP.f === 'kg' ? 'active' : ''}" id="c-${k}-${j}-kg" data-act="cell" data-k="${k}" data-j="${j}" data-f="kg" aria-label="Carga da série ${j + 1}">${act && KP.f === 'kg' && KP.buf.endsWith(',') ? KP.buf : x.kg != null ? fmtN(x.kg) : 'kg'}</button>
         <button class="cell ${cellCls(x, 'reps')} ${act && KP.f === 'reps' ? 'active' : ''}" id="c-${k}-${j}-reps" data-act="cell" data-k="${k}" data-j="${j}" data-f="reps" aria-label="Repetições da série ${j + 1}">${x.reps != null ? x.reps : `${t.rmin}–${t.rmax}`}</button>
         <button class="check ${UI.popped === `${k}-${j}` ? 'pop' : ''}" data-act="done" data-k="${k}" data-j="${j}" aria-pressed="${!!x.ok}" aria-label="Confirmar série ${j + 1}">${I.check}</button></div>`; }).join('')}</div>
-      <button class="addset" data-act="addset" data-k="${k}">+ Adicionar série</button></article>`;
+      <div class="setbtns"><button class="addset rm" data-act="rmset" data-k="${k}" ${e.sets.length > 1 ? '' : 'disabled'} aria-label="Remover a última série">− Remover série</button><button class="addset" data-act="addset" data-k="${k}">+ Adicionar série</button></div></article>`;
   });
   UI.popped = null;
   h += `</section><section class="stack"><button class="btn ghost block" data-act="add-extra">${I.plus}Adicionar exercício</button>`;
@@ -649,7 +651,8 @@ function checkSet(k, j){
   render();
   /* última série do exercício: se o treino tem descanso próprio entre exercícios, ele vale aqui */
   const wk = s.routine ? findWorkout(s.routine, s.workout) : null; const nextEx = allDone ? s.items.slice(k + 1).find(it => !it.sets.every(y => y.ok)) : null;
-  if (s.status === 'open' && x.t !== 'w' && allDone && nextEx && wk && wk.restEx != null){ if (wk.restEx > 0) startRest(wk.restEx, `Próximo: ${exName(nextEx.ex)}`); else stopRest(); }
+  const rx = s.restEx != null ? s.restEx : wk ? wk.restEx : null;
+  if (s.status === 'open' && x.t !== 'w' && allDone && nextEx && rx != null){ if (rx > 0) startRest(rx, `Próximo: ${exName(nextEx.ex)}`); else stopRest(); }
   else if (s.status === 'open' && x.t !== 'w' && t.rest) startRest(t.rest, `${exName(e.ex)} · série ${j + 1}`);
   if (pr) toast(`Novo recorde: ${exName(e.ex)}, ${fmtN(x.kg)} kg × ${x.reps}`);
   if (allDone){ const nx = document.getElementById(`card-${k + 1}`); if (nx) setTimeout(() => nx.scrollIntoView({behavior: reduced() ? 'auto' : 'smooth', block: 'start'}), 150); }
@@ -1080,7 +1083,7 @@ const PREF_OPTS = {
   inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
   bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
   theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
-  pics: {t: 'Imagens dos exercícios', o: () => (animAvail ? ['anim', 'fig'] : ['fig']).concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => (v === 'anim' && !animAvail ? 'Ilustração' : ({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D')},
+  pics: {t: 'Imagens dos exercícios', o: () => ['anim'].concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => (({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D')},
 };
 function vSettings(){
   const P = ST.prefs;
@@ -1096,6 +1099,7 @@ function vSettings(){
   <section class="s-group"><div class="eyebrow">Seus dados</div><div class="list">
     ${Store.adapter?.downloads || !Platform.isArtifact ? act('export', SI.dl, 'Exportar backup', 'Arquivo JSON com treinos, rotinas e medidas') : ''}
     <label class="s-row" for="import-in"><span class="s-ic">${SI.ul}</span><span class="grow"><b>Importar backup</b><span class="sub">Restaura um arquivo exportado antes</span></span>${I.chev}</label><input id="import-in" type="file" accept="application/json,.json" hidden data-act="import">
+    ${Store.mode === 'api' && Auth.googleOk && Auth.user ? (Auth.user.google ? act(Auth.user.password ? 'unlink-google' : 'noop', I_G, 'Conta Google vinculada', Auth.user.password ? 'Você entra com Google ou com e-mail e senha. Toque para desvincular' : 'Você entra com o Google') : act('link-google', I_G, 'Vincular conta Google', 'Para entrar com um toque, sem digitar a senha')) : ''}
     ${Store.mode === 'api' || Store.mode === 'verify' ? act('logout', SI.out, 'Sair da conta', Auth.user?.email ? esc(Auth.user.email) : '') : ''}
     ${act('ask-wipe', I.trash, `Apagar todos os dados${Store.mode === 'api' ? ' deste aparelho' : ''}`, '', 'danger')}
     ${Store.mode === 'api' ? act('ask-delete-account', I.trash, 'Excluir minha conta', 'Apaga a conta e tudo que está na nuvem', 'danger') : ''}</div></section>
@@ -1105,35 +1109,56 @@ function vSettings(){
 }
 PAGES.settings = {title: () => 'Configurações', view: () => vSettings()};
 /* ================= tela de entrada ================= */
+/* v4.25: tela de entrada. Boas-vindas com Google e e-mail lado a lado (mesmo peso, como pede a marca do Google),
+   formulário de e-mail separado, e vínculo quando o Google encontra um e-mail que já tem conta com senha. */
+const I_G = '<svg class="g-ic" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+const gBtn = (label = 'Continuar com o Google') => Auth.googleOk ? `<button type="button" class="gbtn" data-act="auth-google">${I_G}<span>${label}</span></button>` : '';
+function authArt(){
+  const fem = ST.profile && (ST.profile.sex === 'Feminino' || ST.profile.sex === 'F');
+  const src = fem && typeof FIGF !== 'undefined' && FIGF.includes('desenv-halter') && !window.FORJA_FIG ? 'figf/desenv-halter.webp' : figSrc('dumbbell-shoulder-press');
+  return `<div class="auth-art ${fem ? 'f' : 'm'}" aria-hidden="true"><i class="ring"></i><img src="${src}" alt="" decoding="async"><span class="auth-tags"><i>Rotinas prontas</i><i>Progressão de carga</i><i>Na nuvem</i></span></div>`;
+}
 function vAuth(p){
-  const st = UI.auth || (UI.auth = {mode: 'login', show: false}); const m = st.mode;
+  const st = UI.auth || (UI.auth = {mode: 'start', show: false}); const m = st.mode;
+  const skip = `<button class="link auth-skip" data-act="auth-skip">Continuar sem conta</button><p class="auth-fine">Sem conta, seus treinos ficam só neste aparelho. Dá para criar a conta depois, no Perfil, sem perder nada.</p>`;
+  const legal = `<p class="auth-legal">Ao continuar, você concorda com a <a href="privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</p>`;
+  const bg = '<div class="auth-bg" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="grain"></i></div>';
+  if (m === 'start'){
+    return `<div class="auth start">${bg}
+      <div class="auth-top">${p.first ? '<span></span>' : `<button class="icon clear" data-act="back" aria-label="Voltar">${I.back}</button>`}<span class="brand">${I.brand}Forja</span><span></span></div>
+      ${authArt()}
+      <div class="auth-hero"><h1 class="cond">Cada série<br><em>conta.</em></h1><p>Rotinas prontas, registro rápido de cargas e um progresso fácil de ler. Seus treinos ficam salvos e aparecem em qualquer aparelho.</p></div>
+      ${st.err ? `<p class="auth-err" role="alert">${esc(st.err)}</p>` : ''}
+      <div class="auth-cta">${gBtn()}<button class="mbtn" data-act="auth-mode" data-m="register">${I.mail}<span>Continuar com e-mail</span></button>
+        <p class="auth-have">Já tem conta? <button class="link" data-act="auth-mode" data-m="login">Entrar</button></p></div>
+      ${p.first ? skip : ''}${legal}</div>`;
+  }
   const field = (id, label, type, ac, icon, extra = '') => `<label class="af"><span class="af-ic">${icon}</span><input id="${id}" type="${type}" placeholder=" " autocomplete="${ac}" ${extra}><span class="af-l">${label}</span></label>`;
-  const title = m === 'register' ? 'Crie sua<br>conta.' : m === 'forgot' ? 'Nova<br>senha.' : 'Bem-vindo<br>de volta.';
-  const sub = m === 'register' ? 'Seus treinos, cargas e recordes guardados na nuvem e disponíveis em qualquer aparelho.' : m === 'forgot' ? 'Digite o e-mail da conta. Enviamos um link para você criar uma senha nova.' : 'Entre para continuar de onde parou, em qualquer aparelho.';
-  return `<div class="auth">
-    <div class="auth-bg" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="grain"></i></div>
-    <div class="auth-top">${p.first ? '<span></span>' : `<button class="icon clear" data-act="back" aria-label="Voltar">${I.back}</button>`}<span class="brand">${I.brand}Forja</span><span></span></div>
-    <div class="auth-hero"><div class="eyebrow">${m === 'register' ? 'Nova conta' : m === 'forgot' ? 'Recuperar acesso' : 'Entrar'}</div><h1 class="cond">${title}</h1><p>${sub}</p></div>
-    ${m !== 'forgot' ? `<div class="seg auth-seg" role="tablist">${[['login', 'Entrar'], ['register', 'Criar conta']].map(([k, l]) => `<button type="button" role="tab" data-act="auth-mode" data-m="${k}" aria-pressed="${m === k}"${k === 'register' ? ' data-reg="1"' : ''}>${l}</button>`).join('')}</div>` : ''}
+  const title = m === 'register' ? 'Criar conta' : m === 'forgot' ? 'Nova senha' : st.link ? 'Vincular o Google' : 'Entrar';
+  const sub = m === 'register' ? 'Use seu e-mail e uma senha. Enviamos um link para confirmar o e-mail.' : m === 'forgot' ? 'Digite o e-mail da conta. Enviamos um link para você criar uma senha nova.' : st.link ? `Já existe uma conta do Forja com ${st.email || 'este e-mail'}. Entre com a senha dela uma vez: o Google fica vinculado e depois você entra dos dois jeitos.` : 'Entre com o e-mail e a senha da sua conta.';
+  return `<div class="auth mail">${bg}
+    <div class="auth-top"><button class="icon clear" data-act="auth-back" aria-label="Voltar">${I.back}</button><span class="brand">${I.brand}Forja</span><span></span></div>
+    <div class="auth-hero sm"><h1 class="cond">${title}</h1><p>${sub}</p></div>
+    ${m !== 'forgot' && !st.link ? `<div class="seg auth-seg" role="tablist">${[['login', 'Entrar'], ['register', 'Criar conta']].map(([k, l]) => `<button type="button" role="tab" data-act="auth-mode" data-m="${k}" aria-pressed="${m === k}"${k === 'register' ? ' data-reg="1"' : ''}>${l}</button>`).join('')}</div>` : ''}
     <form class="auth-form" data-form="auth" novalidate>
       ${m === 'register' ? field('au-name', 'Nome', 'text', 'name', I.user, `value="${esc(st.name || '')}" maxlength="60"`) : ''}
-      ${field('au-email', 'E-mail', 'email', 'email', I.mail, `value="${esc(st.email || '')}" inputmode="email" autocapitalize="off" spellcheck="false" required`)}
+      ${field('au-email', 'E-mail', 'email', 'email', I.mail, `value="${esc(st.email || '')}" inputmode="email" autocapitalize="off" spellcheck="false" required${st.link ? ' readonly' : ''}`)}
       ${m !== 'forgot' ? `<label class="af pw"><span class="af-ic">${I.lock}</span><input id="au-pass" type="${st.show ? 'text' : 'password'}" placeholder=" " autocomplete="${m === 'login' ? 'current-password' : 'new-password'}" minlength="8" required><span class="af-l">Senha</span><button type="button" class="eye" data-act="pw-toggle" aria-label="${st.show ? 'Ocultar senha' : 'Mostrar senha'}" aria-pressed="${!!st.show}">${st.show ? I.eyeoff : I.eye}</button></label>` : ''}
       ${m === 'register' ? '<p class="af-rule" id="au-rule"><i></i>Pelo menos 8 caracteres</p>' : ''}
       ${m === 'login' ? '<div class="af-row"><button type="button" class="link muted" data-act="auth-mode" data-m="forgot">Esqueci minha senha</button></div>' : ''}
       ${st.note ? `<p class="auth-note" role="status">${esc(st.note)}</p>` : ''}
-      <p id="au-err" class="auth-err" role="alert" hidden></p>
+      <p id="au-err" class="auth-err" role="alert" ${st.err ? '' : 'hidden'}>${esc(st.err || '')}</p>
       ${m === 'forgot' ? `<button class="btn primary block auth-go" type="button" data-act="forgot"><span>Enviar link</span></button><button type="button" class="link muted" style="width:100%" data-act="auth-mode" data-m="login">Voltar para entrar</button>`
-        : `<button class="btn primary block auth-go" type="submit"><span>${m === 'login' ? 'Entrar' : 'Criar conta'}</span></button>`}
+        : `<button class="btn primary block auth-go" type="submit"><span>${st.link ? 'Entrar e vincular o Google' : m === 'login' ? 'Entrar' : 'Criar conta'}</span></button>`}
     </form>
-    ${m !== 'forgot' ? `<div class="auth-or"><span>ou</span></div><button class="btn ghost block" data-act="auth-skip">Continuar sem conta</button><p class="auth-fine">Sem conta, seus treinos ficam só neste aparelho. Dá para criar a conta depois, no Perfil, sem perder nada.</p>` : ''}
-    <p class="auth-legal">${m === 'register' ? 'Ao criar a conta você concorda com a' : 'Veja nossa'} <a href="privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</p>
-  </div>`;
+    ${m !== 'forgot' && !st.link && Auth.googleOk ? `<div class="auth-or"><span>ou</span></div>${gBtn(m === 'register' ? 'Criar conta com o Google' : 'Entrar com o Google')}` : ''}
+    ${st.link ? '<button class="link muted auth-skip" data-act="auth-unlink-cancel">Agora não</button>' : ''}
+    ${legal}</div>`;
 }
 function authKeep(){ const st = UI.auth || {}; const e = $('#au-email'), n = $('#au-name'); if (e) st.email = e.value; if (n) st.name = n.value; UI.auth = st; }
-function openLogin(mode = 'login'){
+function openLogin(mode = 'start'){
   if (!Auth.enabled){ UI.sheet = {kind: 'info'}; openSheet(`${sheetHead('Conta', 'Login em breve')}<p class="ink2" style="margin:14px 0 0">O login fica ativo quando o app for ligado ao seu servidor. A tela, o fluxo e a sincronização já estão prontos no código (veja o README do projeto).</p><p class="ink2">Até lá, seus treinos ficam salvos ${Store.mode === 'cloud' ? 'na sua conta do Claude' : 'neste aparelho'}. Use “Exportar backup” para levar tudo para o app novo.</p><button class="btn primary block" style="margin-top:12px" data-act="close">Entendi</button>`); return; }
-  UI.auth = {mode, show: false, email: UI.auth?.email || ''}; const p = curPage(); if (p && p.type === 'auth'){ render(); return; } push({type: 'auth'});
+  UI.auth = {mode, show: false, email: UI.auth?.email || ''}; Auth.pending = null; const p = curPage(); if (p && p.type === 'auth'){ render(); return; } push({type: 'auth'});
 }
 // ================= arrastar para reordenar =================
 let DRAG = null;
@@ -1215,10 +1240,28 @@ A['set-pick'] = el => { const k = el.dataset.k; const d = PREF_OPTS[k];
   menuSheet('Configurações', d.t, (typeof d.o === 'function' ? d.o() : d.o).map(v => ({label: d.f(v), icon: String(ST.prefs[k]) === String(v) ? I.check : '<span class="mi-sp"></span>', run: () => { ST.prefs[k] = v; saveState(); applyTheme(); render(); }}))); };
 A['pf-set'] = el => { const k = el.dataset.k; ST.profile[k] = ST.profile[k] === el.dataset.v ? '' : el.dataset.v; saveState(); render(); };
 A['go-body'] = () => goTab('corpo');
-A.login = () => openLogin('login');
+A.login = () => openLogin('start');
 A['login-mode'] = el => openLogin(el.dataset.m);
-A['auth-mode'] = el => { authKeep(); UI.auth.mode = el.dataset.m; UI.auth.note = ''; render(); const f = $(UI.auth.mode === 'register' ? '#au-name' : '#au-email'); if (f && !f.value) f.focus(); };
+A['auth-mode'] = el => { authKeep(); if (UI.auth.mode === 'start') UI.auth.from = 'start'; UI.auth.mode = el.dataset.m; UI.auth.note = ''; UI.auth.err = ''; render(); const f = $(UI.auth.mode === 'register' ? '#au-name' : '#au-email'); if (f && !f.value) f.focus(); };
 A['pw-toggle'] = el => { const i = $('#au-pass'); if (!i) return; const show = i.type === 'password'; i.type = show ? 'text' : 'password'; UI.auth.show = show; el.setAttribute('aria-pressed', show); el.setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha'); el.innerHTML = show ? I.eyeoff : I.eye; i.focus({preventScroll: true}); try { i.setSelectionRange(i.value.length, i.value.length); } catch (e) {} };
+A['auth-back'] = () => { authKeep(); const st = UI.auth; if (st.link){ Auth.pending = null; st.link = false; } if (st.mode === 'forgot'){ st.mode = 'login'; render(); return; } if (st.mode !== 'start' && (curPage() || {}).first){ st.mode = 'start'; st.err = ''; render(); return; } if (st.mode !== 'start' && st.from === 'start'){ st.mode = 'start'; render(); return; } A.back(); };
+A['auth-unlink-cancel'] = () => { Auth.pending = null; Object.assign(UI.auth, {link: false, mode: 'start', err: ''}); render(); };
+/* depois de entrar (senha ou Google): liga a sincronização e leva para o lugar certo */
+async function afterLogin(o = {}){
+  lsSet('forja.welcome', '1'); closeSheet(); if (curPage()?.type === 'auth') UI.stack.pop(); render(); toast('Conectando…'); await Store.switchToApi();
+  if (Store.mode === 'verify'){ UI.stack = [{type: 'profile'}]; render(); toast(o.reg ? 'Conta criada. Confirme o e-mail para começar a salvar na nuvem.' : 'Confirme seu e-mail para começar a salvar na nuvem.', null, '', 6000); }
+  else if (Store.mode === 'api') toast(o.linked ? 'Google vinculado. Agora você entra dos dois jeitos.' : o.google ? (o.isNew ? 'Conta criada com o Google. Seus dados estão sincronizados.' : 'Conectado com o Google.') : 'Conectado. Seus dados estão sincronizados.');
+  else toast('Conta conectada, mas o servidor não respondeu. Tentaremos de novo.');
+  if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } render();
+}
+A['auth-google'] = async el => { if (el.classList.contains('busy')) return; authKeep(); const st = UI.auth || (UI.auth = {mode: 'start'}); st.err = ''; el.classList.add('busy');
+  try { const r = await Auth.google(); await afterLogin({google: true, isNew: r.isNew}); }
+  catch (e) { el.classList.remove('busy');
+    if (e.status === 499) return;   // fechou a janela do Google
+    if (e.code === 'auth/account-exists-with-different-credential'){ Object.assign(st, {mode: 'login', link: true, email: e.email || st.email || '', err: '', note: ''}); render(); setTimeout(() => $('#au-pass')?.focus(), 60); return; }
+    st.err = e.status === 0 ? 'Sem conexão. Verifique a internet e tente de novo.' : e.message || 'Não foi possível entrar com o Google.'; render(); } };
+A['link-google'] = async () => { try { await Auth.linkGoogle(); render(); toast('Conta Google vinculada. Agora você entra dos dois jeitos.'); } catch (e) { if (e.status !== 499) toast(e.message || 'Não foi possível vincular agora.'); } };
+A['unlink-google'] = () => confirmSheet({title: 'Desvincular o Google?', text: 'Você continua entrando com e-mail e senha. Dá para vincular de novo quando quiser.', ok: 'Desvincular', onOk: async () => { try { await Auth.unlinkGoogle(); render(); toast('Google desvinculado'); } catch (e) { toast(e.message || 'Não foi possível agora.'); } }});
 A['auth-skip'] = () => { lsSet('forja.welcome', '1'); UI.stack.pop(); render(); window.scrollTo({top: 0}); };
 document.addEventListener('input', ev => { if (ev.target.id === 'au-pass'){ const r = $('#au-rule'); if (r) r.classList.toggle('ok', ev.target.value.length >= 8); } });
 A.forgot = async () => { const email = ($('#au-email').value || '').trim(); const err = $('#au-err'); if (!email){ err.textContent = 'Digite seu e-mail acima e toque de novo em Esqueci minha senha.'; err.hidden = false; return; }
@@ -1227,7 +1270,7 @@ A['check-verified'] = async el => { el.disabled = true; const ok = await Store.c
 A['resend-verify'] = async () => { try { await Auth.resendVerification(); toast('Enviamos outro e-mail de confirmação.'); } catch (e) { toast(e.status === 429 ? 'Aguarde alguns minutos para reenviar.' : 'Não foi possível reenviar agora.'); } };
 A.logout = () => Store.mode === 'verify' ? Store.logout().then(() => { render(); toast('Você saiu. Seus dados continuam neste aparelho.'); }) : confirmSheet({title: 'Sair da conta?', text: 'Seus dados continuam salvos na conta. Este aparelho fica limpo até você entrar de novo.', ok: 'Sair', onOk: async () => { const left = await Store.logout(); UI.stack = []; UI.tab = 'inicio'; render(); toast(left ? 'Saiu. Algumas alterações recentes não chegaram ao servidor.' : 'Você saiu da conta'); }});
 A['ask-delete-account'] = () => { UI.sheet = {kind: 'delacc'}; openSheet(`${sheetHead('Conta', 'Excluir minha conta')}<form class="stack" style="margin-top:14px" data-form="delacc"><p class="ink2" style="margin:0">Isso apaga para sempre a conta e todos os dados dela no servidor: rotinas, treinos, medidas e perfil. Não dá para desfazer. Se quiser guardar uma cópia, exporte um backup antes.</p>
-    <label class="flabel"><span class="tiny muted">Confirme sua senha</span><input id="del-pass" class="field" type="password" autocomplete="current-password" required></label>
+    ${Auth.user && !Auth.user.password ? '<p class="small muted" style="margin:0">Para confirmar, o Google vai pedir sua conta de novo.</p>' : '<label class="flabel"><span class="tiny muted">Confirme sua senha</span><input id="del-pass" class="field" type="password" autocomplete="current-password" required></label>'}
     <p id="del-err" class="small" style="color:var(--bad);margin:0" hidden></p>
     <button class="btn danger block" type="submit">Excluir conta e dados</button><button class="btn ghost block" type="button" data-act="close">Cancelar</button></form>`); };
 A.install = async () => { const r = await Platform.install(); if (r === 'ios') openSheet(`${sheetHead('Instalar', 'Instalar no iPhone')}<ol class="cues" style="margin-top:14px"><li>Toque em Compartilhar, na barra do Safari.</li><li>Escolha “Adicionar à Tela de Início”.</li><li>Toque em Adicionar. O Forja abre em tela cheia, como um app.</li></ol>`); else if (r === 'accepted'){ toast('Forja instalado'); render(); } else if (r === 'unavailable') toast('Use o menu do navegador: Instalar app'); };
@@ -1273,6 +1316,7 @@ A.wcolor = el => { const w = findWorkout(el.dataset.rid, el.dataset.wid); w.cor 
 A['dup-workout'] = el => { const r = routineById(el.dataset.rid); const w = clone(findWorkout(el.dataset.rid, el.dataset.wid)); w.id = uid('w'); w.nome += ' (cópia)'; w.items.forEach(x => x.uid = uid('i')); r.workouts.push(w); saveState(); UI.stack[UI.stack.length - 1] = {type: 'workout', rid: r.id, wid: w.id, edit: true}; render(); toast('Treino duplicado'); };
 A['ask-del-workout'] = el => { const r = routineById(el.dataset.rid); const w = findWorkout(el.dataset.rid, el.dataset.wid); confirmSheet({title: `Excluir ${w.nome}?`, text: 'Ele sai da rotina. O histórico continua.', ok: 'Excluir treino', danger: true, onOk: () => { r.workouts = r.workouts.filter(x => x !== w); saveState(); pop(); toast('Treino excluído'); }}); };
 A['i-edit'] = el => openItemEdit(+el.dataset.j);
+A['w-sets'] = el => { const p = curPage(); const r = routineById(p.rid); const w = r && r.workouts.find(x => x.id === p.wid); const x = w && w.items[+el.dataset.j]; if (!x) return; const n = Math.max(1, Math.min(10, x.sets + +el.dataset.d)); if (n === x.sets) return; x.sets = n; saveState(); render(); Platform.haptic('light'); };
 A['i-add'] = () => openPicker({kind: 'add', multi: true});
 A['ie-sets'] = el => { readItemEdit(); const d = UI.sheet.draft; d.sets = Math.max(1, Math.min(10, d.sets + +el.dataset.d)); drawItemEdit(); };
 A['ie-rest'] = el => { readItemEdit(); UI.sheet.draft.rest = +el.dataset.r; drawItemEdit(); };
@@ -1305,6 +1349,11 @@ A['set-menu'] = el => { const s = curSess(); const k = +el.dataset.k, j = +el.da
   menuSheet(exName(e.ex), `Série ${j + 1}`, [{label: 'Série normal', icon: svg('M12 5v14'), run: setT('n')}, {label: 'Aquecimento (não conta no volume)', icon: I.flame, run: setT('w')}, {label: 'Até a falha', icon: svg('M5 19L19 5M5 5l14 14'), run: setT('f')}, {label: 'Drop set', icon: svg('M12 5v14M6 13l6 6 6-6'), run: setT('d')},
     e.sets.length > 1 ? {label: 'Apagar esta série', icon: I.trash, danger: true, run: () => { const [rm] = e.sets.splice(j, 1); saveSession(s); render(); toast('Série apagada', () => { e.sets.splice(j, 0, rm); saveSession(s); render(); }); }} : null]); };
 A.addset = el => { const s = curSess(); const e = s.items[+el.dataset.k]; const l = e.sets[e.sets.length - 1]; e.sets.push({kg: l ? l.kg : null, reps: l ? l.reps : null, ok: false, t: 'n', km: false, rm: false}); saveSession(s); render(); };
+/* tira a última série ainda não confirmada; se todas já foram feitas, tira a última (com desfazer) */
+A.rmset = el => { const s = curSess(); const k = +el.dataset.k; const e = s.items[k]; if (!e || e.sets.length < 2) return;
+  let j = -1; for (let i = e.sets.length - 1; i >= 0; i--) if (!e.sets[i].ok){ j = i; break; } if (j < 0) j = e.sets.length - 1;
+  const [rm] = e.sets.splice(j, 1); if (KP.open && KP.k === k) closeKP(); saveSession(s); render(); Platform.haptic('light');
+  toast(`${exName(e.ex)}: ${e.sets.length} ${e.sets.length === 1 ? 'série' : 'séries'}`, () => { e.sets.splice(j, 0, rm); saveSession(s); render(); }); };
 A.expand = el => { UI.expand[+el.dataset.k] = true; render(); };
 A.collapse = el => { const k = +el.dataset.k; delete UI.expand[k]; if (KP.open && KP.k === k) closeKP(); render(); const c = document.getElementById(`card-${k}`); if (c && c.getBoundingClientRect().top < 60) c.scrollIntoView({block: 'start'}); };
 A['ex-menu'] = el => { const s = curSess(); const k = +el.dataset.k; const e = s.items[k]; const t = itemTarget(s, e);
@@ -1321,8 +1370,10 @@ A['note-save'] = () => { const s = curSess(); s.items[UI.sheet.k].note = $('#not
 A.unswap = el => { const s = curSess(); const e = s.items[+el.dataset.k]; e.ex = e.planned; const pre = prefillSets(e.ex, e.sets.length, s.id); e.sets.forEach((x, i) => { if (!x.ok) Object.assign(x, {kg: pre[i].kg, reps: pre[i].reps, km: false, rm: false}); }); saveSession(s); render(); };
 A['add-extra'] = () => { closeKP(); openPicker({kind: 'extra', multi: true}); };
 A.finish = () => { closeKP(); const s = curSess(); if (!s) return; const st = stats(s); const total = s.items.reduce((a, e) => a + e.sets.filter(x => x.t !== 'w').length, 0);
-  if (!st.sets) return confirmSheet({title: 'Nenhuma série marcada', text: 'Marque as séries feitas com o ✓ antes de finalizar, ou descarte o treino.', ok: 'Continuar treinando', cancel: 'Fechar', onOk: () => {}});
-  if (st.sets < total) return confirmSheet({sub: 'Finalizar treino', title: `${st.sets} de ${total} séries feitas`, text: 'As séries sem ✓ não entram no histórico.', ok: 'Finalizar assim', cancel: 'Continuar treinando', onOk: () => finishSession(s)});
+  if (!st.sets) return confirmSheet({sub: 'Concluir treino', title: 'Nenhuma série confirmada', text: 'Você pode marcar este treino como feito mesmo assim: ele entra no calendário e na sequência, mas sem cargas e repetições. Se preferir, volte e confirme as séries com o ✓.', ok: 'Marcar como feito', cancel: 'Continuar treinando', onOk: () => { s.quick = true; finishSession(s); }});
+  if (st.sets < total){ const left = s.items.map(e => [e, e.sets.filter(x => x.t !== 'w' && !x.ok).length]).filter(([, n]) => n);
+    const list = left.slice(0, 4).map(([e, n]) => `${exName(e.ex)} (${n})`).join(', ') + (left.length > 4 ? ` e mais ${left.length - 4}` : '');
+    return confirmSheet({sub: 'Concluir treino', title: `Você fez ${st.sets} de ${total} séries`, text: `O treino não foi feito por completo. Ficaram faltando: ${list}. Tem certeza que quer concluir agora? Só as séries com ✓ entram no histórico.`, ok: 'Concluir mesmo assim', cancel: 'Continuar treinando', onOk: () => finishSession(s)}); }
   finishSession(s); };
 A['ask-discard'] = () => { const s = curSess(); if (!s) return; const draft = s.status === 'draft'; confirmSheet({title: draft ? 'Descartar este registro?' : 'Descartar este treino?', text: draft ? 'Nada será salvo no histórico.' : 'As séries anotadas hoje serão apagadas.', ok: 'Descartar', danger: true, onOk: () => { closeKP(); deleteSession(s.id); if (draft){ UI.stack = []; render(); } else { stopRest(); Platform.keepAwake(false); goTab('inicio'); } toast(draft ? 'Registro descartado' : 'Treino descartado'); }}); };
 A['ask-del-session'] = el => confirmSheet({title: 'Apagar este registro?', ok: 'Apagar', danger: true, onOk: () => { const sid = el.dataset.sid; const s = SESS.find(x => x.id === sid); deleteSession(sid); A.back(); toast('Registro apagado', () => { SESS.push(s); saveSession(s); render(); }); }});
@@ -1407,17 +1458,14 @@ document.addEventListener('submit', async ev => {
     if (bad){ err.textContent = bad; err.hidden = false; btn.disabled = false; btn.classList.remove('busy'); return; } }
   btn.classList.add('busy');
   try { if (wasReg) await Auth.register($('#au-name').value.trim(), $('#au-email').value.trim(), $('#au-pass').value); else await Auth.login($('#au-email').value.trim(), $('#au-pass').value);
-    lsSet('forja.welcome', '1'); closeSheet(); if (curPage()?.type === 'auth') UI.stack.pop(); render(); toast('Conectando…'); await Store.switchToApi();
-    if (Store.mode === 'verify'){ UI.stack = [{type: 'profile'}]; render(); toast(wasReg ? 'Conta criada. Confirme o e-mail para começar a salvar na nuvem.' : 'Confirme seu e-mail para começar a salvar na nuvem.', null, '', 6000); }
-    else if (Store.mode === 'api') toast('Conectado. Seus dados estão sincronizados.');
-    else toast('Conta conectada, mas o servidor não respondeu. Tentaremos de novo.'); if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } render(); }
+    const linked = !!Auth.linked; Auth.linked = false; if (UI.auth) UI.auth.link = false; await afterLogin({reg: wasReg, linked}); }
   catch (e) { err.textContent = e.status === 401 ? 'E-mail ou senha incorretos.' : e.status === 409 ? 'Já existe uma conta com este e-mail.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : e.status === 400 ? (e.message || 'Confira os dados.') : 'Não foi possível conectar ao servidor. Verifique a internet.'; err.hidden = false; btn.disabled = false; btn.classList.remove('busy'); }
 });
 document.addEventListener('submit', async ev => {
   const f = ev.target; if (f.dataset.form !== 'delacc') return; ev.preventDefault();
   const err = $('#del-err'); const btn = f.querySelector('[type=submit]'); btn.disabled = true; err.hidden = true;
-  try { await Store.deleteAccount($('#del-pass').value); closeSheet(); UI.stack = []; UI.tab = 'inicio'; render(); toast('Conta e dados excluídos'); }
-  catch (e) { err.textContent = e.status === 401 || e.status === 403 ? 'Senha incorreta.' : 'Não foi possível excluir agora. Tente de novo com internet.'; err.hidden = false; btn.disabled = false; }
+  try { const pw = $('#del-pass'); await Store.deleteAccount(pw ? pw.value : null); closeSheet(); UI.stack = []; UI.tab = 'inicio'; render(); toast('Conta e dados excluídos'); }
+  catch (e) { if (e.status === 499){ btn.disabled = false; return; } err.textContent = (e.status === 401 || e.status === 403) && $('#del-pass') ? 'Senha incorreta.' : e.code === 'auth/user-mismatch' ? 'Escolha a mesma conta Google desta conta do Forja.' : 'Não foi possível excluir agora. Tente de novo com internet.'; err.hidden = false; btn.disabled = false; }
 });
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape'){ handleBack(); return; }
