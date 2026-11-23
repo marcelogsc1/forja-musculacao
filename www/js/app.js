@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.27.0';
+const APP_VERSION = '4.28.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura'};
 let ST = freshState();
 let SESS = [];

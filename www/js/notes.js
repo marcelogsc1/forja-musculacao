@@ -60,7 +60,9 @@ function obAddFor(m, items, ban){
 /* v4.25: contexto da leitura (equipamentos liberados por "só halteres") e foco em ângulos/porções do músculo */
 const OB_CTX = {plus: new Set(), pref: {}, home: false};
 /* em casa, nada que precise de barra fixa, paralelas ou outro aparelho */
-const obNeedsOk = k => !OB_CTX.home || !(typeof NEEDS_X !== 'undefined' && NEEDS_X[k] || []).some(n => !CASA.includes(n));
+const obNeedsOk = k => (!OB_CTX.home || !(typeof NEEDS_X !== 'undefined' && NEEDS_X[k] || []).some(n => !CASA.includes(n))) && (!OB_CTX.inv || gymOk(k, OB_CTX.inv));
+/* v4.28: em treino de academia, só o que a academia da pessoa tem */
+function obGymInv(items){ const g = ST.profile && ST.profile.gym; if (!g || !g.inv) return null; const used = new Set(items.map(x => (getEx(x.ex) || {}).e)); return ['maquina', 'cabo', 'smith', 'barra'].some(e => used.has(e)) ? new Set(g.inv) : null; }
 const OB_FOCUS = /\b(mais|foco|focar|priori\w*|enfase|enfatizar|reforc\w*|caprich\w*|fraco|atrasad\w*|desenvolver|crescer|atencao|incluir|adicion\w*|acrescent\w*|trabalhar|pegar|quero)\b/;
 const OB_ANG = [
   {re: /\b(peito|peitoral) (superior|de cima|alto)\b|\bparte (de cima|superior|alta) do peito\b|\bclavicular\b/, m: 'peito', t: 'peito superior', p: ['press-incl'], ex: ['crossover-baixo', 'supino-incl-halter']},
@@ -110,7 +112,7 @@ let OB_POP = null; const obPop = () => OB_POP || (OB_POP = new Set(Object.values
 function obFindEx(phrase, items = [], ban = new Set()){
   const ws = obWords(phrase); const core = ws.filter(w => !OB_EQ.some(([re]) => re.test(w)) && !OB_MUS.some(([re]) => re.test(w))); if (!core.length) return null; const qeq = (OB_EQ.find(([re]) => re.test(norm(phrase))) || [])[1];
   let best = null, bs = 0; const pop = obPop();
-  Object.keys(CAT).forEach(k => { const c = CAT[k]; if (c.hid || ban.has(c.e)) return; const toks = norm(c.n).split(/[^a-z0-9]+/).filter(Boolean);
+  Object.keys(CAT).forEach(k => { const c = CAT[k]; if (c.hid || ban.has(c.e) || !obNeedsOk(k)) return; const toks = norm(c.n).split(/[^a-z0-9]+/).filter(Boolean);
     const hc = core.filter(w => obTokHit(toks, w)).length; if (!hc) return; const ha = ws.filter(w => obTokHit(toks, w)).length;
     const sc = hc * 10 + ha * 3 + (qeq && c.e === qeq ? 8 : 0) - toks.length * .4 - (OB_HARD.has(k) ? 2 : 0) - (items.some(x => x.ex === k) ? 5 : 0) + (pop.has(k) ? 2 : 0);
     if (hc >= Math.min(2, core.length) && sc > bs){ bs = sc; best = k; } });
@@ -138,7 +140,7 @@ function obFitTime(items, mins){
 /* opts.program: leitura para um programa inteiro (assistente). Foco em músculo só mexe nos treinos que já trabalham aquele músculo. */
 function obInterpret(text, w0, off = new Set(), opts = {}){
   let items = w0.items.map(x => ({...x})); const rules = [], flags = [], notes = [];
-  const ban = new Set(); let fitTo = null; let wset = {}; OB_CTX.plus = new Set(); const S = !!opts.session; const lockd = x => S && x._done > 0; const tot = x => (x._done || 0) + x.sets; const used = new Set();
+  const ban = new Set(); let fitTo = null; let wset = {}; OB_CTX.plus = new Set(); OB_CTX.inv = opts.inv !== undefined ? (opts.inv ? new Set(opts.inv) : null) : obGymInv(w0.items || []); const S = !!opts.session; const lockd = x => S && x._done > 0; const tot = x => (x._done || 0) + x.sets; const used = new Set();
   const FILL = /\b(por favor|pfv|pf|obrigad[oa]|valeu|ok|blz|beleza)\b/g;
   const clauses = norm(text).replace(/\s+e\s+(?=(nao|sem|mais|quero|prefiro|tenho|tirar|trocar|foco|focar|priorizar|descanso|estou|odeio|evitar)\b)/g, ';').split(/[\n.;!?]+|,|\bmas\b/).map(c => c.replace(FILL, '').trim()).filter(c => c.length > 2);
   const push = (title, fn) => { const i = rules.length; const before = items.map(x => ({...x})); const bw = {...wset}; const log = fn(); if (!log || !log.length){ items = before; wset = bw; return false; } if (off.has(i)){ items = before; wset = bw; } rules.push({title, log, on: !off.has(i)}); return true; };

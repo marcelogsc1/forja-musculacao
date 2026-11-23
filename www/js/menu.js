@@ -18,6 +18,11 @@ const MN_TRAIN = [['manha', 'Manhã'], ['tarde', 'Tarde'], ['noite', 'Noite'], [
 const DIET_EX = {oni: [], semver: ['carne', 'porco'], pesc: ['carne', 'porco', 'frango'], veg: ['carne', 'porco', 'frango', 'peixe', 'mar'], vegan: ['carne', 'porco', 'frango', 'peixe', 'mar', 'ovo', 'lac', 'mel']};
 const MN_NOTE = {leitepo: 'dissolvido em água', sojapo: 'dissolvida em água', macarrao: 'peso cru', cafe: 'ou chá, sem açúcar'};
 const MAIN = ['alm', 'jan'];
+/* v4.28: alimentos que você gosta e que evita, escolhidos na lista, e o quanto variar */
+const MN_GROUPS = [['Proteínas', ['prot', 'bprot']], ['Carboidratos', ['base', 'bcarb']], ['Feijões', ['leg']], ['Frutas', ['fruit']], ['Saladas e legumes', ['salad', 'cooked']], ['Gorduras, castanhas e outros', ['fat', 'sweet', 'drink']]];
+const MN_RANGE = [['basic', 'Básicos', 'O que tem em qualquer mercado'], ['mid', 'Equilibrado', 'Básicos e alguns diferentes'], ['wide', 'Bem variado', 'Inclui os menos comuns']];
+/* o básico do mercado brasileiro: fácil de achar e de preparar */
+const MN_COMMON = new Set(['arroz', 'batata', 'batdoce', 'mandioca', 'macarrao', 'cuscuz', 'fcarioca', 'fpreto', 'frango', 'coxa', 'patinho', 'moida', 'musculo', 'ovo', 'atum', 'sardinha', 'paof', 'paoi', 'aveia', 'tapioca', 'torrada', 'iogurte', 'minas', 'mussarela', 'requeijao', 'presunto', 'leitepo', 'banana', 'maca', 'mamao', 'laranja', 'melancia', 'goiaba', 'tangerina', 'abacaxi', 'alface', 'tomate', 'pepino', 'cenoura', 'repolho', 'abobrinha', 'abobora', 'chuchu', 'beterraba', 'couve', 'cenourac', 'brocolis', 'azeite', 'amendoim', 'manteiga', 'mel', 'cafe']);
 
 /* Modelos de refeição. Cada vaga: r = papel do alimento, from = alimentos aceitos (sem from, qualquer um do papel),
    n = quantos diferentes, fix = porção fixa (não entra no ajuste), opt = some se não houver opção. */
@@ -222,11 +227,12 @@ function fatten(m, cx){ const main = MAIN.includes(m.k); return {...m, it: m.it.
 
 /* ---------- escolha dos alimentos ---------- */
 function menuCtx(cfg, o, res){
+  const fp = cfg.fp || {}; (fp.like || []).forEach(k => FOODS[k] && o.like.add(k)); (fp.no || []).forEach(k => FOODS[k] && o.no.add(k)); const range = cfg.range || 'mid';
   const ex = new Set([...(DIET_EX[o.diet || cfg.diet] || []), ...o.ex]);
   const vg = ['veg', 'vegan'].includes(o.diet || cfg.diet);
-  const ok = k => { const F = FOODS[k]; if (o.no.has(k)) return false; if (o.noFruit && F.r.includes('fruit')) return false; if (o.noCooked && F.r.includes('cooked')) return false; if (!vg && k === 'tofu' && !o.like.has(k)) return false; if (!vg && k === 'sojapo' && !o.like.has(k) && !ex.has('lac')) return false; if (F.tg.some(t => ex.has(t))) return false; if (ex.has('glu') && k === 'aveia') return false; if (ex.has('cafe') && k === 'cafe') return false; return true; };
+  const ok = k => { const F = FOODS[k]; if (o.no.has(k)) return false; if (range === 'basic' && !MN_COMMON.has(k) && !o.like.has(k)) return false; if (o.noFruit && F.r.includes('fruit')) return false; if (o.noCooked && F.r.includes('cooked')) return false; if (!vg && k === 'tofu' && !o.like.has(k)) return false; if (!vg && k === 'sojapo' && !o.like.has(k) && !ex.has('lac')) return false; if (F.tg.some(t => ex.has(t))) return false; if (ex.has('glu') && k === 'aveia') return false; if (ex.has('cafe') && k === 'cafe') return false; return true; };
   const diet = o.diet || cfg.diet; const goal = (ST.prefs.plan || {}).goal || 'maint';
-  return {cfg, o, res, ex, ok, diet, goal, style: o.prat ? 'prat' : o.style || cfg.style, din: o.din || cfg.din || 'prato', veg: diet === 'veg' || diet === 'vegan'};
+  return {cfg, o, res, ex, ok, diet, goal, range, style: o.prat ? 'prat' : o.style || cfg.style, din: o.din || cfg.din || 'prato', veg: diet === 'veg' || diet === 'vegan'};
 }
 function weightOf(k, r, cx, used, mealUsed, dayU){
   const F = FOODS[k]; let w = 1;
@@ -236,6 +242,8 @@ function weightOf(k, r, cx, used, mealUsed, dayU){
   if (cx.style === 'prat' && F.tg.includes('pratico')) w *= 2;
   if (cx.o.budget){ if (F.tg.includes('barato')) w *= 2.4; else if (['salmao', 'camarao', 'nozes', 'amendoa', 'castpara', 'kiwi', 'morango', 'contra', 'maminha'].includes(k)) w *= .3; }
   if (cx.style === 'var') w *= 1;
+  if (cx.range === 'wide' && !MN_COMMON.has(k)) w *= 1.9;
+  if (cx.range === 'mid' && !MN_COMMON.has(k) && !cx.o.like.has(k)) w *= .7;
   if (k === 'arroz' && cx.style === 'trad') w *= 1.6;
   if ((k === 'tofu' || k === 'sojapo') && !cx.veg && !cx.o.like.has(k)) w *= .12;
   if (k === 'clara' && cx.goal !== 'cut') w *= .4;
@@ -345,8 +353,9 @@ function amountTxt(f, g, unit){
   const F = FOODS[f]; const gR = g < 20 ? Math.round(g) : Math.round(g / 5) * 5;
   if (f === 'cafe') return {q: unit === 'g' ? `${fmtInt(gR)} ml` : `${frTxt(Math.max(.5, Math.round(g / F.m[0] * 2) / 2))} ${g > F.m[0] ? F.m[2] : F.m[1]}`, sub: MN_NOTE[f]};
   if (unit === 'g' || !F.m) return {q: `${fmtInt(gR)} g`, sub: unit !== 'g' && MN_NOTE[f] ? MN_NOTE[f] : MN_NOTE[f] || ''};
-  const [ug, s, p] = F.m; let u = g / ug; u = ug < 6 ? Math.max(1, Math.round(u)) : Math.max(.5, Math.round(u * 2) / 2);
-  if (u > 8 && ug >= 6) return {q: `${fmtInt(gR)} g`, sub: MN_NOTE[f] || ''};
+  /* v4.28: colheres e unidades pequenas sempre inteiras; xícara, concha, prato, fatia e unidades grandes aceitam meio */
+  const [ug, s, p] = F.m; const whole = ug < 6 || /^colher/.test(s) || ['ovo', 'tapioca', 'torrada', 'castanha', 'noz', 'amêndoa', 'coxa', 'uva'].includes(s); let u = g / ug; u = whole ? Math.max(1, Math.round(u)) : Math.max(.5, Math.round(u * 2) / 2);
+  if ((/^colher/.test(s) ? u > 16 : u > 8) && ug >= 6) return {q: `${fmtInt(gR)} g`, sub: MN_NOTE[f] || ''};
   const approx = Math.abs(u * ug - g) / g > .12;
   const num = frTxt(u);
   return {q: `${approx ? '≈ ' : ''}${num} ${u > 1 ? p : s}`, sub: `${fmtInt(gR)} g${MN_NOTE[f] ? ' · ' + MN_NOTE[f] : ''}`};
@@ -390,7 +399,7 @@ function menuView(){
   });
   h += `</div><div class="row wrap mn-acts"><button class="btn ghost sm" data-act="mn-redo">Refazer todos</button><button class="btn ghost sm" data-act="mn-toggle">Minimizar</button></div>
     <p class="mn-disc">Sugestões para inspirar, não uma dieta prescrita. Para um plano preciso e seguro para você, procure um nutricionista.</p>
-    <p class="mn-src">Composição: TACO 4ª ed. (NEPA/UNICAMP). Medidas caseiras: POF 2008-2009 (IBGE).</p></section>`;
+    <p class="mn-src">Composição: TACO 4ª ed. (NEPA/UNICAMP). Medidas caseiras: POF 2008-2009 (IBGE), em colheres, xícaras, conchas, prato raso e unidades.</p></section>`;
   return h;
 }
 
@@ -440,7 +449,7 @@ function obsPreview(text){
 }
 function openMenuSetup(){
   const M = ST.prefs.menu || {}; const pl = ST.prefs.plan || {}; const g = guessTrain();
-  const c = UI.mnc = {n: M.n || pl.meals || 4, style: M.style || 'trad', diet: M.diet || 'oni', din: M.din || 'prato', train: M.train || g || 'none', obs: M.obs || ''};
+  const c = UI.mnc = {n: M.n || pl.meals || 4, style: M.style || 'trad', diet: M.diet || 'oni', din: M.din || 'prato', train: M.train || g || 'none', obs: M.obs || '', range: M.range || 'mid', fp: {like: [...((M.fp || {}).like || [])], no: [...((M.fp || {}).no || [])]}};
   const chips = (act, opts, cur) => `<div class="pw-chips">${opts.map(([v, l]) => `<button data-act="${act}" data-v="${v}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join('')}</div>`;
   openSheet(`${sheetHead('Cardápios', M.on ? 'Ajustar cardápios' : 'Montar cardápios')}
     <div class="stack" style="margin-top:14px;gap:16px">
@@ -449,6 +458,10 @@ function openMenuSetup(){
     <div class="pw-f"><span class="pw-l">Alimentação</span>${chips('mnc-diet', MN_DIETS, c.diet)}</div>
     <div class="pw-f"><span class="pw-l">Jantar</span>${chips('mnc-din', [['prato', 'Prato de comida'], ['lanche', 'Lanche'], ['misto', 'Alternar']], c.din)}<span class="tiny muted">Lanche: sanduíche, tapioca, omelete ou cuscuz no lugar de arroz e feijão.</span></div>
     <div class="pw-f"><span class="pw-l">Horário do treino ${g ? '<small>(sugerido pelo seu histórico)</small>' : ''}</span>${chips('mnc-train', MN_TRAIN, c.train)}<span class="tiny muted">O lanche antes do treino ganha carboidrato e menos gordura; o depois, proteína.</span></div>
+    <div class="pw-f"><span class="pw-l">Que alimentos usar</span><div class="seg">${MN_RANGE.map(([v, t]) => `<button data-act="mnc-range" data-v="${v}" aria-pressed="${c.range === v}">${t}</button>`).join('')}</div></div>
+    <div class="pw-f"><span class="pw-l">Seus alimentos <small id="mnc-fp-n">${mnFpTxt(c.fp)}</small></span>
+      <p class="tiny muted" style="margin:0 0 6px">1 toque: <b class="fp-lk">gosto</b> · 2 toques: <b class="fp-no">não como</b></p>
+      ${MN_GROUPS.map(([t, rs], gi) => { const ks = Object.keys(FOODS).filter(k => FOODS[k].r.some(r => rs.includes(r))); return `<details class="fp-g"><summary>${t} <span class="tiny muted">${ks.length}</span>${I.down}</summary><div class="fp-l">${ks.map(k => { const st = c.fp.like.includes(k) ? 'like' : c.fp.no.includes(k) ? 'no' : ''; return `<button class="fp-c" data-act="mnc-fp" data-k="${k}" data-s="${st}" aria-label="${esc(FOODS[k].n)}">${esc(FOODS[k].n)}</button>`; }).join('')}</div></details>`; }).join('')}</div>
     <div class="pw-f"><span class="pw-l">Observações e preferências</span>
       <textarea id="mn-obs" class="field ob-ta" rows="3" maxlength="500" placeholder="Ex.: sem lactose · não gosto de peixe · adoro ovos · levo marmita · orçamento apertado" aria-label="Observações e preferências">${esc(c.obs)}</textarea>
       <div id="mn-obs-prev" class="mn-prev">${obsPreview(c.obs)}</div>
@@ -458,6 +471,7 @@ function openMenuSetup(){
     </div>
     <div class="sheet-foot"><button class="btn primary block" data-act="mn-create">${M.on ? 'Atualizar cardápios' : 'Criar cardápios'}</button>${M.on ? '<button class="link muted" style="width:100%;margin-top:4px" data-act="mn-off">Desligar sugestões de cardápio</button>' : ''}</div>`);
 }
+function mnFpTxt(fp){ const a = fp.like.length, b = fp.no.length; return a || b ? `${a ? a + ' gosto' : ''}${a && b ? ' · ' : ''}${b ? b + ' não como' : ''}` : ''; }
 function mnKeepObs(){ const t = $('#mn-obs'); if (t && UI.mnc) UI.mnc.obs = t.value; }
 function mnPress(act, v){ document.querySelectorAll(`[data-act="${act}"]`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === String(v)))); }
 A['mn-setup'] = () => openMenuSetup();
@@ -466,11 +480,15 @@ A['mnc-style'] = el => { UI.mnc.style = el.dataset.v; mnPress('mnc-style', el.da
 A['mnc-diet'] = el => { UI.mnc.diet = el.dataset.v; mnPress('mnc-diet', el.dataset.v); };
 A['mnc-din'] = el => { UI.mnc.din = el.dataset.v; mnPress('mnc-din', el.dataset.v); };
 A['mnc-train'] = el => { UI.mnc.train = el.dataset.v; mnPress('mnc-train', el.dataset.v); };
+A['mnc-range'] = el => { UI.mnc.range = el.dataset.v; mnPress('mnc-range', el.dataset.v); };
+A['mnc-fp'] = el => { const k = el.dataset.k; const fp = UI.mnc.fp; const st = el.dataset.s || ''; const nx = st === '' ? 'like' : st === 'like' ? 'no' : '';
+  fp.like = fp.like.filter(x => x !== k); fp.no = fp.no.filter(x => x !== k); if (nx === 'like') fp.like.push(k); if (nx === 'no') fp.no.push(k);
+  el.dataset.s = nx; const n = $('#mnc-fp-n'); if (n) n.textContent = mnFpTxt(fp); Platform.haptic('light'); };
 A['mnc-ex'] = el => { const t = $('#mn-obs'); if (!t) return; const v = t.value.trim(); t.value = v ? `${v.replace(/[,;.]\s*$/, '')}, ${el.dataset.v}` : el.dataset.v; mnKeepObs(); $('#mn-obs-prev').innerHTML = obsPreview(t.value); };
 A['mn-create'] = () => {
   mnKeepObs(); const c = UI.mnc; const old = ST.prefs.menu || {};
   const o = parseMenuObs(c.obs);
-  ST.prefs.menu = {...old, on: true, n: o.meals || c.n, style: o.style || c.style, diet: o.diet || c.diet, din: o.din || c.din, train: o.train || c.train, obs: c.obs.trim().slice(0, 500), unit: old.unit || 'cas', day: 0};
+  ST.prefs.menu = {...old, on: true, n: o.meals || c.n, style: o.style || c.style, diet: o.diet || c.diet, din: o.din || c.din, train: o.train || c.train, obs: c.obs.trim().slice(0, 500), unit: old.unit || 'cas', day: 0, range: c.range, fp: {like: c.fp.like.slice(), no: c.fp.no.slice()}};
   if (!makeMenu(false)){ toast('Calcule suas metas primeiro.'); return; }
   UI.mnOpen = true; closeSheet(); render(); Platform.haptic('success'); toast('Cardápios prontos');
 };
@@ -506,9 +524,21 @@ A['mn-swap'] = el => {
   const cur = macOf([it]); cands.sort((x, y) => (cx.o.like.has(y.k) - cx.o.like.has(x.k)) || Math.abs(x.m.k - cur.k) - Math.abs(y.m.k - cur.k)); const what = {p: 'a mesma proteína', c: 'o mesmo carboidrato', f: 'a mesma gordura', k: 'as mesmas calorias', d: 'uma porção equivalente'}[lv];
   UI.sheet = {kind: 'mnswap', di, mi, ii};
   const a0 = amountTxt(it.f, it.g, unit);
+  UI.sheet.cands = cands.slice(0, 1).map(c => c.k);
   openSheet(`${sheetHead(MEALS[meal.k].t, 'Trocar ' + FOODS[it.f].n.toLowerCase())}
     <p class="small ink2" style="margin:8px 0 0">Agora: <b>${esc(a0.q)}</b>${a0.sub ? ` (${esc(a0.sub)})` : ''}, ${fmtK(cur.k)} kcal. As opções abaixo entregam ${what}.</p>
-    <div class="mn-swl">${cands.length ? cands.map(c => { const a = amountTxt(c.k, c.g, unit); const dk = Math.round(c.m.k - cur.k); return `<button class="mn-swi" data-act="mn-swap-do" data-f="${c.k}" data-g="${c.g}"><span class="grow"><b>${esc(FOODS[c.k].n)}</b><span>${esc(a.q)}${a.sub ? ` · ${esc(a.sub)}` : ''}</span></span><em class="mono ${Math.abs(dk) < 25 ? '' : dk > 0 ? 'up' : 'dn'}">${dk === 0 ? '=' : (dk > 0 ? '+' : '−') + Math.abs(dk)} kcal</em></button>`; }).join('') : '<p class="small muted">Nenhuma troca com as suas preferências.</p>'}</div>`);
+    <div class="mn-swl">${cands.length ? cands.map(c => { const a = amountTxt(c.k, c.g, unit); const dk = Math.round(c.m.k - cur.k); return `<button class="mn-swi" data-act="mn-swap-do" data-f="${c.k}" data-g="${c.g}"><span class="grow"><b>${esc(FOODS[c.k].n)}</b><span>${esc(a.q)}${a.sub ? ` · ${esc(a.sub)}` : ''}</span></span><em class="mono ${Math.abs(dk) < 25 ? '' : dk > 0 ? 'up' : 'dn'}">${dk === 0 ? '=' : (dk > 0 ? '+' : '−') + Math.abs(dk)} kcal</em></button>`; }).join('') : '<p class="small muted">Nenhuma troca com as suas preferências.</p>'}</div>
+    <button class="btn ghost block mn-dis" data-act="mn-dislike">${I.x || ''}Não gosto: tirar dos cardápios</button>`);
+};
+/* "não gosto": o alimento sai de todos os cardápios e entra a melhor troca equivalente em cada lugar */
+A['mn-dislike'] = () => {
+  const s = UI.sheet; const M = ST.prefs.menu; if (!s || s.kind !== 'mnswap' || !M) return; const k = M.days[s.di].meals[s.mi].it[s.ii].f;
+  M.fp = M.fp || {like: [], no: []}; M.fp.like = (M.fp.like || []).filter(x => x !== k); if (!(M.fp.no || []).includes(k)) M.fp.no = [...(M.fp.no || []), k];
+  const res = planRes(); const o = parseMenuObs(M.obs); const cx = menuCtx(M, o, res || {}); let n = 0;
+  M.days.forEach(d => d.meals.forEach(m => { const inMeal = new Set(m.it.map(x => x.f)); m.it = m.it.flatMap(it => { if (it.f !== k) return [it]; n++;
+    const best = Object.keys(FOODS).filter(x => x !== k && !inMeal.has(x) && FOODS[x].r.includes(it.r) && cx.ok(x)).map(x => ({x, g: swapGrams(k, x, it.g, it.r)})).sort((a, b) => (cx.o.like.has(b.x) - cx.o.like.has(a.x)) || Math.abs(macOf([{f: a.x, g: a.g}]).k - macOf([it]).k) - Math.abs(macOf([{f: b.x, g: b.g}]).k - macOf([it]).k))[0];
+    if (!best) return []; inMeal.add(best.x); return [{...it, f: best.x, g: best.g}]; }); }));
+  saveState(); closeSheet(); render(); Platform.haptic('success'); toast(`${FOODS[k].n} saiu dos cardápios (${n} ${n === 1 ? 'troca' : 'trocas'})`);
 };
 A['mn-swap-do'] = el => {
   const s = UI.sheet; const M = ST.prefs.menu; if (!s || s.kind !== 'mnswap' || !M) return;

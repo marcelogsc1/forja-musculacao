@@ -38,6 +38,48 @@ const NEEDS_X = {
 };
 function exNeeds(id){ const x = CAT[id]; if (!x) return ['?']; return NEEDS_X[id] || NEEDS_BASE[x.e] || ['?']; }
 function exOk(id, local){ const L = LOCAIS[local]; if (!L || !L.ok) return true; return exNeeds(id).every(n => L.ok.includes(n)); }
+/* ---------- v4.28: tipo de academia e o que ela tem ----------
+   Nem toda academia é igual. O assistente pergunta o tipo, já marca o que costuma existir nele
+   e a pessoa ajusta. O gerador e o ajuste rápido só escolhem o que dá para fazer ali. */
+const GYM_INV = [
+  ['halter', 'Halteres', ''], ['barra', 'Barras e anilhas', ''], ['bancosup', 'Banco de supino', ''], ['rack', 'Rack de agachamento', ''], ['smith', 'Smith', ''],
+  ['polia', 'Polia', ''], ['cross', 'Cross over', ''], ['legpress', 'Leg press', ''], ['hack', 'Hack', ''], ['maqinf', 'Extensora e flexora', ''],
+  ['abdutora', 'Abdutora e adutora', ''], ['maqsup', 'Máquinas de tronco', 'supino, voador, puxada'], ['articulada', 'Máquinas específicas', 'hip thrust, cavalinho'],
+  ['barrafixa', 'Barra fixa', ''], ['paralelas', 'Paralelas', ''], ['kettlebell', 'Kettlebells', ''], ['cardio', 'Esteira e bike', ''], ['outros', 'Corda naval e trenó', ''],
+];
+const GYM_TIPOS = {
+  bairro: {n: 'Academia de bairro', d: 'O básico: barras, halteres e poucas máquinas.', inv: ['halter', 'barra', 'bancosup', 'rack', 'polia', 'legpress', 'maqinf', 'barrafixa', 'paralelas', 'cardio']},
+  rede: {n: 'Academia de rede', d: 'Muitas máquinas, polias e smith.', inv: ['halter', 'barra', 'bancosup', 'smith', 'polia', 'cross', 'legpress', 'hack', 'maqinf', 'abdutora', 'maqsup', 'barrafixa', 'cardio']},
+  completa: {n: 'Academia completa', d: 'Quase tudo, até máquinas específicas.', inv: GYM_INV.map(x => x[0])},
+  nsei: {n: 'Não sei dizer', d: 'Uma academia comum.', inv: ['halter', 'barra', 'bancosup', 'rack', 'smith', 'polia', 'cross', 'legpress', 'maqinf', 'maqsup', 'barrafixa', 'cardio']},
+};
+const GYM_PREF = [['livre', 'Pesos livres'], ['equil', 'Equilibrado'], ['maq', 'Máquinas']];
+const G_CROSS = new Set(['crossover', 'crossover-baixo', 'crossover-alto', 'lenhador', 'coice-cabo', 'pull-through', 'supino-cabo', 'rosca-martelo-cruzada', 'elev-lateral-cabo', 'triceps-coice-cabo', 'rosca-cabo-alto']);
+const G_RACK = new Set(['agachamento', 'agachamento-frontal', 'afundo-barra', 'bom-dia']);
+const G_BENCH = new Set(['supino-reto-barra', 'supino-incl-barra', 'supino-decl-barra', 'supino-fechado']);
+const G_ARTIC = new Set(['remada-apoiada-t', 'hip-thrust-maquina', 'hiperext-reversa', 'pant-sentado', 'elev-lateral-maquina', 'mergulho-maquina', 'desenv-maquina-2', 'remada-alta-maquina']);
+const G_CARDIO = new Set(['esteira', 'caminhada-inclinada', 'bike', 'eliptico', 'remo-ergometro', 'stepmill', 'air-bike', 'corrida']);
+/* o que da academia o exercício precisa (vazio: dá em qualquer academia) */
+function gymNeeds(id){
+  const x = CAT[id]; if (!x) return [];
+  const nx = (NEEDS_X[id] || []).filter(n => n === 'barrafixa' || n === 'paralelas');
+  if (x.e === 'barra') return ['barra', ...(G_RACK.has(id) ? ['rack'] : []), ...(G_BENCH.has(id) ? ['bancosup'] : [])];
+  if (x.e === 'halter') return ['halter'];
+  if (x.e === 'smith') return ['smith'];
+  if (x.e === 'kettlebell') return ['kettlebell'];
+  if (x.e === 'cabo') return [G_CROSS.has(id) ? 'cross' : 'polia'];
+  if (x.e === 'maquina'){
+    if (G_CARDIO.has(id)) return ['cardio']; if (id === 'hack') return ['hack']; if (id === 'leg-press' || id === 'pant-legpress') return ['legpress'];
+    if (['extensora', 'cadeira-flexora', 'mesa-flexora', 'pant-pe'].includes(id)) return ['maqinf']; if (id === 'abducao' || id === 'adutora') return ['abdutora'];
+    if (G_ARTIC.has(id)) return ['articulada']; if (NEEDS_X[id] && NEEDS_X[id].includes('maquina') && ['elev-joelhos-paralela', 'hiperextensao', 'abd-declinado', 'pant-burrinho'].includes(id)) return [];
+    return ['maqsup'];
+  }
+  if (id === 'corda-naval' || id === 'treno') return ['outros'];
+  if (id === 'elev-frontal-anilha') return ['barra'];
+  return nx;
+}
+const gymOk = (id, inv) => !inv || gymNeeds(id).every(n => inv.has(n));
+const GYM_LIVRE = ['barra', 'halter', 'kettlebell', 'peso'], GYM_MAQ = ['maquina', 'cabo', 'smith'];
 const NIVEIS = ['Iniciante', 'Intermediário', 'Avançado'];
 const FOCOS = {
   bracos: {n: 'Braços', reg: ['biceps', 'triceps', 'antebraco'], slots: ['bi2', 'tri2'], small: true},
@@ -128,11 +170,19 @@ const FOCUS_DAY = {peito: 'FUP', costas: 'FUB', bracos: 'FUPB', ombros: 'FUP', g
    (num programa de kettlebell, o kettlebell vem antes do peso do corpo). */
 /* pedem força ou técnica avançada: fora dos programas de iniciante */
 const HARD = ['sissy', 'agachamento-unilateral', 'flexora-nordica', 'flexao-parede-invertida', 'flexao-arqueiro', 'paralelas', 'paralelas-peito', 'kb-snatch', 'elev-pernas-barra', 'flexao-palma', 'barra-arqueiro', 'joelho-cotovelo-suspenso', 'trx-pike', 'salto-grupado', 'trx-agachamento-unilateral', 'canivete'];
-function pickEx(slot, eq, used, prefMachine, local, beginner){
-  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)));
+function pickEx(slot, eq, used, prefMachine, local, beginner, gym){
+  const inv = gym && gym.inv ? new Set(gym.inv) : null;
+  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)) && (!inv || (local || 'academia') !== 'academia' || gymOk(x, inv)));
   const main = local && LOCAIS[local] && LOCAIS[local].main;
   if (main) c = [...c].sort((a, b) => (CAT[b].e === main) - (CAT[a].e === main));
-  if (prefMachine) c = [...c].sort((a, b) => (/maquina|cabo/.test(CAT[b].e) ? 1 : 0) - (/maquina|cabo/.test(CAT[a].e) ? 1 : 0));
+  const pref = gym && gym.pref;
+  /* preferência da pessoa: pesos livres ou máquinas primeiro; na academia completa, as máquinas específicas ganham espaço */
+  /* preferência suave: sobe algumas posições, sem trocar um bom exercício por um bem pior (ex.: flexora com halter no lugar da cadeira flexora) */
+  const soft = (L, test, k) => { const r = x => L.indexOf(x) - (test(x) ? k : 0); return [...L].sort((a, b) => r(a) - r(b)); };
+  const kk = /iso|small/.test(SLOTS[slot].r) ? .8 : 2.5;
+  if (pref === 'livre') c = soft(c, x => GYM_LIVRE.includes(CAT[x].e) && CAT[x].e !== 'peso', kk);
+  else if (pref === 'maq' || (prefMachine && pref !== 'livre')) c = pref === 'maq' ? soft(c, x => GYM_MAQ.includes(CAT[x].e), kk) : [...c].sort((a, b) => GYM_MAQ.includes(CAT[b].e) - GYM_MAQ.includes(CAT[a].e));
+  if (gym && gym.tipo === 'completa' && pref !== 'livre'){ const r = x => c.indexOf(x) - (G_ARTIC.has(x) || G_CROSS.has(x) ? 1.5 : 0); c = [...c].sort((a, b) => r(a) - r(b)); }
   return c.find(x => !used.has(x)) || null;
 }
 /* Gera um programa. o = {goal, local, dias, nivel, dur, foco, split} */
@@ -149,7 +199,7 @@ function genProgram(o){
     const used = new Set(); const items = [];
     for (const s of slots){
       if (items.length >= n + extra) break;
-      const ex = pickEx(s, eq, used, beginner && o.local === 'academia', o.local, beginner); if (!ex) continue; used.add(ex);
+      const ex = pickEx(s, eq, used, beginner && o.local === 'academia', o.local, beginner, o.local === 'academia' ? o.gym : null); if (!ex) continue; used.add(ex);
       const role = SLOTS[s].r === 'circ' ? 'comp' : SLOTS[s].r === 'cardio' ? 'comp' : SLOTS[s].r;
       let [sets, rmin, rmax, rest] = sch[role] || sch.comp;
       if (beginner){ sets = Math.max(2, sets - 1); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 10); rmax = Math.max(rmax, 15); } }
@@ -160,7 +210,7 @@ function genProgram(o){
     if (circuit && items.length){ items.forEach(x => { x.rest = 0; x.sets = beginner ? 3 : 4; }); items[items.length - 1].rest = 90; items[0].nota = 'Circuito: faça os exercícios em sequência e descanse 90 s ao fim de cada volta.'; }
     if (o.goal === 'definicao'){
       for (let i = 2; i + 1 < items.length; i += 2){ items[i].rest = 0; items[i].nota = 'Bi-set: vá direto para o próximo exercício.'; }
-      const c = pickEx('cardio', eq, used, false, o.local);
+      const c = pickEx('cardio', eq, used, false, o.local, false, o.local === 'academia' ? o.gym : null);
       if (c) items.push({ex: c, sets: 1, rmin: 15, rmax: 20, rest: 0, nota: 'Cardio moderado de 15 a 20 minutos. Anote os minutos no campo de repetições.'});
     }
     if (items[0] && SLOTS[d.s[0]].r === 'main' && !circuit && !items[0].nota) items[0].nota = 'Faça 1 a 2 séries leves de aproximação antes.';

@@ -1601,3 +1601,26 @@ html[data-lbg="faixa"] #view>section:first-child>.hero-lbl{color:#FFFFFF;--pc:#F
 /* entrada sempre escura, com qualquer tema e qualquer fundo */
 html:has(body.auth-mode),html[data-lbg] body.auth-mode{background:#0E0F11}
 body.auth-mode #lbg{display:none}
+/* v4.28: o que a academia tem */
+.gym-inv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gym-it{display:flex;align-items:flex-start;gap:10px;text-align:left;padding:11px 12px;border-radius:14px;border:1px solid var(--line2);background:var(--s1);color:var(--ink);min-height:52px}
+.gym-it b{display:block;font-size:13.5px;font-weight:600;line-height:1.25}
+.gym-it small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.gym-it .tick{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line2);display:grid;place-items:center;margin-top:1px}
+.gym-it .tick svg{width:13px;height:13px;stroke:#fff;stroke-width:3;opacity:0}
+.gym-it[aria-pressed="true"]{border-color:color-mix(in srgb,var(--ember) 55%,var(--line2));background:color-mix(in srgb,var(--ember) 7%,var(--s1))}
+.gym-it[aria-pressed="true"] .tick{background:var(--ember);border-color:var(--ember)}
+.gym-it[aria-pressed="true"] .tick svg{opacity:1}
+/* v4.28: alimentos que gosta e evita */
+.fp-g{border-top:1px solid var(--line);padding:4px 0}
+.fp-g summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:42px;font-weight:600;font-size:14px;cursor:pointer}
+.fp-g summary::-webkit-details-marker{display:none}
+.fp-g summary svg{margin-left:auto;width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s}
+.fp-g[open] summary svg{transform:rotate(180deg)}
+.fp-l{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 10px}
+.fp-c{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--s1);color:var(--ink2);font-size:13px;font-weight:500}
+.fp-c[data-s="like"]{border-color:var(--ember);background:color-mix(in srgb,var(--ember) 12%,var(--s1));color:var(--ink);font-weight:600}
+.fp-c[data-s="like"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ember);margin-right:7px;vertical-align:1px}
+.fp-c[data-s="no"]{text-decoration:line-through;color:var(--muted);background:var(--s2);border-style:dashed}
+.fp-lk{color:var(--ember)}.fp-no{text-decoration:line-through}
+.mn-dis{margin-top:14px;color:var(--danger,#D13C30)}
