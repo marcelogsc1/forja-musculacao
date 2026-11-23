@@ -170,9 +170,44 @@ const FOCUS_DAY = {peito: 'FUP', costas: 'FUB', bracos: 'FUPB', ombros: 'FUP', g
    (num programa de kettlebell, o kettlebell vem antes do peso do corpo). */
 /* pedem força ou técnica avançada: fora dos programas de iniciante */
 const HARD = ['sissy', 'agachamento-unilateral', 'flexora-nordica', 'flexao-parede-invertida', 'flexao-arqueiro', 'paralelas', 'paralelas-peito', 'kb-snatch', 'elev-pernas-barra', 'flexao-palma', 'barra-arqueiro', 'joelho-cotovelo-suspenso', 'trx-pike', 'salto-grupado', 'trx-agachamento-unilateral', 'canivete'];
-function pickEx(slot, eq, used, prefMachine, local, beginner, gym){
-  const inv = gym && gym.inv ? new Set(gym.inv) : null;
-  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)) && (!inv || (local || 'academia') !== 'academia' || gymOk(x, inv)));
+/* v4.31: limitações e condições. Fontes: ACSM (2026, treino de força; hipertensão), NSCA (idosos, 2019; joelho),
+   ACOG (gestação, 2020) e revisões sobre dor lombar e ombro. "ban" sai do programa; "pre" sobe na lista da vaga. */
+const LIMS = {
+  ombro: {n: 'Ombro', ban: ['remada-alta', 'remada-alta-halter', 'remada-alta-maquina', 'desenv-barra', 'paralelas', 'paralelas-peito', 'mergulho-maquina', 'mergulho-banco', 'mergulho-cadeiras', 'supino-reto-barra', 'supino-incl-barra', 'supino-decl-barra', 'barra-fixa', 'puxada-aberta', 'barra-arqueiro', 'pullover-halter', 'flexao-arqueiro', 'flexao-parede-invertida', 'pike', 'trx-pike', 'triceps-frances-pe', 'triceps-frances-halter', 'kb-snatch', 'crucifixo-halter', 'crucifixo-incl', 'crucifixo-solo', 'flexao-aberta'],
+    pre: ['supino-pegada-neutra', 'supino-reto-halter', 'supino-reto-maquina', 'desenv-maquina', 'puxada-neutra', 'face-pull', 'remada-baixa', 'triceps-corda'], more: 'rowH2',
+    why: 'Ombro: saem remada alta, paralelas, desenvolvimento com barra e crucifixo aberto. Entram halteres e pegada neutra, e mais puxadas do que empurrões.'},
+  joelho: {n: 'Joelho', ban: ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'skipping', 'corrida', 'pular-corda', 'skater', 'sissy', 'agachamento-unilateral', 'trx-agachamento-unilateral', 'agachamento-cossaco', 'afundo-caminhando', 'afundo-cruzado', 'afundo-cruzado-halter', 'afundo-lateral', 'afundo-lateral-halter', 'bulgaro', 'bulgaro-cadeira', 'agachamento-frontal', 'afundo-barra', 'descida-degrau', 'flexora-nordica', 'kb-afundo', 'afundo', 'agachamento'],
+    pre: ['leg-press', 'agachamento-cadeira', 'subida-degrau', 'step-up', 'elevacao-pelvica', 'hip-thrust-maquina', 'cadeira-flexora', 'mesa-flexora', 'goblet'], depth: true,
+    why: 'Joelho: sem saltos, afundos profundos e agachamento livre com barra. Agachamentos e leg press vão até cerca de 90° de joelho, com mais glúteo e posterior.'},
+  lombar: {n: 'Lombar', ban: ['levantamento-terra', 'terra-sumo', 'bom-dia', 'bom-dia-solo', 'remada-curvada', 'remada-curvada-halter', 'agachamento', 'agachamento-frontal', 'afundo-barra', 'stiff-barra', 'kettlebell-swing', 'kb-snatch', 'sit-up', 'v-up', 'canivete', 'abd-declinado', 'elev-pernas', 'elev-pernas-barra', 'flutter', 'limpador', 'abd-russo', 'superman-puxada', 'desenv-barra', 'abd-solo'],
+    pre: ['leg-press', 'hack', 'remada-apoiada-t', 'remada-incl-halter', 'remada-iso', 'serrote', 'remada-baixa', 'elevacao-pelvica', 'hip-thrust-maquina', 'stiff-halter', 'perdigueiro', 'prancha-lateral', 'dead-bug', 'pallof', 'prancha'],
+    why: 'Lombar: saem terra e stiff com barra, bom-dia, remada curvada e agachamento com barra nas costas. Entram remadas com apoio, leg press, elevação pélvica e core de estabilidade, como perdigueiro e prancha lateral.'},
+  punho: {n: 'Punho ou cotovelo', ban: ['flexao', 'flexao-joelhos', 'flexao-diamante', 'flexao-declinada', 'flexao-aberta', 'flexao-arqueiro', 'flexao-palma', 'flexao-inclinada', 'flexao-parede', 'trx-flexao', 'prancha-toque-ombro', 'prancha-urso', 'urso', 'escalador', 'burpee', 'prancha-spiderman', 'prancha-polichinelo', 'rosca-barra', 'triceps-testa', 'triceps-barra', 'agachamento-frontal', 'kb-snatch', 'pike', 'paralelas', 'paralelas-peito', 'rosca-punho', 'rosca-punho-inversa'],
+    pre: ['rosca-martelo', 'rosca-halter', 'rosca-maquina', 'triceps-corda', 'triceps-maquina', 'supino-reto-maquina', 'supino-pegada-neutra'],
+    why: 'Punho ou cotovelo: sem flexões com a mão no chão e sem barra reta nas roscas e no tríceps. Entram halteres, cordas e máquinas, que deixam o punho mais neutro.'},
+  quadril: {n: 'Quadril', ban: ['agachamento-sumo-halter', 'terra-sumo', 'agachamento-cossaco', 'afundo-lateral', 'afundo-lateral-halter', 'bulgaro', 'bulgaro-cadeira', 'afundo-salto', 'agachamento-salto', 'salto-grupado', 'afundo-cruzado', 'afundo-cruzado-halter', 'corrida'],
+    pre: ['leg-press', 'elevacao-pelvica', 'hip-thrust-maquina', 'ponte', 'cadeira-flexora', 'subida-degrau'], depth: true,
+    why: 'Quadril: sem afundos laterais, agachamento sumo e saltos. A amplitude dos agachamentos fica onde não dói, com glúteo trabalhado em ponte e elevação pélvica.'},
+  pescoco: {n: 'Pescoço', ban: ['encolhimento-barra', 'encolhimento-halter', 'desenv-barra', 'abd-solo', 'sit-up', 'v-up', 'canivete', 'kb-snatch', 'barra-fixa'],
+    pre: ['desenv-maquina', 'puxada-neutra', 'abd-maquina', 'prancha', 'dead-bug'], drop: ['shrug'],
+    why: 'Pescoço: sem encolhimentos, desenvolvimento com barra e abdominais que puxam a cabeça. O abdômen fica com prancha e dead bug.'},
+  impacto: {n: 'Sem impacto', ban: ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'skipping', 'corrida', 'pular-corda', 'skater', 'polichinelo', 'prancha-polichinelo', 'chute-gluteo', 'kb-snatch', 'escalador'],
+    pre: ['bike', 'eliptico', 'caminhada-inclinada', 'remo-ergometro', 'air-bike', 'corda-naval'],
+    why: 'Sem impacto: nada de saltos ou corrida. O cardio vai para bicicleta, elíptico, remo ou caminhada inclinada.'},
+  pressao: {n: 'Pressão alta', cond: true, rmin: 8, rmax: 15, rir: 2, rest: 90, noHiit: true,
+    why: 'Pressão alta: séries de 8 a 15 repetições, sem ir à falha e sem prender a respiração (solte o ar na subida). O aeróbico moderado também ajuda a baixar a pressão.'},
+  coracao: {n: 'Coração, diabetes ou outra condição', cond: true, rmin: 10, rmax: 15, rir: 3, rest: 90, noHiit: true, clear: true,
+    why: 'Condição de saúde: intensidade moderada, parando com 3 repetições sobrando e descansos maiores. Antes de começar, peça a liberação do seu médico.'},
+  gestacao: {n: 'Gestação', cond: true, rmin: 10, rmax: 15, rir: 3, rest: 60, noHiit: true, clear: true,
+    ban: ['supino-reto-barra', 'supino-reto-halter', 'supino-reto-smith', 'supino-decl-barra', 'supino-decl-halter', 'supino-fechado', 'crucifixo-halter', 'crucifixo-solo', 'kb-supino-solo', 'triceps-testa', 'triceps-halter-deitado', 'ponte', 'ponte-solo', 'ponte-unilateral', 'ponte-elastico', 'ponte-halter', 'ponte-marcha', 'dead-bug', 'abd-solo', 'abd-declinado', 'abd-bicicleta', 'abd-obliquo', 'abd-cruzado', 'abd-reverso', 'abd-russo', 'abd-polia', 'abd-maquina', 'sit-up', 'v-up', 'flutter', 'canivete', 'hollow-hold', 'elev-pernas', 'elev-pernas-barra', 'limpador', 'canoa', 'mesa-flexora', 'superman-puxada', 'burpee', 'agachamento-salto', 'afundo-salto', 'salto-grupado', 'kettlebell-swing', 'kb-snatch', 'skipping', 'pular-corda', 'corrida', 'bulgaro', 'bulgaro-cadeira', 'agachamento-unilateral', 'trx-agachamento-unilateral', 'afundo-caminhando', 'levantamento-terra', 'terra-sumo', 'escalador', 'prancha-polichinelo'],
+    pre: ['supino-reto-maquina', 'supino-incl-maquina', 'supino-incl-halter', 'desenv-maquina', 'leg-press', 'cadeira-flexora', 'pallof', 'perdigueiro', 'prancha-lateral', 'remada-baixa', 'bike', 'eliptico', 'caminhada-inclinada'],
+    why: 'Gestação: nada deitada de barriga para cima por muito tempo, sem saltos e sem exercícios de muito equilíbrio, com séries moderadas e sem prender a respiração. Pare se sentir tontura, dor, sangramento ou falta de ar, e só comece com a liberação do obstetra.'},
+};
+/* número fixo por pessoa: duas pessoas com as mesmas respostas não recebem sempre os mesmos exercícios */
+function seedOf(str){ let h = 2166136261; for (const ch of String(str)){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function pickEx(slot, eq, used, prefMachine, local, beginner, gym, X){
+  const inv = gym && gym.inv ? new Set(gym.inv) : null; X = X || {};
+  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)) && !(X.ban && X.ban.has(x)) && (!inv || (local || 'academia') !== 'academia' || gymOk(x, inv)));
   const main = local && LOCAIS[local] && LOCAIS[local].main;
   if (main) c = [...c].sort((a, b) => (CAT[b].e === main) - (CAT[a].e === main));
   const pref = gym && gym.pref;
@@ -183,7 +218,12 @@ function pickEx(slot, eq, used, prefMachine, local, beginner, gym){
   if (pref === 'livre') c = soft(c, x => GYM_LIVRE.includes(CAT[x].e) && CAT[x].e !== 'peso', kk);
   else if (pref === 'maq' || (prefMachine && pref !== 'livre')) c = pref === 'maq' ? soft(c, x => GYM_MAQ.includes(CAT[x].e), kk) : [...c].sort((a, b) => GYM_MAQ.includes(CAT[b].e) - GYM_MAQ.includes(CAT[a].e));
   if (gym && gym.tipo === 'completa' && pref !== 'livre'){ const r = x => c.indexOf(x) - (G_ARTIC.has(x) || G_CROSS.has(x) ? 1.5 : 0); c = [...c].sort((a, b) => r(a) - r(b)); }
-  return c.find(x => !used.has(x)) || null;
+  if (X.pre && X.pre.size) c = soft(c, x => X.pre.has(x), 2.5);
+  const free = c.filter(x => !used.has(x));
+  /* entre as duas melhores opções equivalentes, a escolha segue a pessoa (exercício principal fica sempre o primeiro) */
+  const weak = x => ['elastico', 'casa', 'peso'].includes(CAT[x].e);
+  if (X.seed != null && free.length > 1 && SLOTS[slot].r !== 'main' && !(X.pre && X.pre.has(free[0]) && !X.pre.has(free[1])) && !(weak(free[1]) && !weak(free[0]))){ const h = seedOf(X.seed + slot + (X.wi || 0)); if (h % 100 < 38) return free[1]; }
+  return free[0] || null;
 }
 /* Gera um programa. o = {goal, local, dias, nivel, dur, foco, split} */
 function genProgram(o){
@@ -192,31 +232,69 @@ function genProgram(o){
   const beginner = o.nivel === 'Iniciante'; const novato = !!o.novato; const n = Math.max(4, (DUR_N[o.dur] || 6) - (novato ? 1 : 0)); const circuit = o.goal === 'condicionamento';
   /* um ou mais músculos prioritários (o primeiro escolhido entra mais cedo no treino) */
   const fos = (o.focos || (o.foco ? [o.foco] : [])).filter(k => FOCOS[k]);
+  /* v4.31: limitações, idade, ritmo e cardio da pessoa */
+  const lim = (o.lim || []).filter(k => LIMS[k]); const L0 = lim.map(k => LIMS[k]);
+  const X = {ban: new Set(L0.flatMap(l => l.ban || [])), pre: new Set(L0.flatMap(l => l.pre || [])), seed: o.seed != null ? String(o.seed) : null};
+  const age = +o.age || 0; const older = age >= 60; const teen = age && age < 18;
+  if (older){ HARD.forEach(x => X.ban.add(x)); ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'kb-snatch'].forEach(x => X.ban.add(x)); }
+  const cond = L0.filter(l => l.cond); const noHiit = cond.some(l => l.noHiit); if (noHiit) SLOTS.hiit.c.forEach(x => X.ban.add(x));
+  const ritmo = o.ritmo || 'equil'; const adv = o.nivel === 'Avançado'; const mid = o.nivel === 'Intermediário';
+  const rirBase = cond.length ? Math.max(...cond.map(l => l.rir)) : novato || beginner ? 3 : ritmo === 'leve' ? 3 : ritmo === 'forte' ? (adv ? 0 : 1) : (adv ? 1 : 2);
+  const cardio = o.cardio || (o.goal === 'definicao' ? 'leve' : 'nao'); const cardioT = noHiit && cardio === 'hiit' ? 'leve' : cardio;
+  const why = [];
+  const seen = {};
   const workouts = keys.map((k, wi) => {
-    const d = DAYS[k]; let slots = [...d.s]; let extra = 0;
+    const d = DAYS[k]; let slots = [...d.s]; let extra = 0; X.wi = wi; seen[k] = (seen[k] || 0) + 1; const rep2 = seen[d.k + '#'] = (seen[d.k + '#'] || 0) + 1;
+    L0.forEach(l => { if (l.drop) slots = slots.filter(x => !l.drop.includes(x)); if (l.more && /U|P|F/.test(d.k) && !slots.includes(l.more)) slots.splice(Math.min(3, slots.length), 0, l.more); });
     fos.slice().reverse().forEach(fk => { const fo = FOCOS[fk]; if (!FOCUS_DAY[fk].includes(d.k)) return; const at = fo.small ? Math.min(3, slots.length) : 1; slots.splice(at, 0, ...fo.slots); extra++; });
     slots = [...new Set(slots)]; extra = Math.min(1, extra);
     const used = new Set(); const items = [];
     for (const s of slots){
       if (items.length >= n + extra) break;
-      const ex = pickEx(s, eq, used, (beginner || novato) && o.local === 'academia', o.local, beginner, o.local === 'academia' ? o.gym : null); if (!ex) continue; used.add(ex);
+      const ex = pickEx(s, eq, used, (beginner || novato || older) && o.local === 'academia', o.local, beginner || older, o.local === 'academia' ? o.gym : null, X); if (!ex) continue; used.add(ex);
       const role = SLOTS[s].r === 'circ' ? 'comp' : SLOTS[s].r === 'cardio' ? 'comp' : SLOTS[s].r;
       let [sets, rmin, rmax, rest] = sch[role] || sch.comp;
       if (beginner){ sets = Math.max(2, sets - 1); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 10); rmax = Math.max(rmax, 15); } }
       if (novato){ sets = Math.min(sets, 3); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 15); } rest = Math.max(rest, 60); }
       if ((CAT[ex].e === 'peso' || CAT[ex].e === 'casa') && o.goal !== 'forca' && /comp|main/.test(role)){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 20); rest = Math.min(rest, 90); }
       if (CAT[ex].e === 'elastico'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 20); }
-      items.push({ex, sets, rmin, rmax, rest, nota: ''});
+      /* avançado em hipertrofia: um pouco mais de volume nos exercícios principais */
+      if (adv && (o.goal === 'hipertrofia' || o.goal === 'forca') && /main|comp/.test(role) && !circuit) sets += 1;
+      /* ondulação: no segundo treino do mesmo tipo na semana, repetições mais altas (intermediário e avançado) */
+      if ((mid || adv) && rep2 > 1 && (o.goal === 'hipertrofia' || o.goal === 'definicao') && role === 'comp' && !circuit){ rmin = Math.max(rmin + 2, 10); rmax = Math.max(rmax + 3, 15); rest = Math.max(60, rest - 30); }
+      if (older){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 12); rest = Math.max(rest, 90); }
+      if (teen && rmin < 6){ rmin = 6; rmax = Math.max(rmax, 10); }
+      cond.forEach(l => { rmin = Math.max(rmin, l.rmin); rmax = Math.max(rmax, l.rmax, rmin + 2); rest = circuit ? rest : Math.max(rest, l.rest); if (sets > 3) sets = 3; });
+      let nota = '';
+      if (L0.some(l => l.depth) && /agachamento|leg-press|hack|goblet|step|subida/.test(ex)) nota = 'Desça só até onde não doer, por volta de 90° de joelho.';
+      if (L0.some(l => l.depth) && /extensora/.test(ex)) nota = 'Use uma amplitude sem dor e não force o fim do movimento.';
+      if (lim.includes('lombar') && /stiff|terra|hip|elevacao|ponte/.test(ex)) nota = 'Carga moderada e coluna neutra. Pare se a dor aumentar.';
+      items.push({ex, sets, rmin, rmax, rest, nota});
     }
     if (circuit && items.length){ items.forEach(x => { x.rest = 0; x.sets = beginner ? 3 : 4; }); items[items.length - 1].rest = 90; items[0].nota = 'Circuito: faça os exercícios em sequência e descanse 90 s ao fim de cada volta.'; }
-    if (o.goal === 'definicao'){
-      for (let i = 2; i + 1 < items.length; i += 2){ items[i].rest = 0; items[i].nota = 'Bi-set: vá direto para o próximo exercício.'; }
-      const c = pickEx('cardio', eq, used, false, o.local, false, o.local === 'academia' ? o.gym : null);
-      if (c) items.push({ex: c, sets: 1, rmin: 15, rmax: 20, rest: 0, nota: 'Cardio moderado de 15 a 20 minutos. Anote os minutos no campo de repetições.'});
+    if (o.goal === 'definicao' && !cond.length){ for (let i = 2; i + 1 < items.length; i += 2){ if (items[i].nota) continue; items[i].rest = 0; items[i].nota = 'Bi-set: vá direto para o próximo exercício.'; } }
+    /* técnica de intensidade só para quem pediu ritmo puxado e já tem experiência */
+    if (ritmo === 'forte' && (adv || mid) && !cond.length && !circuit && (o.goal === 'hipertrofia' || o.goal === 'definicao')){ const iso = [...items].reverse().find(x => /iso|small/.test((Object.entries(SLOTS).find(([, v]) => v.c.includes(x.ex)) || [, {}])[1].r || '') && !x.nota); if (iso) iso.nota = 'Na última série, faça um drop-set: tire cerca de 30% da carga e siga até perto da falha.'; }
+    if (!circuit && cardioT !== 'nao'){
+      const cs = cardioT === 'hiit' ? ['air-bike', 'bike', 'remo-ergometro', 'corda-naval', 'eliptico', 'corrida', 'pular-corda'] : ['caminhada-inclinada', 'bike', 'eliptico', 'stepmill', 'remo-ergometro', 'corrida', 'marcha'];
+      const c = cs.find(x => CAT[x] && !CAT[x].hid && !X.ban.has(x) && exOk(x, o.local || 'academia') && (o.local !== 'academia' || !o.gym || !o.gym.inv || gymOk(x, new Set(o.gym.inv))));
+      if (c) items.push(cardioT === 'hiit' ? {ex: c, sets: 1, rmin: 8, rmax: 10, rest: 0, nota: 'Intervalado: 30 s forte e 60 s leve, de 6 a 8 vezes. Anote os minutos no campo de repetições.'} : {ex: c, sets: 1, rmin: o.goal === 'definicao' ? 15 : 10, rmax: o.goal === 'definicao' ? 20 : 15, rest: 0, nota: `Cardio moderado de ${o.goal === 'definicao' ? '15 a 20' : '10 a 15'} minutos, conseguindo conversar. Anote os minutos no campo de repetições.`});
     }
     if (items[0] && SLOTS[d.s[0]].r === 'main' && !circuit && !items[0].nota) items[0].nota = 'Faça 1 a 2 séries leves de aproximação antes.';
     return {nome: d.n, cor: wi % COLORS, items};
   });
+  /* o porquê de cada escolha, para a tela de resultado */
+  const rirTxt = rirBase >= 3 ? 'com 3 repetições sobrando' : rirBase === 2 ? 'com 2 repetições sobrando' : rirBase === 1 ? 'com 1 ou 2 repetições sobrando' : 'perto da falha nos exercícios isolados';
+  why.push({t: 'Esforço', d: `Termine cada série ${rirTxt}. ${o.goal === 'forca' ? 'Para força, não precisa ir à falha.' : rirBase <= 1 ? 'Chegar perto da falha ajuda no ganho de massa.' : 'Assim dá para aprender a técnica e progredir com segurança.'}`});
+  if (beginner || novato) why.push({t: 'Começo', d: `${novato ? 'Começando agora' : 'Iniciante'}: menos séries, mais repetições e exercícios mais fáceis de aprender. Quando fizer todas as repetições com folga, suba a carga.`});
+  else if ((mid || adv) && (o.goal === 'hipertrofia' || o.goal === 'definicao') && keys.length >= 4) why.push({t: 'Variação na semana', d: 'O segundo treino de cada tipo usa repetições mais altas que o primeiro. Assim os músculos recebem estímulos diferentes na mesma semana.'});
+  if (adv && (o.goal === 'hipertrofia' || o.goal === 'forca')) why.push({t: 'Volume', d: 'Avançado: uma série a mais nos exercícios principais, porque quem já treina há anos costuma precisar de mais volume para continuar evoluindo.'});
+  if (older) why.push({t: '60 anos ou mais', d: 'Mais máquinas e apoio, 8 a 12 repetições e 90 s ou mais de descanso. Suba o peso com firmeza e desça devagar.'});
+  if (teen) why.push({t: 'Menos de 18 anos', d: 'Sem cargas máximas: 6 repetições ou mais por série, de preferência com acompanhamento de um professor.'});
+  L0.forEach(l => { const d = l.why.replace(/^[^:]{2,40}: /, ''); why.push({t: l.n, d: d.charAt(0).toUpperCase() + d.slice(1)}); });
+  if (cardioT !== 'nao' && !circuit) why.push({t: 'Cardio', d: cardioT === 'hiit' ? 'Intervalado curto no fim de cada treino.' : `Cardio moderado no fim de cada treino${noHiit && cardio === 'hiit' ? ', no lugar do intervalado, por segurança' : ''}.`});
+  if (fos.length) why.push({t: 'Prioridade', d: 'Os músculos escolhidos ganham exercício extra e entram mais cedo nos treinos.'});
+  workouts.why = why; workouts.clear = L0.some(l => l.clear);
   return workouts;
 }
 function genMeta(o){

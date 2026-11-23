@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.30.0';
+const APP_VERSION = '4.31.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura', loginbg: 'fotos'};
 let ST = freshState();
 let SESS = [];
@@ -46,7 +46,7 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return 
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 /* Tela de entrada na primeira abertura: só com Firebase configurado, sem conta e sem nenhum dado no aparelho. */
 const shouldWelcome = () => Auth.kind === 'firebase' && !lsGet('forja.welcome') && !(Store.hasAccount && Store.hasAccount()) && !Auth.user && !SESS.length && !ST.routines.length && !ST.profile.name;
-function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; sessResume(30000); const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); else if (shouldWelcome()) UI.stack = [{type: 'auth', first: true}]; render(); }
+function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; sessResume(30000); const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); else if (shouldWelcome()) UI.stack = [{type: 'auth', first: true}]; else maybeOnb(location.hash === '#primeiros-passos'); render(); }
 function isTyping(){ const a = document.activeElement; return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT'); }
 function canRerender(){ return !isTyping() && !KP.open && $('#sheet').hidden && !DRAG; }
 
@@ -236,6 +236,7 @@ function render(){
   const a = document.activeElement; const fid = a && a.id; const sel = a && a.selectionStart != null ? [a.selectionStart, a.selectionEnd] : null;
   const p = curPage(); const inSess = p && p.type === 'session';
   document.body.classList.toggle('in-session', !!inSess);
+  document.body.classList.toggle('onb-mode', !!(p && p.type === 'onb'));
   { const am = !!(p && p.type === 'auth'); if (document.body.classList.contains('auth-mode') !== am){ document.body.classList.toggle('auth-mode', am); Platform.themeColor(am || isDark()); } }
   if (p && p.type === 'auth' && p.first && (Store.mode === 'cloud' || Store.mode === 'api')){ UI.stack.pop(); return render(); }
   document.querySelectorAll('nav.tabs a').forEach(x => x.setAttribute('aria-current', !p && x.dataset.tab === UI.tab ? 'page' : 'false'));
@@ -245,6 +246,7 @@ function render(){
   const sync = `<span class="sync ${syncClass()}" title="${syncLbl}" role="img" aria-label="${syncLbl}"></span>`;
   let head, body;
   if (p && p.type === 'auth'){ head = ''; body = vAuth(p); }
+  else if (p && p.type === 'onb'){ head = ''; body = vOnb(p); }
   else if (!p){
     head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar${hasPic() ? ' pic' : ''}" data-act="profile" aria-label="Perfil e ajustes">${avatarIn()}</button>`;
     body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'progresso' ? vProgress() : UI.tab === 'corpo' ? vBody() : vHome();
@@ -399,7 +401,7 @@ function vHome(){
     h += `<section class="hero home-hero" style="--pc:var(--ember)">${glow()}<div class="hero-top"><span class="hero-lbl">Primeiro passo</span></div>
       ${heroName('Comece aqui', 'h2', 'home')}
       <p class="hero-focus">Escolha um dos programas prontos ou monte um sob medida para seus dias, seu local e seu objetivo. Leva um minuto.</p>
-      <div class="hero-act"><button class="btn primary" data-act="go-explore">Ver programas</button><button class="btn ghost" data-act="open-builder">Montar o meu</button></div></section>`;
+      <div class="hero-act two"><button class="btn primary" data-act="go-explore">Ver programas</button><button class="btn ai-btn" data-act="open-builder"><span>Montar o meu</span></button></div></section>`;
   } else {
     h += `<section class="empty"><b>Rotina sem treinos</b>Adicione um treino à rotina ${esc(r.nome)}.<div style="margin-top:14px"><button class="btn primary sm" data-act="open-routine" data-rid="${r.id}">Abrir rotina</button></div></section>`;
   }
@@ -1070,9 +1072,9 @@ function vProfile(){
   ${L.n ? `<section class="card small ink2">${L.prs} recordes batidos · ${L.sets} séries no total${L.fav ? ` · mais feito: <b style="color:var(--ink)">${esc(exName(L.fav))}</b>` : ''}${L.first ? ` · desde ${fmtDLong(L.first)}` : ''}</section>` : ''}
   <section class="card stack"><div class="eyebrow">Dados pessoais</div>
     ${field('name', 'Nome', pf.name, 'maxlength="40" autocomplete="name"')}
-    <div class="formgrid">${field('birth', 'Nascimento', pf.birth, 'type="date"')}${field('height', 'Altura (cm)', pf.height, 'inputmode="numeric"')}</div>
+    <div class="formgrid">${field('birth', pf.birthApprox ? 'Nascimento (confira o dia)' : 'Nascimento', pf.birth, 'type="date"')}${field('height', 'Altura (cm)', pf.height, 'inputmode="numeric"')}</div>
     <div class="small muted">Peso atual: ${lastBw ? `<b style="color:var(--ink)">${fmtN(lastBw.kg)} kg</b> em ${fmtD(lastBw.date)}` : 'sem registro'} · <button class="link" style="min-height:0;padding:0" data-act="go-body">Registrar medidas</button></div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Saúde', 'Saúde']])}</div>
+    <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Condicionamento', 'Condicionamento'], ['Saúde', 'Saúde']])}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Experiência</div>${seg('level', [['Iniciante', 'Iniciante'], ['Intermediário', 'Intermediário'], ['Avançado', 'Avançado']])}</div></section>
   <p class="tiny muted" style="text-align:center;margin-top:18px">Forja ${APP_VERSION}</p>`;
 }
@@ -1277,7 +1279,7 @@ async function afterLogin(o = {}){
   if (Store.mode === 'verify'){ UI.stack = [{type: 'profile'}]; render(); toast(o.reg ? 'Conta criada. Confirme o e-mail para começar a salvar na nuvem.' : 'Confirme seu e-mail para começar a salvar na nuvem.', null, '', 6000); }
   else if (Store.mode === 'api') toast(o.linked ? 'Google vinculado. Agora você entra dos dois jeitos.' : o.google ? (o.isNew ? 'Conta criada com o Google. Seus dados estão sincronizados.' : 'Conectado com o Google.') : 'Conectado. Seus dados estão sincronizados.');
   else toast('Conta conectada, mas o servidor não respondeu. Tentaremos de novo.');
-  if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } render();
+  if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } if (Store.mode !== 'verify') maybeOnb(); render();
 }
 A['auth-google'] = async el => { if (el.classList.contains('busy')) return; authKeep(); const st = UI.auth || (UI.auth = {mode: 'start'}); st.err = ''; el.classList.add('busy');
   try { const r = await Auth.google(); await afterLogin({google: true, isNew: r.isNew}); }
@@ -1287,7 +1289,7 @@ A['auth-google'] = async el => { if (el.classList.contains('busy')) return; auth
     st.err = e.status === 0 ? 'Sem conexão. Verifique a internet e tente de novo.' : e.message || 'Não foi possível entrar com o Google.'; render(); } };
 A['link-google'] = async () => { try { await Auth.linkGoogle(); render(); toast('Conta Google vinculada. Agora você entra dos dois jeitos.'); } catch (e) { if (e.status !== 499) toast(e.message || 'Não foi possível vincular agora.'); } };
 A['unlink-google'] = () => confirmSheet({title: 'Desvincular o Google?', text: 'Você continua entrando com e-mail e senha. Dá para vincular de novo quando quiser.', ok: 'Desvincular', onOk: async () => { try { await Auth.unlinkGoogle(); render(); toast('Google desvinculado'); } catch (e) { toast(e.message || 'Não foi possível agora.'); } }});
-A['auth-skip'] = () => { lsSet('forja.welcome', '1'); UI.stack.pop(); render(); window.scrollTo({top: 0}); };
+A['auth-skip'] = () => { lsSet('forja.welcome', '1'); UI.stack.pop(); maybeOnb(); render(); window.scrollTo({top: 0}); };
 document.addEventListener('input', ev => { if (ev.target.id === 'au-pass'){ const r = $('#au-rule'); if (r) r.classList.toggle('ok', ev.target.value.length >= 8); } });
 A.forgot = async () => { const email = ($('#au-email').value || '').trim(); const err = $('#au-err'); if (!email){ err.textContent = 'Digite seu e-mail acima e toque de novo em Esqueci minha senha.'; err.hidden = false; return; }
   try { await Auth.resetPassword(email); if (curPage()?.type === 'auth'){ UI.auth = {mode: 'login', email, note: 'Se houver conta com esse e-mail, enviamos um link para criar uma nova senha. Confira também o spam.'}; render(); return; } closeSheet(); toast('Se houver conta com esse e-mail, enviamos um link para criar uma nova senha.', null, '', 6000); } catch (e) { err.textContent = e.status === 0 ? 'Sem conexão. Tente de novo.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : 'Não foi possível enviar agora.'; err.hidden = false; } };
@@ -1457,7 +1459,7 @@ document.addEventListener('change', async ev => {
   const t = ev.target; const act = t.dataset && t.dataset.act;
   if (act === 'progex'){ UI.progEx = t.value; render(); }
   if (act === 'day-w'){ const r = routineById(t.dataset.rid); if (!r) return; r.dias = r.dias || {}; if (t.value) r.dias[t.dataset.d] = t.value; else delete r.dias[t.dataset.d]; if (!hasSchedule(r)) delete r.dias; saveState(); render(); }
-  if (act === 'pf'){ ST.profile[t.dataset.k] = t.value.trim(); saveState(); if (t.dataset.k === 'name') render(); }
+  if (act === 'pf'){ ST.profile[t.dataset.k] = t.value.trim(); if (t.dataset.k === 'birth') delete ST.profile.birthApprox; saveState(); if (t.dataset.k === 'name') render(); }
   if (act === 'ss-date' || act === 'ss-dur'){ const s = curSess(); if (!s) return; if (act === 'ss-date'){ if (t.value && t.value <= today()) s.date = t.value; } else { const v = parseInt(t.value, 10); s.dur = v > 0 ? v : null; } saveSession(s); }
   if (act === 's-note'){ const s = SESS.find(x => x.id === t.dataset.sid); if (s){ s.note = t.value.trim(); saveSession(s); } }
   if (act === 'import' && t.files && t.files[0]){

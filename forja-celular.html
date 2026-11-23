@@ -898,7 +898,7 @@ details.how[open] summary svg{transform:rotate(180deg)}
 
 /* ===== Assistente "Montar meu programa" em passos (v4.9) ===== */
 .bq{margin-top:10px}
-.bq-prog{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.bq-prog{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
 .bq-prog i{height:4px;border-radius:4px;background:var(--s3);transition:background .25s}
 .bq-prog i.done{background:color-mix(in srgb,var(--ember) 55%,var(--s3))}
 .bq-prog i.on{background:var(--ember)}
@@ -1696,6 +1696,79 @@ body.auth-mode #lbg{display:none}
 .auth.start.pics .auth-hero p{color:rgba(255,255,255,.78)}
 @media (prefers-reduced-motion: reduce){.auth-marq-t,.ap-t{animation:none}}
 .auth.start .auth-hero h1.auth-h{font-size:clamp(34px,calc((min(100vw,440px) - 44px) / 7.7),52px);line-height:.95}
+/* v4.31: primeiros passos */
+body.onb-mode header.top,body.onb-mode nav.tabs{display:none}
+body.onb-mode .app{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+.onb{max-width:440px;margin:0 auto;padding-top:max(10px,env(safe-area-inset-top,0px));min-height:100svh;display:flex;flex-direction:column}
+.onb-top{display:flex;align-items:center;justify-content:space-between;min-height:48px}
+.onb-top .brand{font-size:21px}
+.onb-top .brand svg{width:24px;height:24px}
+.onb-count{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.onb-prog{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.onb-prog i{height:4px;border-radius:4px;background:var(--s3);transition:background .3s}
+.onb-prog i.done{background:color-mix(in srgb,var(--ember) 55%,var(--s3))}
+.onb-prog i.on{background:var(--ember)}
+.onb-q{margin:26px 0 0;text-wrap:balance}
+.onb-sub{margin:10px 0 0;color:var(--ink2);font-size:15px;line-height:1.45}
+.onb .stack{margin-top:22px}
+.onb-intro{margin-top:14px}
+.onb-pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:6px 11px 6px 9px;border-radius:999px;background:color-mix(in srgb,var(--ember) 14%,transparent);color:var(--ember)}
+.onb-pill svg{width:14px;height:14px;fill:currentColor}
+.onb-intro p{margin:10px 0 0;color:var(--ink2);font-size:15px;line-height:1.45}
+.onb-in{margin-top:22px;font-size:20px;padding:16px 18px;border-radius:18px}
+.onb-go{margin-top:16px;min-height:56px;border-radius:18px}
+.onb-age{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:30px}
+.onb-st{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--line2);background:var(--s1);color:var(--ink);font-size:26px;line-height:1}
+.onb-num{width:120px;text-align:center;font-size:64px;font-weight:600;border:0;border-bottom:2px solid var(--line2);background:none;color:var(--ink);padding:0 0 4px;outline:none}
+.onb-num:focus{border-bottom-color:var(--ember)}
+.onb-unit{text-align:center;margin:8px 0 0;color:var(--muted);font-size:14px}
+.onb-age+.onb-unit+.onb-go{margin-top:28px}
+.onb-badge{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin-top:28px;background:linear-gradient(135deg,var(--ember),var(--ember2));box-shadow:0 10px 30px color-mix(in srgb,var(--ember) 35%,transparent);animation:onb-pop .5s var(--ease) both}
+.onb-badge svg{width:30px;height:30px;stroke:#fff;stroke-width:2.6;fill:none}
+.onb-ready .onb-q{margin-top:18px}
+.onb-done{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:10px}
+.onb-done li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--s1);border:1px solid var(--line);animation:onb-in .45s var(--ease) both;animation-delay:calc(var(--d) + 200ms)}
+.onb-done i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--ember) 16%,transparent)}
+.onb-done i svg{width:15px;height:15px;stroke:var(--ember);stroke-width:2.6;fill:none}
+.onb-done b{display:block;font-size:15px;font-weight:600}
+.onb-done small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.onb-next{margin-top:auto;padding-top:26px}
+.onb-next h2{margin:6px 0 0;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.onb-next p{margin:8px 0 18px;color:var(--ink2);font-size:14.5px;line-height:1.45}
+.onb-later{display:block;margin:12px auto 0;color:var(--ink2)}
+@keyframes onb-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes onb-pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+/* botão com borda animada (estilo IA): montar treino sob medida */
+@property --ai-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+.ai-btn{--ai-fill:var(--s1);position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0 !important;background:transparent;color:var(--ink);font-weight:600;min-height:56px;border-radius:18px;box-shadow:0 0 22px -6px rgba(255,106,26,.6),0 0 30px -10px rgba(255,179,71,.55)}
+.ai-btn::before,.ai-btn::after{content:"";position:absolute;border-radius:inherit;pointer-events:none;z-index:-1}
+.ai-btn::before{inset:0;background:conic-gradient(from var(--ai-a),#ff6a1a,#ffb347,#ffe0b0,#ff8a3d,#e8401a,#ff6a1a 75%,#ffb347);animation:ai-spin 3s linear infinite}
+.ai-btn::after{inset:1.8px;border-radius:16.4px;background:var(--ai-fill)}
+.hero .ai-btn{--ai-fill:#141518;color:#fff}
+.ai-btn svg{width:17px;height:17px;fill:#ffb347;flex:none}
+.ai-btn span{position:relative}
+@keyframes ai-spin{to{--ai-a:360deg}}
+@media (prefers-reduced-motion: reduce){.ai-btn::before{animation:none}.onb-done li,.onb-badge{animation:none}}
+.hero-act.two .btn{flex:1 1 0;min-width:0;min-height:50px;font-size:14px;padding-inline:12px}
+.hero-act.two .btn.primary{font-size:14px}
+.hero-act.two .ai-btn{min-height:50px}
+.onb-next .ai-btn{width:100%;font-size:16px}
+
+/* v4.31: limitações, estilo e "feito para você" */
+.bq-lims{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bq-lim{min-height:42px;padding:0 15px;border-radius:999px;border:1.5px solid var(--line2);background:var(--s1);color:var(--ink);font-size:14.5px;font-weight:500}
+.bq-lim[aria-pressed="true"]{border-color:var(--ember);background:color-mix(in srgb,var(--ember) 14%,var(--s1));color:var(--ink);font-weight:600}
+.bq-safe{display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:12px 14px;border-radius:16px;background:var(--s2)}
+.bq-safe svg{flex:none;width:18px;height:18px;margin-top:1px;stroke:var(--muted);fill:none;stroke-width:2}
+.bq-safe p{margin:0;font-size:13.5px;line-height:1.45;color:var(--ink2)}
+.bq-safe.warn{background:color-mix(in srgb,var(--ember) 12%,var(--s1))}
+.bq-safe.warn svg{stroke:var(--ember)}
+.bq-why ul{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:12px}
+.bq-why li b{display:block;font-size:14.5px;font-weight:600}
+.bq-why li span{display:block;margin-top:3px;font-size:13.5px;line-height:1.45;color:var(--ink2)}
+.bq-why .bq-safe{margin-top:12px}
+.bq-whymore{margin-top:10px;padding:0;min-height:32px}
+.bq-links{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
 
 </style>
 </head>
@@ -3304,9 +3377,44 @@ const FOCUS_DAY = {peito: 'FUP', costas: 'FUB', bracos: 'FUPB', ombros: 'FUP', g
    (num programa de kettlebell, o kettlebell vem antes do peso do corpo). */
 /* pedem força ou técnica avançada: fora dos programas de iniciante */
 const HARD = ['sissy', 'agachamento-unilateral', 'flexora-nordica', 'flexao-parede-invertida', 'flexao-arqueiro', 'paralelas', 'paralelas-peito', 'kb-snatch', 'elev-pernas-barra', 'flexao-palma', 'barra-arqueiro', 'joelho-cotovelo-suspenso', 'trx-pike', 'salto-grupado', 'trx-agachamento-unilateral', 'canivete'];
-function pickEx(slot, eq, used, prefMachine, local, beginner, gym){
-  const inv = gym && gym.inv ? new Set(gym.inv) : null;
-  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)) && (!inv || (local || 'academia') !== 'academia' || gymOk(x, inv)));
+/* v4.31: limitações e condições. Fontes: ACSM (2026, treino de força; hipertensão), NSCA (idosos, 2019; joelho),
+   ACOG (gestação, 2020) e revisões sobre dor lombar e ombro. "ban" sai do programa; "pre" sobe na lista da vaga. */
+const LIMS = {
+  ombro: {n: 'Ombro', ban: ['remada-alta', 'remada-alta-halter', 'remada-alta-maquina', 'desenv-barra', 'paralelas', 'paralelas-peito', 'mergulho-maquina', 'mergulho-banco', 'mergulho-cadeiras', 'supino-reto-barra', 'supino-incl-barra', 'supino-decl-barra', 'barra-fixa', 'puxada-aberta', 'barra-arqueiro', 'pullover-halter', 'flexao-arqueiro', 'flexao-parede-invertida', 'pike', 'trx-pike', 'triceps-frances-pe', 'triceps-frances-halter', 'kb-snatch', 'crucifixo-halter', 'crucifixo-incl', 'crucifixo-solo', 'flexao-aberta'],
+    pre: ['supino-pegada-neutra', 'supino-reto-halter', 'supino-reto-maquina', 'desenv-maquina', 'puxada-neutra', 'face-pull', 'remada-baixa', 'triceps-corda'], more: 'rowH2',
+    why: 'Ombro: saem remada alta, paralelas, desenvolvimento com barra e crucifixo aberto. Entram halteres e pegada neutra, e mais puxadas do que empurrões.'},
+  joelho: {n: 'Joelho', ban: ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'skipping', 'corrida', 'pular-corda', 'skater', 'sissy', 'agachamento-unilateral', 'trx-agachamento-unilateral', 'agachamento-cossaco', 'afundo-caminhando', 'afundo-cruzado', 'afundo-cruzado-halter', 'afundo-lateral', 'afundo-lateral-halter', 'bulgaro', 'bulgaro-cadeira', 'agachamento-frontal', 'afundo-barra', 'descida-degrau', 'flexora-nordica', 'kb-afundo', 'afundo', 'agachamento'],
+    pre: ['leg-press', 'agachamento-cadeira', 'subida-degrau', 'step-up', 'elevacao-pelvica', 'hip-thrust-maquina', 'cadeira-flexora', 'mesa-flexora', 'goblet'], depth: true,
+    why: 'Joelho: sem saltos, afundos profundos e agachamento livre com barra. Agachamentos e leg press vão até cerca de 90° de joelho, com mais glúteo e posterior.'},
+  lombar: {n: 'Lombar', ban: ['levantamento-terra', 'terra-sumo', 'bom-dia', 'bom-dia-solo', 'remada-curvada', 'remada-curvada-halter', 'agachamento', 'agachamento-frontal', 'afundo-barra', 'stiff-barra', 'kettlebell-swing', 'kb-snatch', 'sit-up', 'v-up', 'canivete', 'abd-declinado', 'elev-pernas', 'elev-pernas-barra', 'flutter', 'limpador', 'abd-russo', 'superman-puxada', 'desenv-barra', 'abd-solo'],
+    pre: ['leg-press', 'hack', 'remada-apoiada-t', 'remada-incl-halter', 'remada-iso', 'serrote', 'remada-baixa', 'elevacao-pelvica', 'hip-thrust-maquina', 'stiff-halter', 'perdigueiro', 'prancha-lateral', 'dead-bug', 'pallof', 'prancha'],
+    why: 'Lombar: saem terra e stiff com barra, bom-dia, remada curvada e agachamento com barra nas costas. Entram remadas com apoio, leg press, elevação pélvica e core de estabilidade, como perdigueiro e prancha lateral.'},
+  punho: {n: 'Punho ou cotovelo', ban: ['flexao', 'flexao-joelhos', 'flexao-diamante', 'flexao-declinada', 'flexao-aberta', 'flexao-arqueiro', 'flexao-palma', 'flexao-inclinada', 'flexao-parede', 'trx-flexao', 'prancha-toque-ombro', 'prancha-urso', 'urso', 'escalador', 'burpee', 'prancha-spiderman', 'prancha-polichinelo', 'rosca-barra', 'triceps-testa', 'triceps-barra', 'agachamento-frontal', 'kb-snatch', 'pike', 'paralelas', 'paralelas-peito', 'rosca-punho', 'rosca-punho-inversa'],
+    pre: ['rosca-martelo', 'rosca-halter', 'rosca-maquina', 'triceps-corda', 'triceps-maquina', 'supino-reto-maquina', 'supino-pegada-neutra'],
+    why: 'Punho ou cotovelo: sem flexões com a mão no chão e sem barra reta nas roscas e no tríceps. Entram halteres, cordas e máquinas, que deixam o punho mais neutro.'},
+  quadril: {n: 'Quadril', ban: ['agachamento-sumo-halter', 'terra-sumo', 'agachamento-cossaco', 'afundo-lateral', 'afundo-lateral-halter', 'bulgaro', 'bulgaro-cadeira', 'afundo-salto', 'agachamento-salto', 'salto-grupado', 'afundo-cruzado', 'afundo-cruzado-halter', 'corrida'],
+    pre: ['leg-press', 'elevacao-pelvica', 'hip-thrust-maquina', 'ponte', 'cadeira-flexora', 'subida-degrau'], depth: true,
+    why: 'Quadril: sem afundos laterais, agachamento sumo e saltos. A amplitude dos agachamentos fica onde não dói, com glúteo trabalhado em ponte e elevação pélvica.'},
+  pescoco: {n: 'Pescoço', ban: ['encolhimento-barra', 'encolhimento-halter', 'desenv-barra', 'abd-solo', 'sit-up', 'v-up', 'canivete', 'kb-snatch', 'barra-fixa'],
+    pre: ['desenv-maquina', 'puxada-neutra', 'abd-maquina', 'prancha', 'dead-bug'], drop: ['shrug'],
+    why: 'Pescoço: sem encolhimentos, desenvolvimento com barra e abdominais que puxam a cabeça. O abdômen fica com prancha e dead bug.'},
+  impacto: {n: 'Sem impacto', ban: ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'skipping', 'corrida', 'pular-corda', 'skater', 'polichinelo', 'prancha-polichinelo', 'chute-gluteo', 'kb-snatch', 'escalador'],
+    pre: ['bike', 'eliptico', 'caminhada-inclinada', 'remo-ergometro', 'air-bike', 'corda-naval'],
+    why: 'Sem impacto: nada de saltos ou corrida. O cardio vai para bicicleta, elíptico, remo ou caminhada inclinada.'},
+  pressao: {n: 'Pressão alta', cond: true, rmin: 8, rmax: 15, rir: 2, rest: 90, noHiit: true,
+    why: 'Pressão alta: séries de 8 a 15 repetições, sem ir à falha e sem prender a respiração (solte o ar na subida). O aeróbico moderado também ajuda a baixar a pressão.'},
+  coracao: {n: 'Coração, diabetes ou outra condição', cond: true, rmin: 10, rmax: 15, rir: 3, rest: 90, noHiit: true, clear: true,
+    why: 'Condição de saúde: intensidade moderada, parando com 3 repetições sobrando e descansos maiores. Antes de começar, peça a liberação do seu médico.'},
+  gestacao: {n: 'Gestação', cond: true, rmin: 10, rmax: 15, rir: 3, rest: 60, noHiit: true, clear: true,
+    ban: ['supino-reto-barra', 'supino-reto-halter', 'supino-reto-smith', 'supino-decl-barra', 'supino-decl-halter', 'supino-fechado', 'crucifixo-halter', 'crucifixo-solo', 'kb-supino-solo', 'triceps-testa', 'triceps-halter-deitado', 'ponte', 'ponte-solo', 'ponte-unilateral', 'ponte-elastico', 'ponte-halter', 'ponte-marcha', 'dead-bug', 'abd-solo', 'abd-declinado', 'abd-bicicleta', 'abd-obliquo', 'abd-cruzado', 'abd-reverso', 'abd-russo', 'abd-polia', 'abd-maquina', 'sit-up', 'v-up', 'flutter', 'canivete', 'hollow-hold', 'elev-pernas', 'elev-pernas-barra', 'limpador', 'canoa', 'mesa-flexora', 'superman-puxada', 'burpee', 'agachamento-salto', 'afundo-salto', 'salto-grupado', 'kettlebell-swing', 'kb-snatch', 'skipping', 'pular-corda', 'corrida', 'bulgaro', 'bulgaro-cadeira', 'agachamento-unilateral', 'trx-agachamento-unilateral', 'afundo-caminhando', 'levantamento-terra', 'terra-sumo', 'escalador', 'prancha-polichinelo'],
+    pre: ['supino-reto-maquina', 'supino-incl-maquina', 'supino-incl-halter', 'desenv-maquina', 'leg-press', 'cadeira-flexora', 'pallof', 'perdigueiro', 'prancha-lateral', 'remada-baixa', 'bike', 'eliptico', 'caminhada-inclinada'],
+    why: 'Gestação: nada deitada de barriga para cima por muito tempo, sem saltos e sem exercícios de muito equilíbrio, com séries moderadas e sem prender a respiração. Pare se sentir tontura, dor, sangramento ou falta de ar, e só comece com a liberação do obstetra.'},
+};
+/* número fixo por pessoa: duas pessoas com as mesmas respostas não recebem sempre os mesmos exercícios */
+function seedOf(str){ let h = 2166136261; for (const ch of String(str)){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function pickEx(slot, eq, used, prefMachine, local, beginner, gym, X){
+  const inv = gym && gym.inv ? new Set(gym.inv) : null; X = X || {};
+  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)) && !(X.ban && X.ban.has(x)) && (!inv || (local || 'academia') !== 'academia' || gymOk(x, inv)));
   const main = local && LOCAIS[local] && LOCAIS[local].main;
   if (main) c = [...c].sort((a, b) => (CAT[b].e === main) - (CAT[a].e === main));
   const pref = gym && gym.pref;
@@ -3317,7 +3425,12 @@ function pickEx(slot, eq, used, prefMachine, local, beginner, gym){
   if (pref === 'livre') c = soft(c, x => GYM_LIVRE.includes(CAT[x].e) && CAT[x].e !== 'peso', kk);
   else if (pref === 'maq' || (prefMachine && pref !== 'livre')) c = pref === 'maq' ? soft(c, x => GYM_MAQ.includes(CAT[x].e), kk) : [...c].sort((a, b) => GYM_MAQ.includes(CAT[b].e) - GYM_MAQ.includes(CAT[a].e));
   if (gym && gym.tipo === 'completa' && pref !== 'livre'){ const r = x => c.indexOf(x) - (G_ARTIC.has(x) || G_CROSS.has(x) ? 1.5 : 0); c = [...c].sort((a, b) => r(a) - r(b)); }
-  return c.find(x => !used.has(x)) || null;
+  if (X.pre && X.pre.size) c = soft(c, x => X.pre.has(x), 2.5);
+  const free = c.filter(x => !used.has(x));
+  /* entre as duas melhores opções equivalentes, a escolha segue a pessoa (exercício principal fica sempre o primeiro) */
+  const weak = x => ['elastico', 'casa', 'peso'].includes(CAT[x].e);
+  if (X.seed != null && free.length > 1 && SLOTS[slot].r !== 'main' && !(X.pre && X.pre.has(free[0]) && !X.pre.has(free[1])) && !(weak(free[1]) && !weak(free[0]))){ const h = seedOf(X.seed + slot + (X.wi || 0)); if (h % 100 < 38) return free[1]; }
+  return free[0] || null;
 }
 /* Gera um programa. o = {goal, local, dias, nivel, dur, foco, split} */
 function genProgram(o){
@@ -3326,31 +3439,69 @@ function genProgram(o){
   const beginner = o.nivel === 'Iniciante'; const novato = !!o.novato; const n = Math.max(4, (DUR_N[o.dur] || 6) - (novato ? 1 : 0)); const circuit = o.goal === 'condicionamento';
   /* um ou mais músculos prioritários (o primeiro escolhido entra mais cedo no treino) */
   const fos = (o.focos || (o.foco ? [o.foco] : [])).filter(k => FOCOS[k]);
+  /* v4.31: limitações, idade, ritmo e cardio da pessoa */
+  const lim = (o.lim || []).filter(k => LIMS[k]); const L0 = lim.map(k => LIMS[k]);
+  const X = {ban: new Set(L0.flatMap(l => l.ban || [])), pre: new Set(L0.flatMap(l => l.pre || [])), seed: o.seed != null ? String(o.seed) : null};
+  const age = +o.age || 0; const older = age >= 60; const teen = age && age < 18;
+  if (older){ HARD.forEach(x => X.ban.add(x)); ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'kb-snatch'].forEach(x => X.ban.add(x)); }
+  const cond = L0.filter(l => l.cond); const noHiit = cond.some(l => l.noHiit); if (noHiit) SLOTS.hiit.c.forEach(x => X.ban.add(x));
+  const ritmo = o.ritmo || 'equil'; const adv = o.nivel === 'Avançado'; const mid = o.nivel === 'Intermediário';
+  const rirBase = cond.length ? Math.max(...cond.map(l => l.rir)) : novato || beginner ? 3 : ritmo === 'leve' ? 3 : ritmo === 'forte' ? (adv ? 0 : 1) : (adv ? 1 : 2);
+  const cardio = o.cardio || (o.goal === 'definicao' ? 'leve' : 'nao'); const cardioT = noHiit && cardio === 'hiit' ? 'leve' : cardio;
+  const why = [];
+  const seen = {};
   const workouts = keys.map((k, wi) => {
-    const d = DAYS[k]; let slots = [...d.s]; let extra = 0;
+    const d = DAYS[k]; let slots = [...d.s]; let extra = 0; X.wi = wi; seen[k] = (seen[k] || 0) + 1; const rep2 = seen[d.k + '#'] = (seen[d.k + '#'] || 0) + 1;
+    L0.forEach(l => { if (l.drop) slots = slots.filter(x => !l.drop.includes(x)); if (l.more && /U|P|F/.test(d.k) && !slots.includes(l.more)) slots.splice(Math.min(3, slots.length), 0, l.more); });
     fos.slice().reverse().forEach(fk => { const fo = FOCOS[fk]; if (!FOCUS_DAY[fk].includes(d.k)) return; const at = fo.small ? Math.min(3, slots.length) : 1; slots.splice(at, 0, ...fo.slots); extra++; });
     slots = [...new Set(slots)]; extra = Math.min(1, extra);
     const used = new Set(); const items = [];
     for (const s of slots){
       if (items.length >= n + extra) break;
-      const ex = pickEx(s, eq, used, (beginner || novato) && o.local === 'academia', o.local, beginner, o.local === 'academia' ? o.gym : null); if (!ex) continue; used.add(ex);
+      const ex = pickEx(s, eq, used, (beginner || novato || older) && o.local === 'academia', o.local, beginner || older, o.local === 'academia' ? o.gym : null, X); if (!ex) continue; used.add(ex);
       const role = SLOTS[s].r === 'circ' ? 'comp' : SLOTS[s].r === 'cardio' ? 'comp' : SLOTS[s].r;
       let [sets, rmin, rmax, rest] = sch[role] || sch.comp;
       if (beginner){ sets = Math.max(2, sets - 1); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 10); rmax = Math.max(rmax, 15); } }
       if (novato){ sets = Math.min(sets, 3); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 15); } rest = Math.max(rest, 60); }
       if ((CAT[ex].e === 'peso' || CAT[ex].e === 'casa') && o.goal !== 'forca' && /comp|main/.test(role)){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 20); rest = Math.min(rest, 90); }
       if (CAT[ex].e === 'elastico'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 20); }
-      items.push({ex, sets, rmin, rmax, rest, nota: ''});
+      /* avançado em hipertrofia: um pouco mais de volume nos exercícios principais */
+      if (adv && (o.goal === 'hipertrofia' || o.goal === 'forca') && /main|comp/.test(role) && !circuit) sets += 1;
+      /* ondulação: no segundo treino do mesmo tipo na semana, repetições mais altas (intermediário e avançado) */
+      if ((mid || adv) && rep2 > 1 && (o.goal === 'hipertrofia' || o.goal === 'definicao') && role === 'comp' && !circuit){ rmin = Math.max(rmin + 2, 10); rmax = Math.max(rmax + 3, 15); rest = Math.max(60, rest - 30); }
+      if (older){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 12); rest = Math.max(rest, 90); }
+      if (teen && rmin < 6){ rmin = 6; rmax = Math.max(rmax, 10); }
+      cond.forEach(l => { rmin = Math.max(rmin, l.rmin); rmax = Math.max(rmax, l.rmax, rmin + 2); rest = circuit ? rest : Math.max(rest, l.rest); if (sets > 3) sets = 3; });
+      let nota = '';
+      if (L0.some(l => l.depth) && /agachamento|leg-press|hack|goblet|step|subida/.test(ex)) nota = 'Desça só até onde não doer, por volta de 90° de joelho.';
+      if (L0.some(l => l.depth) && /extensora/.test(ex)) nota = 'Use uma amplitude sem dor e não force o fim do movimento.';
+      if (lim.includes('lombar') && /stiff|terra|hip|elevacao|ponte/.test(ex)) nota = 'Carga moderada e coluna neutra. Pare se a dor aumentar.';
+      items.push({ex, sets, rmin, rmax, rest, nota});
     }
     if (circuit && items.length){ items.forEach(x => { x.rest = 0; x.sets = beginner ? 3 : 4; }); items[items.length - 1].rest = 90; items[0].nota = 'Circuito: faça os exercícios em sequência e descanse 90 s ao fim de cada volta.'; }
-    if (o.goal === 'definicao'){
-      for (let i = 2; i + 1 < items.length; i += 2){ items[i].rest = 0; items[i].nota = 'Bi-set: vá direto para o próximo exercício.'; }
-      const c = pickEx('cardio', eq, used, false, o.local, false, o.local === 'academia' ? o.gym : null);
-      if (c) items.push({ex: c, sets: 1, rmin: 15, rmax: 20, rest: 0, nota: 'Cardio moderado de 15 a 20 minutos. Anote os minutos no campo de repetições.'});
+    if (o.goal === 'definicao' && !cond.length){ for (let i = 2; i + 1 < items.length; i += 2){ if (items[i].nota) continue; items[i].rest = 0; items[i].nota = 'Bi-set: vá direto para o próximo exercício.'; } }
+    /* técnica de intensidade só para quem pediu ritmo puxado e já tem experiência */
+    if (ritmo === 'forte' && (adv || mid) && !cond.length && !circuit && (o.goal === 'hipertrofia' || o.goal === 'definicao')){ const iso = [...items].reverse().find(x => /iso|small/.test((Object.entries(SLOTS).find(([, v]) => v.c.includes(x.ex)) || [, {}])[1].r || '') && !x.nota); if (iso) iso.nota = 'Na última série, faça um drop-set: tire cerca de 30% da carga e siga até perto da falha.'; }
+    if (!circuit && cardioT !== 'nao'){
+      const cs = cardioT === 'hiit' ? ['air-bike', 'bike', 'remo-ergometro', 'corda-naval', 'eliptico', 'corrida', 'pular-corda'] : ['caminhada-inclinada', 'bike', 'eliptico', 'stepmill', 'remo-ergometro', 'corrida', 'marcha'];
+      const c = cs.find(x => CAT[x] && !CAT[x].hid && !X.ban.has(x) && exOk(x, o.local || 'academia') && (o.local !== 'academia' || !o.gym || !o.gym.inv || gymOk(x, new Set(o.gym.inv))));
+      if (c) items.push(cardioT === 'hiit' ? {ex: c, sets: 1, rmin: 8, rmax: 10, rest: 0, nota: 'Intervalado: 30 s forte e 60 s leve, de 6 a 8 vezes. Anote os minutos no campo de repetições.'} : {ex: c, sets: 1, rmin: o.goal === 'definicao' ? 15 : 10, rmax: o.goal === 'definicao' ? 20 : 15, rest: 0, nota: `Cardio moderado de ${o.goal === 'definicao' ? '15 a 20' : '10 a 15'} minutos, conseguindo conversar. Anote os minutos no campo de repetições.`});
     }
     if (items[0] && SLOTS[d.s[0]].r === 'main' && !circuit && !items[0].nota) items[0].nota = 'Faça 1 a 2 séries leves de aproximação antes.';
     return {nome: d.n, cor: wi % COLORS, items};
   });
+  /* o porquê de cada escolha, para a tela de resultado */
+  const rirTxt = rirBase >= 3 ? 'com 3 repetições sobrando' : rirBase === 2 ? 'com 2 repetições sobrando' : rirBase === 1 ? 'com 1 ou 2 repetições sobrando' : 'perto da falha nos exercícios isolados';
+  why.push({t: 'Esforço', d: `Termine cada série ${rirTxt}. ${o.goal === 'forca' ? 'Para força, não precisa ir à falha.' : rirBase <= 1 ? 'Chegar perto da falha ajuda no ganho de massa.' : 'Assim dá para aprender a técnica e progredir com segurança.'}`});
+  if (beginner || novato) why.push({t: 'Começo', d: `${novato ? 'Começando agora' : 'Iniciante'}: menos séries, mais repetições e exercícios mais fáceis de aprender. Quando fizer todas as repetições com folga, suba a carga.`});
+  else if ((mid || adv) && (o.goal === 'hipertrofia' || o.goal === 'definicao') && keys.length >= 4) why.push({t: 'Variação na semana', d: 'O segundo treino de cada tipo usa repetições mais altas que o primeiro. Assim os músculos recebem estímulos diferentes na mesma semana.'});
+  if (adv && (o.goal === 'hipertrofia' || o.goal === 'forca')) why.push({t: 'Volume', d: 'Avançado: uma série a mais nos exercícios principais, porque quem já treina há anos costuma precisar de mais volume para continuar evoluindo.'});
+  if (older) why.push({t: '60 anos ou mais', d: 'Mais máquinas e apoio, 8 a 12 repetições e 90 s ou mais de descanso. Suba o peso com firmeza e desça devagar.'});
+  if (teen) why.push({t: 'Menos de 18 anos', d: 'Sem cargas máximas: 6 repetições ou mais por série, de preferência com acompanhamento de um professor.'});
+  L0.forEach(l => { const d = l.why.replace(/^[^:]{2,40}: /, ''); why.push({t: l.n, d: d.charAt(0).toUpperCase() + d.slice(1)}); });
+  if (cardioT !== 'nao' && !circuit) why.push({t: 'Cardio', d: cardioT === 'hiit' ? 'Intervalado curto no fim de cada treino.' : `Cardio moderado no fim de cada treino${noHiit && cardio === 'hiit' ? ', no lugar do intervalado, por segurança' : ''}.`});
+  if (fos.length) why.push({t: 'Prioridade', d: 'Os músculos escolhidos ganham exercício extra e entram mais cedo nos treinos.'});
+  workouts.why = why; workouts.clear = L0.some(l => l.clear);
   return workouts;
 }
 function genMeta(o){
@@ -4193,7 +4344,7 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.30.0';
+const APP_VERSION = '4.31.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura', loginbg: 'fotos'};
 let ST = freshState();
 let SESS = [];
@@ -4240,7 +4391,7 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return 
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 /* Tela de entrada na primeira abertura: só com Firebase configurado, sem conta e sem nenhum dado no aparelho. */
 const shouldWelcome = () => Auth.kind === 'firebase' && !lsGet('forja.welcome') && !(Store.hasAccount && Store.hasAccount()) && !Auth.user && !SESS.length && !ST.routines.length && !ST.profile.name;
-function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; sessResume(30000); const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); else if (shouldWelcome()) UI.stack = [{type: 'auth', first: true}]; render(); }
+function onDataLoaded(){ applyTheme(); if (booted) return; booted = true; sessResume(30000); const o = openSession(); if (o && (!location.hash.slice(1) || location.hash === '#treinar')) UI.stack = [{type: 'session', sid: o.id}]; else if (location.hash === '#treinar') setTimeout(() => A.fab(), 50); else if (shouldWelcome()) UI.stack = [{type: 'auth', first: true}]; else maybeOnb(location.hash === '#primeiros-passos'); render(); }
 function isTyping(){ const a = document.activeElement; return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT'); }
 function canRerender(){ return !isTyping() && !KP.open && $('#sheet').hidden && !DRAG; }
 
@@ -4430,6 +4581,7 @@ function render(){
   const a = document.activeElement; const fid = a && a.id; const sel = a && a.selectionStart != null ? [a.selectionStart, a.selectionEnd] : null;
   const p = curPage(); const inSess = p && p.type === 'session';
   document.body.classList.toggle('in-session', !!inSess);
+  document.body.classList.toggle('onb-mode', !!(p && p.type === 'onb'));
   { const am = !!(p && p.type === 'auth'); if (document.body.classList.contains('auth-mode') !== am){ document.body.classList.toggle('auth-mode', am); Platform.themeColor(am || isDark()); } }
   if (p && p.type === 'auth' && p.first && (Store.mode === 'cloud' || Store.mode === 'api')){ UI.stack.pop(); return render(); }
   document.querySelectorAll('nav.tabs a').forEach(x => x.setAttribute('aria-current', !p && x.dataset.tab === UI.tab ? 'page' : 'false'));
@@ -4439,6 +4591,7 @@ function render(){
   const sync = `<span class="sync ${syncClass()}" title="${syncLbl}" role="img" aria-label="${syncLbl}"></span>`;
   let head, body;
   if (p && p.type === 'auth'){ head = ''; body = vAuth(p); }
+  else if (p && p.type === 'onb'){ head = ''; body = vOnb(p); }
   else if (!p){
     head = `<span class="brand">${I.brand}Forja</span><span class="sp"></span>${sync}<button class="avatar${hasPic() ? ' pic' : ''}" data-act="profile" aria-label="Perfil e ajustes">${avatarIn()}</button>`;
     body = UI.tab === 'rotinas' ? vRoutines() : UI.tab === 'progresso' ? vProgress() : UI.tab === 'corpo' ? vBody() : vHome();
@@ -4593,7 +4746,7 @@ function vHome(){
     h += `<section class="hero home-hero" style="--pc:var(--ember)">${glow()}<div class="hero-top"><span class="hero-lbl">Primeiro passo</span></div>
       ${heroName('Comece aqui', 'h2', 'home')}
       <p class="hero-focus">Escolha um dos programas prontos ou monte um sob medida para seus dias, seu local e seu objetivo. Leva um minuto.</p>
-      <div class="hero-act"><button class="btn primary" data-act="go-explore">Ver programas</button><button class="btn ghost" data-act="open-builder">Montar o meu</button></div></section>`;
+      <div class="hero-act two"><button class="btn primary" data-act="go-explore">Ver programas</button><button class="btn ai-btn" data-act="open-builder"><span>Montar o meu</span></button></div></section>`;
   } else {
     h += `<section class="empty"><b>Rotina sem treinos</b>Adicione um treino à rotina ${esc(r.nome)}.<div style="margin-top:14px"><button class="btn primary sm" data-act="open-routine" data-rid="${r.id}">Abrir rotina</button></div></section>`;
   }
@@ -5264,9 +5417,9 @@ function vProfile(){
   ${L.n ? `<section class="card small ink2">${L.prs} recordes batidos · ${L.sets} séries no total${L.fav ? ` · mais feito: <b style="color:var(--ink)">${esc(exName(L.fav))}</b>` : ''}${L.first ? ` · desde ${fmtDLong(L.first)}` : ''}</section>` : ''}
   <section class="card stack"><div class="eyebrow">Dados pessoais</div>
     ${field('name', 'Nome', pf.name, 'maxlength="40" autocomplete="name"')}
-    <div class="formgrid">${field('birth', 'Nascimento', pf.birth, 'type="date"')}${field('height', 'Altura (cm)', pf.height, 'inputmode="numeric"')}</div>
+    <div class="formgrid">${field('birth', pf.birthApprox ? 'Nascimento (confira o dia)' : 'Nascimento', pf.birth, 'type="date"')}${field('height', 'Altura (cm)', pf.height, 'inputmode="numeric"')}</div>
     <div class="small muted">Peso atual: ${lastBw ? `<b style="color:var(--ink)">${fmtN(lastBw.kg)} kg</b> em ${fmtD(lastBw.date)}` : 'sem registro'} · <button class="link" style="min-height:0;padding:0" data-act="go-body">Registrar medidas</button></div>
-    <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Saúde', 'Saúde']])}</div>
+    <div><div class="tiny muted" style="margin-bottom:8px">Objetivo</div>${seg('goal', [['Hipertrofia', 'Hipertrofia'], ['Definição', 'Definição'], ['Força', 'Força'], ['Condicionamento', 'Condicionamento'], ['Saúde', 'Saúde']])}</div>
     <div><div class="tiny muted" style="margin-bottom:8px">Experiência</div>${seg('level', [['Iniciante', 'Iniciante'], ['Intermediário', 'Intermediário'], ['Avançado', 'Avançado']])}</div></section>
   <p class="tiny muted" style="text-align:center;margin-top:18px">Forja ${APP_VERSION}</p>`;
 }
@@ -5471,7 +5624,7 @@ async function afterLogin(o = {}){
   if (Store.mode === 'verify'){ UI.stack = [{type: 'profile'}]; render(); toast(o.reg ? 'Conta criada. Confirme o e-mail para começar a salvar na nuvem.' : 'Confirme seu e-mail para começar a salvar na nuvem.', null, '', 6000); }
   else if (Store.mode === 'api') toast(o.linked ? 'Google vinculado. Agora você entra dos dois jeitos.' : o.google ? (o.isNew ? 'Conta criada com o Google. Seus dados estão sincronizados.' : 'Conectado com o Google.') : 'Conectado. Seus dados estão sincronizados.');
   else toast('Conta conectada, mas o servidor não respondeu. Tentaremos de novo.');
-  if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } render();
+  if (!ST.profile.name && Auth.user && Auth.user.name){ ST.profile.name = Auth.user.name; saveState(); } if (Store.mode !== 'verify') maybeOnb(); render();
 }
 A['auth-google'] = async el => { if (el.classList.contains('busy')) return; authKeep(); const st = UI.auth || (UI.auth = {mode: 'start'}); st.err = ''; el.classList.add('busy');
   try { const r = await Auth.google(); await afterLogin({google: true, isNew: r.isNew}); }
@@ -5481,7 +5634,7 @@ A['auth-google'] = async el => { if (el.classList.contains('busy')) return; auth
     st.err = e.status === 0 ? 'Sem conexão. Verifique a internet e tente de novo.' : e.message || 'Não foi possível entrar com o Google.'; render(); } };
 A['link-google'] = async () => { try { await Auth.linkGoogle(); render(); toast('Conta Google vinculada. Agora você entra dos dois jeitos.'); } catch (e) { if (e.status !== 499) toast(e.message || 'Não foi possível vincular agora.'); } };
 A['unlink-google'] = () => confirmSheet({title: 'Desvincular o Google?', text: 'Você continua entrando com e-mail e senha. Dá para vincular de novo quando quiser.', ok: 'Desvincular', onOk: async () => { try { await Auth.unlinkGoogle(); render(); toast('Google desvinculado'); } catch (e) { toast(e.message || 'Não foi possível agora.'); } }});
-A['auth-skip'] = () => { lsSet('forja.welcome', '1'); UI.stack.pop(); render(); window.scrollTo({top: 0}); };
+A['auth-skip'] = () => { lsSet('forja.welcome', '1'); UI.stack.pop(); maybeOnb(); render(); window.scrollTo({top: 0}); };
 document.addEventListener('input', ev => { if (ev.target.id === 'au-pass'){ const r = $('#au-rule'); if (r) r.classList.toggle('ok', ev.target.value.length >= 8); } });
 A.forgot = async () => { const email = ($('#au-email').value || '').trim(); const err = $('#au-err'); if (!email){ err.textContent = 'Digite seu e-mail acima e toque de novo em Esqueci minha senha.'; err.hidden = false; return; }
   try { await Auth.resetPassword(email); if (curPage()?.type === 'auth'){ UI.auth = {mode: 'login', email, note: 'Se houver conta com esse e-mail, enviamos um link para criar uma nova senha. Confira também o spam.'}; render(); return; } closeSheet(); toast('Se houver conta com esse e-mail, enviamos um link para criar uma nova senha.', null, '', 6000); } catch (e) { err.textContent = e.status === 0 ? 'Sem conexão. Tente de novo.' : e.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.' : 'Não foi possível enviar agora.'; err.hidden = false; } };
@@ -5651,7 +5804,7 @@ document.addEventListener('change', async ev => {
   const t = ev.target; const act = t.dataset && t.dataset.act;
   if (act === 'progex'){ UI.progEx = t.value; render(); }
   if (act === 'day-w'){ const r = routineById(t.dataset.rid); if (!r) return; r.dias = r.dias || {}; if (t.value) r.dias[t.dataset.d] = t.value; else delete r.dias[t.dataset.d]; if (!hasSchedule(r)) delete r.dias; saveState(); render(); }
-  if (act === 'pf'){ ST.profile[t.dataset.k] = t.value.trim(); saveState(); if (t.dataset.k === 'name') render(); }
+  if (act === 'pf'){ ST.profile[t.dataset.k] = t.value.trim(); if (t.dataset.k === 'birth') delete ST.profile.birthApprox; saveState(); if (t.dataset.k === 'name') render(); }
   if (act === 'ss-date' || act === 'ss-dur'){ const s = curSess(); if (!s) return; if (act === 'ss-date'){ if (t.value && t.value <= today()) s.date = t.value; } else { const v = parseInt(t.value, 10); s.dur = v > 0 ? v : null; } saveSession(s); }
   if (act === 's-note'){ const s = SESS.find(x => x.id === t.dataset.sid); if (s){ s.note = t.value.trim(); saveSession(s); } }
   if (act === 'import' && t.files && t.files[0]){
@@ -5807,7 +5960,7 @@ function vTemplate(p){
 }
 
 // ---------- assistente ----------
-const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto', obs: '', gym: null};
+const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto', obs: '', gym: null, lim: [], ritmo: 'equil', cardio: null, v: 0};
 const gymDefault = () => ST.profile && ST.profile.gym ? {...ST.profile.gym, inv: [...ST.profile.gym.inv]} : {tipo: 'nsei', inv: [...GYM_TIPOS.nsei.inv], pref: 'equil'};
 const FOCO_MAX = 3;
 const focosTxt = fs => { const n = fs.map(k => FOCOS[k].n.toLowerCase()); return n.length > 1 ? n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1] : n[0] || ''; };
@@ -5821,10 +5974,11 @@ function bldKeys(b){
 function builderTpl(){
   const b = UI.bld || (UI.bld = {...BLD0}); if (b.local === 'academia' && !b.gym) b.gym = gymDefault(); const o = {...b, keys: bldKeys(b), focos: b.focos || [], foco: undefined, gym: b.local === 'academia' ? b.gym : null};
   const nm = `${{hipertrofia: 'Hipertrofia', forca: 'Força', definicao: 'Definição', condicionamento: 'Condicionamento', saude: 'Saúde'}[b.goal]} sob medida ${b.dias}x`;
-  o.nivel = bldNivel(b.nivel); o.novato = b.nivel === 'Começando';
-  const ob = bldObs(genProgram(o), b.obs, b.local === 'academia' && b.gym ? b.gym.inv : null);
+  o.nivel = bldNivel(b.nivel); o.novato = b.nivel === 'Começando'; const pf = ST.profile || {}; o.age = ageFrom(pf.birth) || 0; o.cardio = bldCardio(b); o.seed = `${pf.name || ''}|${pf.birth || ''}|${b.v || 0}`;
+  const gp = genProgram(o); const why = gp.why || [], clear = !!gp.clear;
+  const ob = bldObs(gp, b.obs, b.local === 'academia' && b.gym ? b.gym.inv : null);
   return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${b.local === 'academia' && b.gym && b.gym.tipo !== 'nsei' ? GYM_TIPOS[b.gym.tipo].n.toLowerCase() : LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.${ob.text ? ` Suas observações: “${ob.text}”.` : ''}`,
-    goal: [b.goal], local: [b.local], nivel: bldNivel(b.nivel), freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
+    goal: [b.goal], local: [b.local], nivel: bldNivel(b.nivel), freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob, why, clear};
 }
 /* Cartão do assistente: borda com uma luz laranja girando em volta */
 function builderCta(){ return `<button class="builder-cta spin-b" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Algumas perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>6 passos</i><i class="hot">1 minuto</i></span></button>`; }
@@ -5860,11 +6014,14 @@ function bldObsSummary(ob){
 /* Assistente em passos: uma pergunta por tela, cada passo é uma página da pilha
    (o voltar do celular e o do topo voltam uma pergunta). No fim, o programa recomendado
    e, discretamente, outras opções compatíveis com as respostas. */
-const BSTEPS = ['goal', 'dias', 'local', 'gym', 'nivel', 'foco', 'obs'];
+const BSTEPS = ['goal', 'dias', 'local', 'gym', 'nivel', 'saude', 'estilo', 'foco', 'obs'];
 /* o passo da academia só aparece para quem treina em academia */
-const bSteps = () => BSTEPS.filter(x => x !== 'gym' || (UI.bld && UI.bld.local === 'academia'));
+const bSteps = () => BSTEPS.filter(x => (x !== 'gym' || (UI.bld && UI.bld.local === 'academia')) && (x !== 'goal' || !(UI.bld && UI.bld.skipGoal)));
 const GOAL_SUB = {hipertrofia: 'Aumentar a massa muscular, com volume e repetições moderadas.', forca: 'Levantar mais peso nos básicos. Poucas repetições e descansos longos.', definicao: 'Perder gordura mantendo os músculos. Bi-sets e cardio no fim.', condicionamento: 'Fôlego e gasto calórico. Circuitos quase sem descanso.', saude: 'Começar ou voltar a treinar com segurança e constância.'};
 /* v4.28: quatro níveis no assistente. "Começando agora" gera como Iniciante, com treinos ainda mais simples. */
+const BLD_RITMO = [['leve', 'Mais tranquilo', 'Séries com folga, longe do limite'], ['equil', 'Equilibrado', 'Esforço alto, com a técnica sob controle'], ['forte', 'Puxado', 'Perto do limite, para quem já treina']];
+const BLD_CARDIO = [['nao', 'Sem cardio'], ['leve', 'Leve no fim'], ['hiit', 'Intervalado']];
+const bldCardio = b => b.cardio || (b.goal === 'definicao' ? 'leve' : b.goal === 'condicionamento' ? 'nao' : 'nao');
 const BLD_NIVEIS = [['Começando', 'Começando agora', 'Nunca treinou ou fez só algumas semanas.'], ['Iniciante', 'Iniciante', 'Menos de 6 meses treinando, ou voltando de uma pausa longa.'], ['Intermediário', 'Intermediário', 'De 6 meses a 2 anos treinando, sem parar.'], ['Avançado', 'Avançado', 'Mais de 2 anos treinando, com cargas altas.']];
 const NIVEL_SUB = Object.fromEntries(BLD_NIVEIS.map(([k, , d]) => [k, d]));
 const bldNivel = n => n === 'Começando' ? 'Iniciante' : n;
@@ -5888,7 +6045,7 @@ function bldAlts(b){
   const lib = tplFilter({goal: b.goal, local: b.local, tipo: 'programa'}).map(t => [sc(t), t]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0]).slice(0, 4).map(x => x[1]);
   return {divs, lib};
 }
-function bldProgress(i){ const ST_ = bSteps(); return `<div class="bq-prog" aria-label="Passo ${i + 1} de ${ST_.length}">${ST_.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'on' : ''}"></i>`).join('')}</div><div class="eyebrow" style="margin-top:14px">Passo ${i + 1} de ${ST_.length}</div>`; }
+function bldProgress(i){ const ST_ = bSteps(); return `<div class="bq-prog" aria-label="Passo ${i + 1} de ${ST_.length}">${ST_.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'on' : ''}"></i>`).join('')}</div><div class="eyebrow" style="margin-top:14px">Passo ${i + 1} de ${ST_.length}${i === 0 ? ' · cerca de 1 minuto' : ''}</div>`; }
 const bqChoice = (k, v, cur, title, sub, lead = '') => `<button class="choice" data-act="bld-pick" data-k="${k}" data-v="${esc(v)}" aria-pressed="${String(cur) === String(v)}">${lead}<span class="grow"><b>${title}</b>${sub ? `<span>${sub}</span>` : ''}</span><i class="tick">${I.check}</i></button>`;
 function vBuilderStep(b, step){
   const i = bSteps().indexOf(step); let q = '', body = '';
@@ -5914,6 +6071,20 @@ function vBuilderStep(b, step){
   else if (step === 'nivel'){ q = 'Como está a sua experiência?'; body = `<div class="stack" style="gap:10px">${BLD_NIVEIS.map(([k, n, d]) => bqChoice('nivel', k, b.nivel, n, d)).join('')}</div>
     <div class="og" style="margin-top:22px"><span class="eyebrow">Tempo por treino</span><div class="seg">${[30, 45, 60, 75].map(m => `<button data-act="bld-set" data-k="dur" data-v="${m}" aria-pressed="${b.dur === m}">${m} min</button>`).join('')}</div></div>
     <button class="btn primary block" style="margin-top:22px" data-act="bld-next" data-step="nivel">Continuar</button>`; }
+  else if (step === 'saude'){ q = 'Tem alguma dor, lesão ou condição de saúde?'; const L = b.lim || (b.lim = []);
+    const chip = ([k, n]) => `<button class="bq-lim" data-act="bld-lim" data-v="${k}" aria-pressed="${L.includes(k)}">${esc(n)}</button>`;
+    const conds = [['pressao', 'Pressão alta'], ['coracao', 'Coração, diabetes ou outra'], ...(isFem() ? [['gestacao', 'Gestação']] : []), ['impacto', 'Prefiro sem impacto']];
+    const clear = L.some(k => LIMS[k] && LIMS[k].clear);
+    body = `<p class="ink2" style="margin:-6px 0 16px">O treino evita o que pode piorar e troca por opções seguras.</p>
+      <button class="choice" data-act="bld-lim" data-v="" aria-pressed="${!L.length}"><span class="grow"><b>Nada disso</b><span>Pode montar sem restrições</span></span><i class="tick">${I.check}</i></button>
+      <div class="eyebrow" style="margin-top:20px">Dor ou lesão</div><div class="bq-lims">${[['ombro', 'Ombro'], ['joelho', 'Joelho'], ['lombar', 'Lombar'], ['punho', 'Punho ou cotovelo'], ['quadril', 'Quadril'], ['pescoco', 'Pescoço']].map(chip).join('')}</div>
+      <div class="eyebrow" style="margin-top:18px">Condição</div><div class="bq-lims">${conds.map(chip).join('')}</div>
+      ${L.length ? `<div class="bq-safe${clear ? ' warn' : ''}">${I.info}<p>${clear ? 'Antes de começar, peça a liberação do seu médico. O app ajusta o treino, mas não substitui essa avaliação.' : L.includes('pressao') ? 'Se a pressão não estiver controlada, fale com seu médico antes de começar. Com dor forte ou que piora no treino, procure um fisioterapeuta.' : L.includes('impacto') && L.length === 1 ? 'Tudo certo: o cardio e os exercícios ficam sem saltos e sem corrida.' : 'Se a dor for forte, recente ou piorar com o treino, procure um fisioterapeuta ou médico. O app adapta os exercícios, mas não substitui uma avaliação.'}</p></div>` : ''}
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="saude">Continuar</button></div>`; }
+  else if (step === 'estilo'){ q = 'Como você gosta de treinar?'; const cur = bldCardio(b);
+    body = `<div class="stack" style="gap:10px">${BLD_RITMO.map(([k, n, d]) => `<button class="choice" data-act="bld-set" data-k="ritmo" data-v="${k}" aria-pressed="${(b.ritmo || 'equil') === k}"><span class="grow"><b>${n}</b><span>${d}</span></span><i class="tick">${I.check}</i></button>`).join('')}</div>
+      <div class="og" style="margin-top:22px"><span class="eyebrow">Cardio no treino</span><div class="seg">${BLD_CARDIO.map(([k, n]) => `<button data-act="bld-set" data-k="cardio" data-v="${k}" aria-pressed="${cur === k}">${n}</button>`).join('')}</div></div>
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="estilo">Continuar</button></div>`; }
   else if (step === 'foco'){ q = 'Quer dar prioridade a algum músculo?'; const fs = b.focos;
     body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. Escolha até ${FOCO_MAX}: eles ganham volume extra e entram mais cedo nos treinos, sem deixar o resto de lado.</p><div class="list">
       <button class="li frow bq-foco" data-act="bld-foco" data-v="" aria-pressed="${!fs.length}"><span class="fthumb">${bodyThumb([], 0)}</span><div class="grow"><b>Não, quero equilíbrio</b><span class="sub">Todos os grupos com o mesmo peso</span></div><i class="tick">${I.check}</i></button>
@@ -5927,10 +6098,11 @@ function vBuilderStep(b, step){
 }
 function vBuilderResult(b){
   const t = builderTpl(); const keys = bldKeys(b); const al = UI.bldAlt ? bldAlts(b) : null;
-  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ...(b.local === 'academia' && b.gym ? [['gym', b.gym.tipo === 'nsei' ? 'Academia comum' : GYM_TIPOS[b.gym.tipo].n]] : []), ['nivel', `${(BLD_NIVEIS.find(x => x[0] === b.nivel) || [, b.nivel])[1]} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
+  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ...(b.local === 'academia' && b.gym ? [['gym', b.gym.tipo === 'nsei' ? 'Academia comum' : GYM_TIPOS[b.gym.tipo].n]] : []), ['nivel', `${(BLD_NIVEIS.find(x => x[0] === b.nivel) || [, b.nivel])[1]} · ${b.dur} min`], ['saude', (b.lim || []).length ? b.lim.map(k => LIMS[k].n).join(', ') : 'Sem limitações'], ['estilo', `${BLD_RITMO.find(x => x[0] === (b.ritmo || 'equil'))[1]} · ${BLD_CARDIO.find(x => x[0] === bldCardio(b))[1].toLowerCase()}`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
   return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
     <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
     <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
+  ${t.why && t.why.length ? `<section class="card bq-why"><span class="eyebrow">Feito para você</span>${t.clear ? `<div class="bq-safe warn">${I.info}<p>Antes de começar, peça a liberação do seu médico.</p></div>` : ''}<ul>${t.why.map((x, k) => `<li${k > 2 ? ' class="more" hidden' : ''}><b>${esc(x.t)}</b><span>${esc(x.d)}</span></li>`).join('')}</ul>${t.why.length > 3 ? `<button class="link bq-whymore" data-act="bld-why">Ver os ${t.why.length - 3} outros ajustes</button>` : ''}</section>` : ''}
   <section><div class="list bq-week">${t.workouts.map((w, i) => `<details class="bq-w"><summary><span class="plate" style="${pcs(w.cor)}">${i + 1}</span><span class="grow"><b>${esc(w.nome)}</b><span class="sub">${w.items.length} exercícios · ${wSets(w)} séries · ~${wMins(w)} min</span></span>${I.chev}</summary><div class="list">${w.items.map(exRow).join('')}</div></details>`).join('')}</div>
     <p class="tiny muted" style="margin:10px 4px 0">Toque em um treino para ver os exercícios. Depois de salvar, você pode trocar qualquer um.</p></section>
   <section class="card stack ob-card bq-obs"><div class="row between"><span class="eyebrow">Observações e preferências</span>${t.obsRes && t.obsRes.text ? `<span class="tiny muted">${t.obsRes.rules.length} ${t.obsRes.rules.length === 1 ? 'ajuste' : 'ajustes'}</span>` : ''}</div>
@@ -5938,7 +6110,7 @@ function vBuilderResult(b){
     <div class="row between" style="gap:10px"><span class="tiny muted grow">Mude o texto e atualize: o programa acima é refeito com as suas preferências.</span><button class="btn sm primary" data-act="bld-obs-run">Atualizar programa</button></div>
     ${bldObsSummary(t.obsRes)}</section>
   <section class="stack" style="gap:10px"><button class="btn primary block" data-act="add-template" data-tid="_bld">${I.plus}Salvar programa</button>
-    ${al ? '' : '<button class="link bq-more" data-act="bld-alt">Ver outras opções</button>'}</section>
+    <div class="bq-links"><button class="link" data-act="bld-var">Gerar outra versão</button>${al ? '' : '<button class="link" data-act="bld-alt">Ver outras opções</button>'}</div></section>
   ${al ? `<section><div class="sec-head"><span class="eyebrow">Outras opções para você</span><button class="link" data-act="bld-alt">Ocultar</button></div>
     ${al.divs.length ? `<div class="stack" style="gap:10px;margin-bottom:12px">${al.divs.map(d => `<button class="choice" data-act="bld-div" data-v="${d.div}" ><span class="grow"><b>${esc(d.label)}</b><span>Mesmos ${b.dias} dias, outra divisão. ${splitWhy(bldKeys({...b, div: d.div}), b.dias)}</span></span>${I.chev}</button>`).join('')}</div>` : ''}
     ${al.lib.length ? `<div class="stack">${al.lib.map(pcard).join('')}</div>` : (al.divs.length ? '' : '<div class="empty"><b>Sem outras opções</b>Mude uma das respostas acima para ver mais programas.</div>')}</section>` : ''}
@@ -5949,7 +6121,7 @@ PAGES.builder = {title: () => 'Montar meu programa', view: p => {
   return p.step && p.step !== 'res' ? vBuilderStep(b, p.step) : p.step === 'res' ? vBuilderResult(b) : vBuilderStep(b, 'goal');
 }};
 const bldWdTxt = wd => wd.slice().sort((x, y) => WEEK.indexOf(x) - WEEK.indexOf(y)).map(d => DIA3[d]).join(' · ');
-const bldNext = step => { const L = bSteps(); const i = L.indexOf(step); push({type: 'builder', step: i < L.length - 1 ? L[i + 1] : 'res'}); };
+const bldNext = step => { const cp = curPage(); if (cp && cp.ret){ UI.stack.pop(); render(); window.scrollTo({top: 0}); return; } const L = bSteps(); const i = L.indexOf(step); push({type: 'builder', step: i < L.length - 1 ? L[i + 1] : 'res'}); };
 // ---------- ações ----------
 A.rtab = el => { UI.rtab = el.dataset.t; render(); };
 A['xf-open'] = el => { const k = el.dataset.k, d = XF_KEYS[k];
@@ -5957,7 +6129,7 @@ A['xf-open'] = el => { const k = el.dataset.k, d = XF_KEYS[k];
 A['xf-set'] = el => { UI.xf[el.dataset.k] = el.dataset.v || ''; closeSheet(); render(); };
 A['xf-clear'] = () => { UI.xf = {}; UI.xq = ''; render(); };
 A['open-xlist'] = el => { let f = {}; try { f = JSON.parse(el.dataset.f); } catch (e) {} push({type: 'xlist', f, title: el.dataset.title}); };
-A['open-builder'] = () => { UI.bld = null; UI.bldAlt = false; push({type: 'builder', step: 'goal'}); };
+A['open-builder'] = () => { UI.bld = bldFromProfile(); UI.bldAlt = false; push({type: 'builder', step: 'goal'}); };
 A['tpl-opt'] = el => { const tid = el.dataset.tid, k = el.dataset.k; const o = UI.tplOpt[tid] = UI.tplOpt[tid] || {}; o[k] = k === 'dur' ? +el.dataset.v : el.dataset.v; render(); };
 A.bld = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; render(); };
 A['bld-set'] = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; render(); Platform.haptic('light'); };
@@ -5974,12 +6146,16 @@ A['bld-gym'] = el => { const b = UI.bld; const k = el.dataset.v; b.gym = {tipo: 
 A['bld-inv'] = el => { const g = UI.bld.gym; const k = el.dataset.v; g.inv = g.inv.includes(k) ? g.inv.filter(x => x !== k) : [...g.inv, k]; render(); Platform.haptic('light'); };
 A['bld-gpref'] = el => { UI.bld.gym.pref = el.dataset.v; render(); Platform.haptic('light'); };
 A['bld-foco'] = el => { const b = UI.bld; const k = el.dataset.v; if (!k) b.focos = []; else if (b.focos.includes(k)) b.focos = b.focos.filter(x => x !== k); else if (b.focos.length >= FOCO_MAX){ toast(`Até ${FOCO_MAX} músculos. Com mais, a prioridade se dilui e os treinos ficam longos.`); return; } else b.focos = [...b.focos, k]; b.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); };
-A['bld-go'] = el => { const i = UI.stack.findIndex(p => p.type === 'builder' && p.step === el.dataset.step); if (i >= 0){ UI.stack = UI.stack.slice(0, i + 1); render(); window.scrollTo({top: 0}); } };
+A['bld-lim'] = el => { const b = UI.bld; const k = el.dataset.v; b.lim = !k ? [] : (b.lim || []).includes(k) ? b.lim.filter(x => x !== k) : [...(b.lim || []), k]; render(); Platform.haptic('light'); };
+A['bld-var'] = () => { UI.bld.v = (UI.bld.v || 0) + 1; render(); Platform.haptic('light'); toast('Outra versão, com exercícios equivalentes'); };
+A['bld-why'] = el => { document.querySelectorAll('.bq-why li.more').forEach(x => { x.hidden = false; }); el.remove(); };
+A['bld-go'] = el => { const i = UI.stack.findIndex(p => p.type === 'builder' && p.step === el.dataset.step); if (i >= 0){ UI.stack = UI.stack.slice(0, i + 1); render(); window.scrollTo({top: 0}); } else { push({type: 'builder', step: el.dataset.step, ret: true}); } };
 A['bld-alt'] = () => { UI.bldAlt = !UI.bldAlt; render(); if (UI.bldAlt) setTimeout(() => $('.bq-more, .bq-res ~ section .sec-head')?.scrollIntoView({behavior: 'smooth', block: 'start'}), 30); };
 A['bld-div'] = el => { UI.bld.div = el.dataset.v; UI.bldAlt = false; render(); window.scrollTo({top: 0, behavior: 'smooth'}); toast('Divisão trocada'); };
 A['add-template'] = el => {
   const t = effTpl(tplById(el.dataset.tid)); if (!t) return;
   if (t.id === '_bld' && UI.bld && UI.bld.local === 'academia' && UI.bld.gym){ ST.profile.gym = {...UI.bld.gym, inv: [...UI.bld.gym.inv]}; }
+  if (t.id === '_bld' && UI.bld){ ST.profile.lim = (UI.bld.lim || []).slice(); ST.profile.ritmo = UI.bld.ritmo || 'equil'; if (UI.bld.nivel) ST.profile.level = UI.bld.nivel === 'Começando' ? 'Iniciante' : UI.bld.nivel; }
   const r = routineFromTemplate(t); const wd = t.id === '_bld' && UI.bld && UI.bld.wd && UI.bld.wd.length === r.workouts.length ? UI.bld.wd : null; if (wd) setDays(r, wd);
   ST.routines.push(r); if (!activeRoutine()) ST.active = r.id; saveState();
   UI.tab = 'rotinas'; UI.rtab = 'minhas'; UI.stack = [{type: 'routine', rid: r.id}]; render(); window.scrollTo({top: 0}); Platform.haptic('success'); if (wd) toast(`${t.nome} salvo, com treinos em ${bldWdTxt(wd)}.`); else if (r.workouts.length) openDaysSheet(r.id, true); else toast(`${t.nome} salvo nas suas rotinas`);
@@ -5991,6 +6167,74 @@ A['add-tpl-workout'] = el => {
 };
 A.pics = el => { ST.prefs.pics = el.dataset.v; saveState(); render(); };
 document.addEventListener('input', ev => { const t = ev.target; if (t.dataset && t.dataset.act === 'xq'){ const was = xActive(); UI.xq = t.value; if (was !== xActive()){ render(); const i = $('#x-q'); if (i){ i.focus(); i.setSelectionRange(i.value.length, i.value.length); } } else { const el = $('#x-results'); if (el) el.innerHTML = xResults(); } } });
+
+/* ================= v4.31: primeiros passos =================
+   Quatro perguntas obrigatórias (nome, sexo, idade, objetivo), com contagem e tempo à vista.
+   Depois, o convite para montar o primeiro treino sob medida, ou entrar no app e fazer depois. */
+const ONB_GOALS = [['hipertrofia', 'Ganhar massa muscular', 'Músculos maiores e mais definidos', 'Hipertrofia'], ['definicao', 'Perder gordura', 'Secar mantendo os músculos', 'Definição'], ['forca', 'Ficar mais forte', 'Levantar mais peso nos básicos', 'Força'], ['condicionamento', 'Melhorar o condicionamento', 'Mais fôlego e disposição', 'Condicionamento'], ['saude', 'Saúde e constância', 'Começar ou voltar a treinar bem', 'Saúde']];
+const PF_GOAL_BLD = {'Hipertrofia': 'hipertrofia', 'Definição': 'definicao', 'Força': 'forca', 'Condicionamento': 'condicionamento', 'Saúde': 'saude'};
+function bldFromProfile(){ const pf = ST.profile || {}; return {...BLD0, goal: PF_GOAL_BLD[pf.goal] || BLD0.goal, nivel: NIVEIS.includes(pf.level) || pf.level === 'Começando' ? pf.level : BLD0.nivel, lim: (pf.lim || []).filter(k => LIMS[k]), ritmo: pf.ritmo || 'equil'}; }
+const ONB_N = 4;
+function needsOnb(){ const pf = ST.profile || {}; return !lsGet('forja.onb') && !SESS.length && !ST.routines.length && !(pf.name && pf.sex && pf.birth && pf.goal); }
+function maybeOnb(force){ if ((!force && !needsOnb()) || UI.stack.some(p => p.type === 'onb')) return false; const pf = ST.profile || {};
+  UI.onb = {name: pf.name || (Auth.user && Auth.user.name ? String(Auth.user.name).split(' ')[0] : ''), sex: pf.sex || '', age: ageFrom(pf.birth) || '', goal: PF_GOAL_BLD[pf.goal] || ''};
+  UI.stack = [{type: 'onb', step: 0}]; return true; }
+function onbHead(i){
+  const bar = `<div class="onb-prog" aria-label="Pergunta ${i + 1} de ${ONB_N}">${Array.from({length: ONB_N}, (_, j) => `<i class="${j < i ? 'done' : j === i ? 'on' : ''}"></i>`).join('')}</div>`;
+  return `<div class="onb-top">${i ? `<button class="hbtn" data-act="onb-back" aria-label="Voltar">${I.back}</button>` : `<span class="brand">${I.brand}Forja</span>`}<span class="onb-count">${i + 1} de ${ONB_N}</span></div>${bar}`;
+}
+function vOnb(p){
+  const o = UI.onb || (UI.onb = {name: '', sex: '', age: '', goal: ''}); const i = p.step; const nm = esc((o.name || '').trim().split(' ')[0]);
+  const choice = (k, v, cur, t, sub) => `<button class="choice" data-act="onb-pick" data-k="${k}" data-v="${v}" aria-pressed="${cur === v}"><span class="grow"><b>${t}</b>${sub ? `<span>${sub}</span>` : ''}</span><i class="tick">${I.check}</i></button>`;
+  let q = '', sub = '', body = '';
+  if (i === 0){
+    q = 'Olá, como você quer ser chamado?';
+    body = `<div class="onb-intro"><span class="onb-pill">${I_SPARK}4 perguntas · 30 segundos</span><p>Com elas, treinos, cargas e metas já começam do seu jeito. Dá para mudar tudo depois no Perfil.</p></div>
+      <input id="onb-name" class="field onb-in" maxlength="40" autocomplete="given-name" autocapitalize="words" placeholder="Seu nome" value="${esc(o.name || '')}" enterkeyhint="next">
+      <button class="btn primary block onb-go" data-act="onb-next" ${(o.name || '').trim().length >= 2 ? '' : 'disabled'}>Continuar</button>`;
+  } else if (i === 1){
+    q = `Prazer, ${nm}. Qual é o seu sexo?`; sub = 'Usamos nas fórmulas de calorias e nas demonstrações dos exercícios.';
+    body = `<div class="stack" style="gap:10px">${choice('sex', 'Masculino', o.sex, 'Masculino')}${choice('sex', 'Feminino', o.sex, 'Feminino')}</div>`;
+  } else if (i === 2){
+    q = 'Quantos anos você tem?'; sub = 'Entra no cálculo do seu gasto de energia e no ritmo do treino.';
+    const a = +o.age || '';
+    body = `<div class="onb-age"><button class="onb-st" data-act="onb-age" data-d="-1" aria-label="Menos um ano">−</button><input id="onb-age" class="onb-num mono" inputmode="numeric" maxlength="2" placeholder="--" value="${a}" aria-label="Idade"><button class="onb-st" data-act="onb-age" data-d="1" aria-label="Mais um ano">+</button></div><p class="onb-unit">anos</p>
+      <button class="btn primary block onb-go" data-act="onb-next" ${a >= 13 && a <= 90 ? '' : 'disabled'}>Continuar</button>`;
+  } else if (i === 3){
+    q = `Qual é o seu objetivo principal, ${nm}?`; sub = 'É por ele que o app escolhe treinos, séries e metas.';
+    body = `<div class="stack" style="gap:10px">${ONB_GOALS.map(([k, t, d]) => choice('goal', k, o.goal, t, d)).join('')}</div>`;
+  } else return vOnbReady();
+  return `<div class="onb">${onbHead(i)}<h1 class="display h2 onb-q">${q}</h1>${sub ? `<p class="onb-sub">${sub}</p>` : ''}${body}</div>`;
+}
+function vOnbReady(){
+  const pf = ST.profile; const g = ONB_GOALS.find(x => x[0] === PF_GOAL_BLD[pf.goal]) || ONB_GOALS[0]; const nm = esc((pf.name || '').split(' ')[0]); const age = ageFrom(pf.birth);
+  const n = BSTEPS.filter(x => x !== 'goal' && (x !== 'gym' || BLD0.local === 'academia')).length;
+  const L = [[`Perfil de ${nm}`, `${pf.sex === 'Feminino' ? 'Feminino' : 'Masculino'}${age ? `, ${age} anos` : ''}`], [`Foco em ${g[1].toLowerCase()}`, 'Treinos, séries e metas partem daqui'], [pf.sex === 'Feminino' ? 'Demonstrações com modelo feminino' : 'Calorias calculadas para você', pf.sex === 'Feminino' ? 'Nas animações e capas dos exercícios' : 'Com seu sexo e idade, ao abrir a Nutrição']];
+  return `<div class="onb onb-ready"><div class="onb-top"><span class="brand">${I.brand}Forja</span><span class="onb-count">Pronto</span></div>
+    <div class="onb-badge">${I.check}</div>
+    <h1 class="display h2 onb-q">Seu Forja já está com a sua cara, ${nm}</h1>
+    <ul class="onb-done">${L.map(([t, d], k) => `<li style="--d:${k * 140}ms"><i>${I.check}</i><span><b>${t}</b><small>${d}</small></span></li>`).join('')}</ul>
+    <section class="onb-next"><span class="eyebrow">Próximo passo</span><h2>Seu primeiro treino sob medida</h2><p>Mais ${n} perguntas rápidas sobre rotina, local, experiência e saúde, e o app cria um programa só seu. Cerca de 1 minuto.</p>
+      <button class="btn block ai-btn" data-act="onb-build"><span>Montar meu treino</span></button>
+      <button class="link onb-later" data-act="onb-later">Ver o app primeiro e montar depois</button></section></div>`;
+}
+PAGES.onb = {title: () => '', view: p => vOnb(p)};
+function onbKeep(){ const o = UI.onb; const n = $('#onb-name'), a = $('#onb-age'); if (n) o.name = n.value.slice(0, 40); if (a) o.age = a.value.replace(/\D/g, '').slice(0, 2); }
+function onbStep(d){ const p = curPage(); if (!p || p.type !== 'onb') return; onbKeep(); p.step = Math.max(0, Math.min(ONB_N, p.step + d)); render(); window.scrollTo({top: 0}); if (p.step === 0) setTimeout(() => $('#onb-name')?.focus(), 80); }
+function onbSave(){ const o = UI.onb; const pf = ST.profile; pf.name = o.name.trim(); pf.sex = o.sex;
+  const a = +o.age; if (a && ageFrom(pf.birth) !== a){ const d = new Date(); d.setFullYear(d.getFullYear() - a); d.setMonth(d.getMonth() - 6); pf.birth = d.toISOString().slice(0, 10); pf.birthApprox = true; }
+  const g = ONB_GOALS.find(x => x[0] === o.goal); if (g) pf.goal = g[3]; saveState(); }
+A['onb-next'] = () => { onbKeep(); const o = UI.onb; const i = curPage().step; if (i === 0 && o.name.trim().length < 2) return; if (i === 2 && !(+o.age >= 13 && +o.age <= 90)) return; onbStep(1); };
+A['onb-back'] = () => onbStep(-1);
+A['onb-pick'] = el => { onbKeep(); const k = el.dataset.k; UI.onb[k] = el.dataset.v; render(); Platform.haptic('light'); clearTimeout(A._ot);
+  A._ot = setTimeout(() => { const p = curPage(); if (!p || p.type !== 'onb') return; if (p.step === ONB_N - 1){ onbSave(); lsSet('forja.onb', '1'); } onbStep(1); }, 240); };
+A['onb-age'] = el => { onbKeep(); const o = UI.onb; const v = (+o.age || 25) + +el.dataset.d; o.age = String(Math.max(13, Math.min(90, v))); render(); };
+A['onb-build'] = () => { UI.bld = {...bldFromProfile(), skipGoal: true}; UI.bldAlt = false; UI.stack = [{type: 'builder', step: bSteps()[0]}]; render(); window.scrollTo({top: 0}); };
+A['onb-later'] = () => { UI.stack = []; UI.tab = 'inicio'; render(); window.scrollTo({top: 0}); toast('Tudo certo. Monte seu treino quando quiser pelo Início.'); };
+document.addEventListener('input', ev => { const t = ev.target; if (!t || !UI.onb || curPage()?.type !== 'onb') return;
+  if (t.id === 'onb-name'){ UI.onb.name = t.value.slice(0, 40); const b = $('.onb-go'); if (b) b.disabled = t.value.trim().length < 2; }
+  if (t.id === 'onb-age'){ const v = t.value.replace(/\D/g, '').slice(0, 2); if (v !== t.value) t.value = v; UI.onb.age = v; const b = $('.onb-go'); if (b) b.disabled = !(+v >= 13 && +v <= 90); } });
+document.addEventListener('keydown', ev => { if (ev.key !== 'Enter' || curPage()?.type !== 'onb') return; const t = ev.target; if (t && (t.id === 'onb-name' || t.id === 'onb-age')){ ev.preventDefault(); A['onb-next'](); } });
 
 /* Assistente de objetivo do Forja: gasto energético, calorias, macronutrientes e check-in semanal adaptativo.
    Referências usadas nos cálculos (também listadas no app, em "Como calculamos"):
