@@ -1624,3 +1624,12 @@ body.auth-mode #lbg{display:none}
 .fp-c[data-s="no"]{text-decoration:line-through;color:var(--muted);background:var(--s2);border-style:dashed}
 .fp-lk{color:var(--ember)}.fp-no{text-decoration:line-through}
 .mn-dis{margin-top:14px;color:var(--danger,#D13C30)}
+/* v4.28: equipamentos opcionais, discretos */
+.gym-more{margin-top:20px;border-top:1px solid var(--line);padding-top:6px}
+.gym-more summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer}
+.gym-more summary::-webkit-details-marker{display:none}
+.gym-more summary span{font-weight:400;color:var(--muted);font-size:12.5px}
+.gym-more summary svg{margin-left:auto;width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s}
+.gym-more[open] summary svg{transform:rotate(180deg)}
+.gym-more .gym-inv{padding:4px 0 6px}
+.gym-more .gym-it{min-height:44px;padding:9px 11px}

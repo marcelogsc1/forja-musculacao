@@ -119,9 +119,10 @@ function bldKeys(b){
 function builderTpl(){
   const b = UI.bld || (UI.bld = {...BLD0}); if (b.local === 'academia' && !b.gym) b.gym = gymDefault(); const o = {...b, keys: bldKeys(b), focos: b.focos || [], foco: undefined, gym: b.local === 'academia' ? b.gym : null};
   const nm = `${{hipertrofia: 'Hipertrofia', forca: 'Força', definicao: 'Definição', condicionamento: 'Condicionamento', saude: 'Saúde'}[b.goal]} sob medida ${b.dias}x`;
+  o.nivel = bldNivel(b.nivel); o.novato = b.nivel === 'Começando';
   const ob = bldObs(genProgram(o), b.obs, b.local === 'academia' && b.gym ? b.gym.inv : null);
   return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${b.local === 'academia' && b.gym && b.gym.tipo !== 'nsei' ? GYM_TIPOS[b.gym.tipo].n.toLowerCase() : LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.${ob.text ? ` Suas observações: “${ob.text}”.` : ''}`,
-    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
+    goal: [b.goal], local: [b.local], nivel: bldNivel(b.nivel), freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
 }
 /* Cartão do assistente: borda com uma luz laranja girando em volta */
 function builderCta(){ return `<button class="builder-cta spin-b" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Algumas perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>6 passos</i><i class="hot">1 minuto</i></span></button>`; }
@@ -161,7 +162,10 @@ const BSTEPS = ['goal', 'dias', 'local', 'gym', 'nivel', 'foco', 'obs'];
 /* o passo da academia só aparece para quem treina em academia */
 const bSteps = () => BSTEPS.filter(x => x !== 'gym' || (UI.bld && UI.bld.local === 'academia'));
 const GOAL_SUB = {hipertrofia: 'Aumentar a massa muscular, com volume e repetições moderadas.', forca: 'Levantar mais peso nos básicos. Poucas repetições e descansos longos.', definicao: 'Perder gordura mantendo os músculos. Bi-sets e cardio no fim.', condicionamento: 'Fôlego e gasto calórico. Circuitos quase sem descanso.', saude: 'Começar ou voltar a treinar com segurança e constância.'};
-const NIVEL_SUB = {Iniciante: 'Começando agora ou voltando depois de uma pausa longa.', 'Intermediário': 'Treina com regularidade e já conhece os exercícios básicos.', 'Avançado': 'Treina há anos e precisa de mais volume para evoluir.'};
+/* v4.28: quatro níveis no assistente. "Começando agora" gera como Iniciante, com treinos ainda mais simples. */
+const BLD_NIVEIS = [['Começando', 'Começando agora', 'Nunca treinou ou fez só algumas semanas.'], ['Iniciante', 'Iniciante', 'Menos de 6 meses treinando, ou voltando de uma pausa longa.'], ['Intermediário', 'Intermediário', 'De 6 meses a 2 anos treinando, sem parar.'], ['Avançado', 'Avançado', 'Mais de 2 anos treinando, com cargas altas.']];
+const NIVEL_SUB = Object.fromEntries(BLD_NIVEIS.map(([k, , d]) => [k, d]));
+const bldNivel = n => n === 'Começando' ? 'Iniciante' : n;
 function splitLabel(keys){ const ks = keys.join(); return /CI/.test(ks) ? 'Circuitos' : /GA/.test(ks) ? 'Glúteos em foco' : /^PU,PL,LG,PU2/.test(ks) ? 'Push Pull Legs 2x' : /^PU,PL,LG$/.test(ks) ? 'Push Pull Legs' : /^UA,LA,PU/.test(ks) ? 'Upper Lower + Push Pull Legs' : /^UA,LA/.test(ks) ? 'Superiores e inferiores' : 'Corpo inteiro'; }
 function splitWhy(keys, dias){ const l = splitLabel(keys);
   return l === 'Push Pull Legs' ? 'Cada treino foca um movimento: empurrar, puxar e pernas. Cada músculo é treinado 1 vez por semana, com mais volume por treino.'
@@ -178,7 +182,7 @@ function bldAlts(b){
   const tries = b.dias === 3 ? ['auto', 'ppl', 'std'] : b.dias === 4 ? ['auto', 'fb', 'std'] : []; const seen = new Set([cur]);
   if (b.goal !== 'condicionamento') tries.forEach(d => { const k = bldKeys({...b, div: d}); if (!seen.has(k.join())){ seen.add(k.join()); divs.push({div: d, label: splitLabel(k)}); } });
   // programas da biblioteca compatíveis com as respostas
-  const sc = t => (t.freq === b.dias ? 4 : Math.abs(t.freq - b.dias) === 1 ? 1 : -9) + (t.nivel === b.nivel ? 2 : 0) + 3 * b.focos.filter(f => (t.foco || []).includes(f)).length + (t.dur <= b.dur ? 1 : 0);
+  const sc = t => (t.freq === b.dias ? 4 : Math.abs(t.freq - b.dias) === 1 ? 1 : -9) + (t.nivel === bldNivel(b.nivel) ? 2 : 0) + 3 * b.focos.filter(f => (t.foco || []).includes(f)).length + (t.dur <= b.dur ? 1 : 0);
   const lib = tplFilter({goal: b.goal, local: b.local, tipo: 'programa'}).map(t => [sc(t), t]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0]).slice(0, 4).map(x => x[1]);
   return {divs, lib};
 }
@@ -201,11 +205,11 @@ function vBuilderStep(b, step){
   else if (step === 'gym'){ q = 'Como é a sua academia?'; const g = b.gym || (b.gym = gymDefault()); const inv = new Set(g.inv);
     body = `<p class="ink2" style="margin:-6px 0 16px">Escolha pelo que tem na sua academia.</p>
       <div class="stack" style="gap:10px">${Object.entries(GYM_TIPOS).map(([k, t]) => `<button class="choice" data-act="bld-gym" data-v="${k}" aria-pressed="${g.tipo === k}"><span class="grow"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></span><i class="tick">${I.check}</i></button>`).join('')}</div>
-      <div class="og" style="margin-top:22px"><span class="eyebrow">O que tem lá · toque para ajustar</span>
-        <div class="gym-inv" style="margin-top:10px">${GYM_INV.map(([k, n, d]) => `<button class="gym-it" data-act="bld-inv" data-v="${k}" aria-pressed="${inv.has(k)}"><i class="tick">${I.check}</i><span><b>${esc(n)}</b>${d ? `<small>${esc(d)}</small>` : ''}</span></button>`).join('')}</div></div>
       <div class="og" style="margin-top:22px"><span class="eyebrow">Você prefere</span><div class="seg" style="margin-top:8px">${GYM_PREF.map(([k, n]) => `<button data-act="bld-gpref" data-v="${k}" aria-pressed="${g.pref === k}">${n}</button>`).join('')}</div></div>
+      <details class="gym-more" ${UI.gymMore ? 'open' : ''}><summary data-act="gym-more">Ajustar equipamentos <span>opcional</span>${I.down}</summary>
+        <div class="gym-inv">${GYM_INV.map(([k, n, d]) => `<button class="gym-it" data-act="bld-inv" data-v="${k}" aria-pressed="${inv.has(k)}"><i class="tick">${I.check}</i><span><b>${esc(n)}</b>${d ? `<small>${esc(d)}</small>` : ''}</span></button>`).join('')}</div></details>
       <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="gym">Continuar</button></div>`; }
-  else if (step === 'nivel'){ q = 'Como está a sua experiência?'; body = `<div class="stack" style="gap:10px">${NIVEIS.map(n => bqChoice('nivel', n, b.nivel, n, NIVEL_SUB[n])).join('')}</div>
+  else if (step === 'nivel'){ q = 'Como está a sua experiência?'; body = `<div class="stack" style="gap:10px">${BLD_NIVEIS.map(([k, n, d]) => bqChoice('nivel', k, b.nivel, n, d)).join('')}</div>
     <div class="og" style="margin-top:22px"><span class="eyebrow">Tempo por treino</span><div class="seg">${[30, 45, 60, 75].map(m => `<button data-act="bld-set" data-k="dur" data-v="${m}" aria-pressed="${b.dur === m}">${m} min</button>`).join('')}</div></div>
     <button class="btn primary block" style="margin-top:22px" data-act="bld-next" data-step="nivel">Continuar</button>`; }
   else if (step === 'foco'){ q = 'Quer dar prioridade a algum músculo?'; const fs = b.focos;
@@ -221,7 +225,7 @@ function vBuilderStep(b, step){
 }
 function vBuilderResult(b){
   const t = builderTpl(); const keys = bldKeys(b); const al = UI.bldAlt ? bldAlts(b) : null;
-  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ...(b.local === 'academia' && b.gym ? [['gym', b.gym.tipo === 'nsei' ? 'Academia comum' : GYM_TIPOS[b.gym.tipo].n]] : []), ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
+  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ...(b.local === 'academia' && b.gym ? [['gym', b.gym.tipo === 'nsei' ? 'Academia comum' : GYM_TIPOS[b.gym.tipo].n]] : []), ['nivel', `${(BLD_NIVEIS.find(x => x[0] === b.nivel) || [, b.nivel])[1]} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
   return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
     <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
     <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
@@ -256,13 +260,14 @@ A['tpl-opt'] = el => { const tid = el.dataset.tid, k = el.dataset.k; const o = U
 A.bld = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; render(); };
 A['bld-set'] = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; render(); Platform.haptic('light'); };
 /* escolher avança sozinho depois de um instante, para a marcação aparecer */
-A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
+A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); if (k === 'nivel') return; A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
 A['bld-next'] = el => { const ta = $('#bld-obs'); if (ta) UI.bld.obs = ta.value.trim().slice(0, 400); bldNext(el.dataset.step); };
 A['bld-obs-ex'] = el => { const ta = $('#bld-obs'); const cur = (ta ? ta.value : UI.bld.obs || '').trim(); const v = el.dataset.v; if (norm(cur).includes(norm(v))) return; UI.bld.obs = (cur ? cur.replace(/[.;,\s]+$/, '') + '. ' : '') + v; UI.bld.obsDraft = null; render(); const t = $('#bld-obs'); if (t){ t.focus({preventScroll: true}); t.setSelectionRange(t.value.length, t.value.length); } Platform.haptic('light'); };
 A['bld-obs-run'] = () => { const ta = $('#bld-obs'); UI.bld.obs = ta ? ta.value.trim().slice(0, 400) : ''; UI.bld.obsDraft = null; render(); Platform.haptic('light'); const n = tplById('_bld').obsRes; toast(UI.bld.obs ? (n.rules.length ? `Programa refeito com ${n.rules.length} ${n.rules.length === 1 ? 'ajuste' : 'ajustes'}` : 'Nenhum ajuste reconhecido nessa anotação') : 'Observações removidas'); };
 document.addEventListener('input', ev => { const t = ev.target; if (!t || t.id !== 'bld-obs' || !UI.bld) return; if (t.dataset.w === 'res') UI.bld.obsDraft = t.value.slice(0, 400); else UI.bld.obs = t.value.slice(0, 400); });
 A['bld-wd'] = el => { const d = +el.dataset.d; const b = UI.bld; b.wd = b.wd.includes(d) ? b.wd.filter(x => x !== d) : [...b.wd, d]; b.dias = b.wd.length; b.div = 'auto'; render(); Platform.haptic('light'); };
 A['bld-wdmode'] = el => { const b = UI.bld; if (el.dataset.v === '1'){ b.dias = Math.min(6, Math.max(2, b.dias)); b.wd = defaultDays(b.dias); } else { b.wd = null; b.dias = Math.min(6, Math.max(2, b.dias)); } render(); };
+A['gym-more'] = (el, ev) => { if (ev) ev.preventDefault(); UI.gymMore = !UI.gymMore; render(); };
 A['bld-gym'] = el => { const b = UI.bld; const k = el.dataset.v; b.gym = {tipo: k, inv: [...GYM_TIPOS[k].inv], pref: (b.gym && b.gym.pref) || 'equil'}; render(); Platform.haptic('light'); };
 A['bld-inv'] = el => { const g = UI.bld.gym; const k = el.dataset.v; g.inv = g.inv.includes(k) ? g.inv.filter(x => x !== k) : [...g.inv, k]; render(); Platform.haptic('light'); };
 A['bld-gpref'] = el => { UI.bld.gym.pref = el.dataset.v; render(); Platform.haptic('light'); };

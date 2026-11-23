@@ -189,7 +189,7 @@ function pickEx(slot, eq, used, prefMachine, local, beginner, gym){
 function genProgram(o){
   const eq = (LOCAIS[o.local] || LOCAIS.academia).eq; const sch = SCHEMES[o.goal] || SCHEMES.hipertrofia;
   const keys = o.keys || SPLITS[o.split || o.dias] || SPLITS[3];
-  const n = DUR_N[o.dur] || 6; const beginner = o.nivel === 'Iniciante'; const circuit = o.goal === 'condicionamento';
+  const beginner = o.nivel === 'Iniciante'; const novato = !!o.novato; const n = Math.max(4, (DUR_N[o.dur] || 6) - (novato ? 1 : 0)); const circuit = o.goal === 'condicionamento';
   /* um ou mais músculos prioritários (o primeiro escolhido entra mais cedo no treino) */
   const fos = (o.focos || (o.foco ? [o.foco] : [])).filter(k => FOCOS[k]);
   const workouts = keys.map((k, wi) => {
@@ -199,10 +199,11 @@ function genProgram(o){
     const used = new Set(); const items = [];
     for (const s of slots){
       if (items.length >= n + extra) break;
-      const ex = pickEx(s, eq, used, beginner && o.local === 'academia', o.local, beginner, o.local === 'academia' ? o.gym : null); if (!ex) continue; used.add(ex);
+      const ex = pickEx(s, eq, used, (beginner || novato) && o.local === 'academia', o.local, beginner, o.local === 'academia' ? o.gym : null); if (!ex) continue; used.add(ex);
       const role = SLOTS[s].r === 'circ' ? 'comp' : SLOTS[s].r === 'cardio' ? 'comp' : SLOTS[s].r;
       let [sets, rmin, rmax, rest] = sch[role] || sch.comp;
       if (beginner){ sets = Math.max(2, sets - 1); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 10); rmax = Math.max(rmax, 15); } }
+      if (novato){ sets = Math.min(sets, 3); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 15); } rest = Math.max(rest, 60); }
       if ((CAT[ex].e === 'peso' || CAT[ex].e === 'casa') && o.goal !== 'forca' && /comp|main/.test(role)){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 20); rest = Math.min(rest, 90); }
       if (CAT[ex].e === 'elastico'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 20); }
       items.push({ex, sets, rmin, rmax, rest, nota: ''});
