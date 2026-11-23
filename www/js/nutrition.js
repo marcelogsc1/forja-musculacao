@@ -9,7 +9,9 @@
    - Por refeição: 0,4 g/kg em pelo menos 4 refeições (Schoenfeld & Aragon, 2018).
    - Emagrecer: 0,5 a 1% do peso por semana (Helms et al., 2014). Ganhar: superávit de 10 a 20%, 0,25 a 0,5% do peso
      por semana (Iraki et al., 2019).
-   - Gordura: 20 a 35% das calorias e pelo menos 0,5 g/kg (Iraki et al., 2019). Fibras: 14 g por 1.000 kcal
+   - Gordura (v4.29): 22% das calorias e pelo menos 0,5 g/kg. Fica na parte baixa da faixa de 20 a 35% para quem treina
+     (Academy of Nutrition and Dietetics, Dietitians of Canada e ACSM, 2016; Iraki et al., 2019) e abaixo do teto de 30%
+     da OMS (diretriz sobre gordura total, 2023), que também pede menos de 10% das calorias em gordura saturada. Fibras: 14 g por 1.000 kcal
      (Dietary Guidelines for Americans). Água total de referência: 2,0 L (mulheres) e 2,5 L (homens) por dia, EFSA 2010.
    - 7.700 kcal por kg de peso é a aproximação clássica; por isso o check-in semanal corrige o plano pelo seu peso real.
    Gasto do dia (v4.6), em partes, em vez dos fatores de atividade "sedentário/moderado/..." que misturam rotina e treino:
@@ -132,7 +134,7 @@ function planCalc(i){
   else { const k = i.goal === 'gain' ? 1.8 : 2.0; p = refKg * k; plo = refKg * 1.6; phi = refKg * 2.2; basis = `${fmtN(k)} g por kg${refKg !== i.kg ? ' do peso de referência' : ''}`; }
   p = r5(p); out.p = p; out.plo = r5(plo); out.phi = r5(phi); out.pBasis = basis;
   // gordura e carboidrato
-  let f = Math.max(kcal * 0.25 / 9, 0.5 * i.kg); let c = (kcal - p * 4 - f * 9) / 4;
+  let f = Math.max(kcal * 0.22 / 9, 0.5 * i.kg); let c = (kcal - p * 4 - f * 9) / 4;
   if (c < 0){ f = Math.max(0.5 * i.kg, (kcal - p * 4) / 9); c = Math.max(0, (kcal - p * 4 - f * 9) / 4); }
   out.f = r5(f); out.c = r5(c); out.cKg = c / i.kg;
   if (i.goal === 'gain' && out.cKg < 3) out.warn.push('Carboidratos abaixo de 3 g/kg: em fase de ganho, vale priorizar carboidrato para render no treino.');
@@ -349,7 +351,7 @@ function planDash(){
       ${gasto}
       <li><b>${pl.goal === 'cut' ? 'Déficit' : pl.goal === 'gain' ? 'Superávit' : 'Manutenção'}${res.delta ? `: ${sgn(res.delta)}${fmtK(Math.abs(res.delta))} kcal` : ''}</b><span>${pl.goal === 'cut' ? `${fmtN(inp.rate)}% do peso por semana, usando a aproximação de 7.700 kcal por kg. Ritmo indicado para o seu corpo: ${fmtN(res.rec)}%.` : pl.goal === 'gain' ? `${inp.gain}% acima do gasto, para ganhar cerca de ${(GAIN_RATES.find(x => x.v === inp.gain) || {}).w}% do peso por semana.` : 'Calorias iguais ao gasto.'}${pl.adj ? ` Ajustes dos check-ins: ${sgn(pl.adj)}${fmtK(Math.abs(pl.adj))} kcal.` : ''}${res.floor ? ' Limitado para não ficar abaixo do basal.' : ''}</span></li>
       <li><b>Proteína: ${res.p} g</b><span>${res.pBasis}. Faixa com respaldo: ${res.plo} a ${res.phi} g.${res.refKg !== inp.kg && !res.lbm ? ' Acima de IMC 25, usamos o peso de referência (IMC 25) para não superestimar.' : ''}</span></li>
-      <li><b>Gorduras: ${res.f} g · Carboidratos: ${res.c} g</b><span>Gordura em 25% das calorias (mínimo de 0,5 g/kg); carboidratos completam o restante (${fmtN(Math.round(res.cKg * 10) / 10)} g/kg).</span></li>
+      <li><b>Gorduras: ${res.f} g · Carboidratos: ${res.c} g</b><span>Gordura em 22% das calorias (mínimo de 0,5 g/kg), abaixo do teto de 30% da OMS; carboidratos completam o restante (${fmtN(Math.round(res.cKg * 10) / 10)} g/kg).</span></li>
     </ol>
     <p class="tiny muted" style="margin:12px 0 0">Por que o gasto é calculado em partes: os fatores tradicionais ("sedentário", "moderado"...) misturam rotina e treino e costumam contar a musculação como se fosse corrida. Aqui a rotina parte do limite inferior medido em pessoas sedentárias com água duplamente marcada, e o treino entra pelo tempo real, com o desconto da compensação do corpo.</p>
     <p class="tiny muted" style="margin:8px 0 0">Referências: Mifflin et al. 1990; Frankenfield et al. 2005; Plucker et al. 2024; FAO/OMS/UNU 2004; Compendium of Physical Activities 2024; Tudor-Locke et al. 2013; Careau et al. 2021; Katch-McArdle; Hodgdon &amp; Beckett 1984; Morton et al. 2018; Schoenfeld &amp; Aragon 2018; Helms et al. 2014; Garthe et al. 2011; Iraki et al. 2019; Dietary Guidelines for Americans; EFSA 2010.</p></details>

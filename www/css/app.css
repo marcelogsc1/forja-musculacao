@@ -1623,7 +1623,7 @@ body.auth-mode #lbg{display:none}
 .fp-c[data-s="like"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ember);margin-right:7px;vertical-align:1px}
 .fp-c[data-s="no"]{text-decoration:line-through;color:var(--muted);background:var(--s2);border-style:dashed}
 .fp-lk{color:var(--ember)}.fp-no{text-decoration:line-through}
-.mn-dis{margin-top:14px;color:var(--danger,#D13C30)}
+.mn-dis{margin-top:14px;color:var(--ink)}.mn-dis svg{width:17px;height:17px;stroke:var(--ember);fill:none;stroke-width:2;margin-right:6px}
 /* v4.28: equipamentos opcionais, discretos */
 .gym-more{margin-top:20px;border-top:1px solid var(--line);padding-top:6px}
 .gym-more summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer}
@@ -1633,3 +1633,18 @@ body.auth-mode #lbg{display:none}
 .gym-more[open] summary svg{transform:rotate(180deg)}
 .gym-more .gym-inv{padding:4px 0 6px}
 .gym-more .gym-it{min-height:44px;padding:9px 11px}
+.mn-lbl.mn-dish{display:block;font-size:14.5px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em}
+/* v4.29: campo de preferências do cardápio no mesmo modelo do ajuste rápido */
+.mn-ai{margin-top:8px;border-color:color-mix(in srgb,var(--ember) 45%,var(--line2));background:linear-gradient(100deg,var(--ember-soft),transparent 70%),var(--s2)}
+.mn-ai:focus-within{border-color:var(--ember);box-shadow:0 0 0 4px color-mix(in srgb,var(--ember) 14%,transparent)}
+.sheet .adj-chips{margin-left:0;margin-right:0;padding-left:0;padding-right:0}
+.mn-prev{margin-top:10px}
+.mn-whey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.mn-whey[hidden]{display:none}
+.mn-whey label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2)}
+.mn-whey input{width:64px;min-height:40px;text-align:center;padding:0 6px}
+.mn-whey>span{flex-basis:100%}
+.pw-l small{font-weight:400;color:var(--muted)}
+.mn-more{margin-top:2px}
+.mn-more>summary{list-style:none;cursor:pointer;padding:10px 2px;font-weight:600;font-size:14px;color:var(--accent,#e8541e)}
+.mn-more>summary::-webkit-details-marker{display:none}

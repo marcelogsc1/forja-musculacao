@@ -1543,9 +1543,9 @@ html,body{overscroll-behavior-y:contain}
 /* ===== v4.25: entrada (boas-vindas, Google, e-mail) ===== */
 .auth.start .auth-top{position:relative;z-index:2}
 .auth-art{position:relative;height:clamp(210px,38svh,360px);margin:-6px -20px 0;overflow:hidden;isolation:isolate}
-.auth-art img{position:absolute;top:4%;left:50%;height:100%;width:auto;max-width:none;transform:translateX(-75%);filter:contrast(1.06) brightness(1.06);
-  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 16%,#000 58%,transparent 98%),linear-gradient(90deg,transparent 52%,#000 62%,#000 90%,transparent 99%);-webkit-mask-composite:source-in;
-  mask-image:linear-gradient(180deg,transparent 0%,#000 16%,#000 58%,transparent 98%),linear-gradient(90deg,transparent 52%,#000 62%,#000 90%,transparent 99%);mask-composite:intersect;animation:art-in 1s var(--ease) both}
+.auth-art img{position:absolute;top:8%;left:50%;height:94%;width:auto;max-width:none;transform:translateX(-75%);filter:contrast(1.06) brightness(1.06);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 5%,#000 60%,transparent 98%),linear-gradient(90deg,transparent 52%,#000 62%,#000 90%,transparent 99%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(180deg,transparent 0%,#000 5%,#000 60%,transparent 98%),linear-gradient(90deg,transparent 52%,#000 62%,#000 90%,transparent 99%);mask-composite:intersect;animation:art-in 1s var(--ease) both}
 .auth-art.f img{left:0;width:100%;transform:none;-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent 98%);mask-image:linear-gradient(180deg,#000 60%,transparent 98%);object-fit:contain;object-position:50% 70%}
 .auth-art .ring{position:absolute;left:50%;top:48%;width:min(78vw,300px);height:min(78vw,300px);transform:translate(-50%,-50%);border-radius:50%;z-index:-1;
   background:radial-gradient(closest-side,rgba(255,107,44,.30),rgba(255,107,44,.10) 55%,transparent 72%);box-shadow:inset 0 0 0 1px rgba(255,140,70,.18)}
@@ -1587,6 +1587,90 @@ body.auth-mode{color-scheme:dark;
   --hero:#1A1C20; --hero-b:#2A2C30;
   --m-skin:#2A2E34; --m-off:#3A4047; --m-pri:#FF5A2E; --m-sec:#A8553A; --m-border:#5B626B;
   --m-l1:#6B3A2A; --m-l2:#C2502C; --m-l3:#FF6A2B;;background:#0E0F11;color:var(--ink)}
+
+/* ===== v4.26/4.27: fundos do tema claro, com a cor do treino do dia (--day) =====
+   A cor fica só no topo da página, some aos poucos para baixo e sobe junto com a rolagem. */
+#lbg{display:none}
+html[data-lbg] body{background:transparent}
+html[data-lbg] #lbg{display:block;position:absolute;left:0;right:0;top:0;height:min(560px,70vh);z-index:-1;overflow:hidden;pointer-events:none;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 100%)}
+html[data-lbg] #lbg::before,html[data-lbg] #lbg::after{content:"";position:absolute;pointer-events:none}
+html[data-lbg] header.top{background:color-mix(in srgb,var(--bg) 70%,transparent)}
+/* A: gradiente só da cor do dia, diagonal e sutil, mudando de intensidade devagar */
+:root[data-lbg="aura"]{--bg:#F8F7F5;--s1:#FFFFFF;--line:rgba(23,24,26,.07)}
+html[data-lbg="aura"] #lbg::before{left:0;top:0;width:200%;height:100%;background:linear-gradient(120deg,color-mix(in srgb,var(--day) 22%,transparent) 0%,color-mix(in srgb,var(--day) 6%,transparent) 30%,color-mix(in srgb,var(--day) 16%,transparent) 55%,color-mix(in srgb,var(--day) 4%,transparent) 80%,color-mix(in srgb,var(--day) 14%,transparent) 100%);animation:lbg-slide 22s ease-in-out infinite alternate;will-change:transform}
+@keyframes lbg-slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* B: véu leve da cor do dia, com pontos bem discretos */
+:root[data-lbg="tinta"]{--bg:#FBFAF8;--s1:#FFFFFF;--s2:#F3F2EF}
+html[data-lbg="tinta"] #lbg::before{inset:0;background:color-mix(in srgb,var(--day) 11%,transparent)}
+html[data-lbg="tinta"] #lbg::after{inset:0;background-image:radial-gradient(rgba(23,24,26,.07) 1px,transparent 1.2px);background-size:16px 16px}
+/* C: branco frio; a cor só numa linha fina no topo e num brilho bem leve */
+:root[data-lbg="nitido"]{--bg:#F2F3F5;--s1:#FFFFFF;--s2:#EFF0F3;--s3:#E3E5E9;--line:rgba(16,24,40,.07)}
+html[data-lbg="nitido"] #lbg::before{inset:0 0 auto 0;height:3px;background:var(--day)}
+html[data-lbg="nitido"] #lbg::after{left:-25%;right:-25%;top:-140px;height:420px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--day) 14%,transparent),transparent)}
+html[data-lbg="nitido"] .card,html[data-lbg="nitido"] .list{border-color:transparent;box-shadow:0 1px 2px rgba(16,24,40,.05),0 12px 28px -18px rgba(16,24,40,.2)}
+/* D: faixa na cor do dia que rola junto com a página; o cabeçalho só fica branco enquanto está sobre ela */
+:root[data-lbg="faixa"]{--bg:#F5F5F4;--s1:#FFFFFF}
+html[data-lbg="faixa"] #lbg{height:250px;-webkit-mask-image:none;mask-image:none}
+html[data-lbg="faixa"] #lbg::before{left:0;top:0;width:220%;height:250px;background:linear-gradient(115deg,var(--day) 0%,var(--day) 50%,color-mix(in srgb,var(--day) 70%,#fff) 100%);animation:lbg-sheen 16s ease-in-out infinite alternate;will-change:transform}
+html[data-lbg="faixa"] #lbg::after{left:0;right:0;top:222px;height:60px;background:var(--bg);border-radius:28px 28px 0 0}
+@keyframes lbg-sheen{from{transform:translateX(0)}to{transform:translateX(-54%)}}
+html[data-lbg="faixa"].lbg-top header.top{background:transparent;border-color:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;--ink:#FFFFFF;--ink2:rgba(255,255,255,.85);--muted:rgba(255,255,255,.82);--s1:rgba(255,255,255,.18);--s2:rgba(255,255,255,.18);--line:rgba(255,255,255,.3);--line2:rgba(255,255,255,.4)}
+html[data-lbg="faixa"] header.top{transition:background-color .2s}
+html[data-lbg="faixa"] .greet>*,html[data-lbg="faixa"] .greet p,html[data-lbg="faixa"] #view>section:first-child>:is(h1,.eyebrow,.meta,p){color:#FFFFFF}
+html[data-lbg="faixa"] .greet p{opacity:.85}
+html[data-lbg="faixa"] #view>section:first-child>.hero-lbl{color:#FFFFFF;--pc:#FFFFFF}
+@media (prefers-reduced-motion: reduce){html[data-lbg] #lbg::before{animation:none}}
+/* entrada sempre escura, com qualquer tema e qualquer fundo */
+html:has(body.auth-mode),html[data-lbg] body.auth-mode{background:#0E0F11}
+body.auth-mode #lbg{display:none}
+/* v4.28: o que a academia tem */
+.gym-inv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gym-it{display:flex;align-items:flex-start;gap:10px;text-align:left;padding:11px 12px;border-radius:14px;border:1px solid var(--line2);background:var(--s1);color:var(--ink);min-height:52px}
+.gym-it b{display:block;font-size:13.5px;font-weight:600;line-height:1.25}
+.gym-it small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.gym-it .tick{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line2);display:grid;place-items:center;margin-top:1px}
+.gym-it .tick svg{width:13px;height:13px;stroke:#fff;stroke-width:3;opacity:0}
+.gym-it[aria-pressed="true"]{border-color:color-mix(in srgb,var(--ember) 55%,var(--line2));background:color-mix(in srgb,var(--ember) 7%,var(--s1))}
+.gym-it[aria-pressed="true"] .tick{background:var(--ember);border-color:var(--ember)}
+.gym-it[aria-pressed="true"] .tick svg{opacity:1}
+/* v4.28: alimentos que gosta e evita */
+.fp-g{border-top:1px solid var(--line);padding:4px 0}
+.fp-g summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:42px;font-weight:600;font-size:14px;cursor:pointer}
+.fp-g summary::-webkit-details-marker{display:none}
+.fp-g summary svg{margin-left:auto;width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s}
+.fp-g[open] summary svg{transform:rotate(180deg)}
+.fp-l{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 10px}
+.fp-c{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--s1);color:var(--ink2);font-size:13px;font-weight:500}
+.fp-c[data-s="like"]{border-color:var(--ember);background:color-mix(in srgb,var(--ember) 12%,var(--s1));color:var(--ink);font-weight:600}
+.fp-c[data-s="like"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ember);margin-right:7px;vertical-align:1px}
+.fp-c[data-s="no"]{text-decoration:line-through;color:var(--muted);background:var(--s2);border-style:dashed}
+.fp-lk{color:var(--ember)}.fp-no{text-decoration:line-through}
+.mn-dis{margin-top:14px;color:var(--ink)}.mn-dis svg{width:17px;height:17px;stroke:var(--ember);fill:none;stroke-width:2;margin-right:6px}
+/* v4.28: equipamentos opcionais, discretos */
+.gym-more{margin-top:20px;border-top:1px solid var(--line);padding-top:6px}
+.gym-more summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer}
+.gym-more summary::-webkit-details-marker{display:none}
+.gym-more summary span{font-weight:400;color:var(--muted);font-size:12.5px}
+.gym-more summary svg{margin-left:auto;width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s}
+.gym-more[open] summary svg{transform:rotate(180deg)}
+.gym-more .gym-inv{padding:4px 0 6px}
+.gym-more .gym-it{min-height:44px;padding:9px 11px}
+.mn-lbl.mn-dish{display:block;font-size:14.5px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em}
+/* v4.29: campo de preferências do cardápio no mesmo modelo do ajuste rápido */
+.mn-ai{margin-top:8px;border-color:color-mix(in srgb,var(--ember) 45%,var(--line2));background:linear-gradient(100deg,var(--ember-soft),transparent 70%),var(--s2)}
+.mn-ai:focus-within{border-color:var(--ember);box-shadow:0 0 0 4px color-mix(in srgb,var(--ember) 14%,transparent)}
+.sheet .adj-chips{margin-left:0;margin-right:0;padding-left:0;padding-right:0}
+.mn-prev{margin-top:10px}
+.mn-whey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.mn-whey[hidden]{display:none}
+.mn-whey label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2)}
+.mn-whey input{width:64px;min-height:40px;text-align:center;padding:0 6px}
+.mn-whey>span{flex-basis:100%}
+.pw-l small{font-weight:400;color:var(--muted)}
+.mn-more{margin-top:2px}
+.mn-more>summary{list-style:none;cursor:pointer;padding:10px 2px;font-weight:600;font-size:14px;color:var(--accent,#e8541e)}
+.mn-more>summary::-webkit-details-marker{display:none}
 
 </style>
 </head>
@@ -3060,6 +3144,48 @@ const NEEDS_X = {
 };
 function exNeeds(id){ const x = CAT[id]; if (!x) return ['?']; return NEEDS_X[id] || NEEDS_BASE[x.e] || ['?']; }
 function exOk(id, local){ const L = LOCAIS[local]; if (!L || !L.ok) return true; return exNeeds(id).every(n => L.ok.includes(n)); }
+/* ---------- v4.28: tipo de academia e o que ela tem ----------
+   Nem toda academia é igual. O assistente pergunta o tipo, já marca o que costuma existir nele
+   e a pessoa ajusta. O gerador e o ajuste rápido só escolhem o que dá para fazer ali. */
+const GYM_INV = [
+  ['halter', 'Halteres', ''], ['barra', 'Barras e anilhas', ''], ['bancosup', 'Banco de supino', ''], ['rack', 'Rack de agachamento', ''], ['smith', 'Smith', ''],
+  ['polia', 'Polia', ''], ['cross', 'Cross over', ''], ['legpress', 'Leg press', ''], ['hack', 'Hack', ''], ['maqinf', 'Extensora e flexora', ''],
+  ['abdutora', 'Abdutora e adutora', ''], ['maqsup', 'Máquinas de tronco', 'supino, voador, puxada'], ['articulada', 'Máquinas específicas', 'hip thrust, cavalinho'],
+  ['barrafixa', 'Barra fixa', ''], ['paralelas', 'Paralelas', ''], ['kettlebell', 'Kettlebells', ''], ['cardio', 'Esteira e bike', ''], ['outros', 'Corda naval e trenó', ''],
+];
+const GYM_TIPOS = {
+  bairro: {n: 'Academia de bairro', d: 'O básico: barras, halteres e poucas máquinas.', inv: ['halter', 'barra', 'bancosup', 'rack', 'polia', 'legpress', 'maqinf', 'barrafixa', 'paralelas', 'cardio']},
+  rede: {n: 'Academia de rede', d: 'Muitas máquinas, polias e smith.', inv: ['halter', 'barra', 'bancosup', 'smith', 'polia', 'cross', 'legpress', 'hack', 'maqinf', 'abdutora', 'maqsup', 'barrafixa', 'cardio']},
+  completa: {n: 'Academia completa', d: 'Quase tudo, até máquinas específicas.', inv: GYM_INV.map(x => x[0])},
+  nsei: {n: 'Não sei dizer', d: 'Uma academia comum.', inv: ['halter', 'barra', 'bancosup', 'rack', 'smith', 'polia', 'cross', 'legpress', 'maqinf', 'maqsup', 'barrafixa', 'cardio']},
+};
+const GYM_PREF = [['livre', 'Pesos livres'], ['equil', 'Equilibrado'], ['maq', 'Máquinas']];
+const G_CROSS = new Set(['crossover', 'crossover-baixo', 'crossover-alto', 'lenhador', 'coice-cabo', 'pull-through', 'supino-cabo', 'rosca-martelo-cruzada', 'elev-lateral-cabo', 'triceps-coice-cabo', 'rosca-cabo-alto']);
+const G_RACK = new Set(['agachamento', 'agachamento-frontal', 'afundo-barra', 'bom-dia']);
+const G_BENCH = new Set(['supino-reto-barra', 'supino-incl-barra', 'supino-decl-barra', 'supino-fechado']);
+const G_ARTIC = new Set(['remada-apoiada-t', 'hip-thrust-maquina', 'hiperext-reversa', 'pant-sentado', 'elev-lateral-maquina', 'mergulho-maquina', 'desenv-maquina-2', 'remada-alta-maquina']);
+const G_CARDIO = new Set(['esteira', 'caminhada-inclinada', 'bike', 'eliptico', 'remo-ergometro', 'stepmill', 'air-bike', 'corrida']);
+/* o que da academia o exercício precisa (vazio: dá em qualquer academia) */
+function gymNeeds(id){
+  const x = CAT[id]; if (!x) return [];
+  const nx = (NEEDS_X[id] || []).filter(n => n === 'barrafixa' || n === 'paralelas');
+  if (x.e === 'barra') return ['barra', ...(G_RACK.has(id) ? ['rack'] : []), ...(G_BENCH.has(id) ? ['bancosup'] : [])];
+  if (x.e === 'halter') return ['halter'];
+  if (x.e === 'smith') return ['smith'];
+  if (x.e === 'kettlebell') return ['kettlebell'];
+  if (x.e === 'cabo') return [G_CROSS.has(id) ? 'cross' : 'polia'];
+  if (x.e === 'maquina'){
+    if (G_CARDIO.has(id)) return ['cardio']; if (id === 'hack') return ['hack']; if (id === 'leg-press' || id === 'pant-legpress') return ['legpress'];
+    if (['extensora', 'cadeira-flexora', 'mesa-flexora', 'pant-pe'].includes(id)) return ['maqinf']; if (id === 'abducao' || id === 'adutora') return ['abdutora'];
+    if (G_ARTIC.has(id)) return ['articulada']; if (NEEDS_X[id] && NEEDS_X[id].includes('maquina') && ['elev-joelhos-paralela', 'hiperextensao', 'abd-declinado', 'pant-burrinho'].includes(id)) return [];
+    return ['maqsup'];
+  }
+  if (id === 'corda-naval' || id === 'treno') return ['outros'];
+  if (id === 'elev-frontal-anilha') return ['barra'];
+  return nx;
+}
+const gymOk = (id, inv) => !inv || gymNeeds(id).every(n => inv.has(n));
+const GYM_LIVRE = ['barra', 'halter', 'kettlebell', 'peso'], GYM_MAQ = ['maquina', 'cabo', 'smith'];
 const NIVEIS = ['Iniciante', 'Intermediário', 'Avançado'];
 const FOCOS = {
   bracos: {n: 'Braços', reg: ['biceps', 'triceps', 'antebraco'], slots: ['bi2', 'tri2'], small: true},
@@ -3150,18 +3276,26 @@ const FOCUS_DAY = {peito: 'FUP', costas: 'FUB', bracos: 'FUPB', ombros: 'FUP', g
    (num programa de kettlebell, o kettlebell vem antes do peso do corpo). */
 /* pedem força ou técnica avançada: fora dos programas de iniciante */
 const HARD = ['sissy', 'agachamento-unilateral', 'flexora-nordica', 'flexao-parede-invertida', 'flexao-arqueiro', 'paralelas', 'paralelas-peito', 'kb-snatch', 'elev-pernas-barra', 'flexao-palma', 'barra-arqueiro', 'joelho-cotovelo-suspenso', 'trx-pike', 'salto-grupado', 'trx-agachamento-unilateral', 'canivete'];
-function pickEx(slot, eq, used, prefMachine, local, beginner){
-  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)));
+function pickEx(slot, eq, used, prefMachine, local, beginner, gym){
+  const inv = gym && gym.inv ? new Set(gym.inv) : null;
+  let c = SLOTS[slot].c.filter(x => CAT[x] && !CAT[x].hid && exOk(x, local || 'academia') && !(beginner && HARD.includes(x)) && (!inv || (local || 'academia') !== 'academia' || gymOk(x, inv)));
   const main = local && LOCAIS[local] && LOCAIS[local].main;
   if (main) c = [...c].sort((a, b) => (CAT[b].e === main) - (CAT[a].e === main));
-  if (prefMachine) c = [...c].sort((a, b) => (/maquina|cabo/.test(CAT[b].e) ? 1 : 0) - (/maquina|cabo/.test(CAT[a].e) ? 1 : 0));
+  const pref = gym && gym.pref;
+  /* preferência da pessoa: pesos livres ou máquinas primeiro; na academia completa, as máquinas específicas ganham espaço */
+  /* preferência suave: sobe algumas posições, sem trocar um bom exercício por um bem pior (ex.: flexora com halter no lugar da cadeira flexora) */
+  const soft = (L, test, k) => { const r = x => L.indexOf(x) - (test(x) ? k : 0); return [...L].sort((a, b) => r(a) - r(b)); };
+  const kk = /iso|small/.test(SLOTS[slot].r) ? .8 : 2.5;
+  if (pref === 'livre') c = soft(c, x => GYM_LIVRE.includes(CAT[x].e) && CAT[x].e !== 'peso', kk);
+  else if (pref === 'maq' || (prefMachine && pref !== 'livre')) c = pref === 'maq' ? soft(c, x => GYM_MAQ.includes(CAT[x].e), kk) : [...c].sort((a, b) => GYM_MAQ.includes(CAT[b].e) - GYM_MAQ.includes(CAT[a].e));
+  if (gym && gym.tipo === 'completa' && pref !== 'livre'){ const r = x => c.indexOf(x) - (G_ARTIC.has(x) || G_CROSS.has(x) ? 1.5 : 0); c = [...c].sort((a, b) => r(a) - r(b)); }
   return c.find(x => !used.has(x)) || null;
 }
 /* Gera um programa. o = {goal, local, dias, nivel, dur, foco, split} */
 function genProgram(o){
   const eq = (LOCAIS[o.local] || LOCAIS.academia).eq; const sch = SCHEMES[o.goal] || SCHEMES.hipertrofia;
   const keys = o.keys || SPLITS[o.split || o.dias] || SPLITS[3];
-  const n = DUR_N[o.dur] || 6; const beginner = o.nivel === 'Iniciante'; const circuit = o.goal === 'condicionamento';
+  const beginner = o.nivel === 'Iniciante'; const novato = !!o.novato; const n = Math.max(4, (DUR_N[o.dur] || 6) - (novato ? 1 : 0)); const circuit = o.goal === 'condicionamento';
   /* um ou mais músculos prioritários (o primeiro escolhido entra mais cedo no treino) */
   const fos = (o.focos || (o.foco ? [o.foco] : [])).filter(k => FOCOS[k]);
   const workouts = keys.map((k, wi) => {
@@ -3171,10 +3305,11 @@ function genProgram(o){
     const used = new Set(); const items = [];
     for (const s of slots){
       if (items.length >= n + extra) break;
-      const ex = pickEx(s, eq, used, beginner && o.local === 'academia', o.local, beginner); if (!ex) continue; used.add(ex);
+      const ex = pickEx(s, eq, used, (beginner || novato) && o.local === 'academia', o.local, beginner, o.local === 'academia' ? o.gym : null); if (!ex) continue; used.add(ex);
       const role = SLOTS[s].r === 'circ' ? 'comp' : SLOTS[s].r === 'cardio' ? 'comp' : SLOTS[s].r;
       let [sets, rmin, rmax, rest] = sch[role] || sch.comp;
       if (beginner){ sets = Math.max(2, sets - 1); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 10); rmax = Math.max(rmax, 15); } }
+      if (novato){ sets = Math.min(sets, 3); if (o.goal !== 'forca'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 15); } rest = Math.max(rest, 60); }
       if ((CAT[ex].e === 'peso' || CAT[ex].e === 'casa') && o.goal !== 'forca' && /comp|main/.test(role)){ rmin = Math.max(rmin, 8); rmax = Math.max(rmax, 20); rest = Math.min(rest, 90); }
       if (CAT[ex].e === 'elastico'){ rmin = Math.max(rmin, 12); rmax = Math.max(rmax, 20); }
       items.push({ex, sets, rmin, rmax, rest, nota: ''});
@@ -3182,7 +3317,7 @@ function genProgram(o){
     if (circuit && items.length){ items.forEach(x => { x.rest = 0; x.sets = beginner ? 3 : 4; }); items[items.length - 1].rest = 90; items[0].nota = 'Circuito: faça os exercícios em sequência e descanse 90 s ao fim de cada volta.'; }
     if (o.goal === 'definicao'){
       for (let i = 2; i + 1 < items.length; i += 2){ items[i].rest = 0; items[i].nota = 'Bi-set: vá direto para o próximo exercício.'; }
-      const c = pickEx('cardio', eq, used, false, o.local);
+      const c = pickEx('cardio', eq, used, false, o.local, false, o.local === 'academia' ? o.gym : null);
       if (c) items.push({ex: c, sets: 1, rmin: 15, rmax: 20, rest: 0, nota: 'Cardio moderado de 15 a 20 minutos. Anote os minutos no campo de repetições.'});
     }
     if (items[0] && SLOTS[d.s[0]].r === 'main' && !circuit && !items[0].nota) items[0].nota = 'Faça 1 a 2 séries leves de aproximação antes.';
@@ -4030,8 +4165,8 @@ function renderSync(){ const el = document.querySelector('.sync'); if (el) el.cl
 function syncClass(){ return Store.mode === 'cloud' || Store.mode === 'api' ? (Store.pending() ? 'pending' : 'cloud') : Store.mode === 'local' || Store.mode === 'verify' ? 'local' : ''; }
 
 // ================= estado =================
-const APP_VERSION = '4.25.0';
-const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1};
+const APP_VERSION = '4.29.3';
+const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura'};
 let ST = freshState();
 let SESS = [];
 const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '', progTab: 'geral', progEx: null, progMetric: 'kg', calMonth: null, calSel: today(), bwMetric: 'kg', exTab: 'sobre', expand: {}, rtab: 'minhas', xf: {}, tplOpt: {}, bld: null };
@@ -4047,7 +4182,19 @@ const routineById = id => ST.routines.find(r => r.id === id);
 const activeRoutine = () => routineById(ST.active) || ST.routines[0];
 function findWorkout(rid, wid){ const r = routineById(rid); return r && r.workouts.find(w => w.id === wid); }
 function isDark(){ const t = ST.prefs?.theme || 'system'; return t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); }
-function applyTheme(){ const t = ST.prefs?.theme || 'system'; const root = document.documentElement; if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t); Platform.themeColor(isDark()); }
+function applyTheme(){ const t = ST.prefs?.theme || 'system'; const root = document.documentElement; if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t); Platform.themeColor(isDark()); applyLbg(); }
+/* v4.26: fundo do tema claro (Aparência). A cor do treino do dia entra como --day: do treino aberto ou do sugerido para hoje. */
+const LBG = ['aura', 'tinta', 'nitido', 'faixa'];
+function applyLbg(){
+  const root = document.documentElement; const v = LBG.includes(ST.prefs?.lightbg) ? ST.prefs.lightbg : 'aura';
+  if (isDark()) root.removeAttribute('data-lbg'); else root.setAttribute('data-lbg', v);
+  if (!document.getElementById('lbg') && document.body){ const d = document.createElement('div'); d.id = 'lbg'; d.setAttribute('aria-hidden', 'true'); document.body.prepend(d);
+    /* faixa de energia: o cabeçalho fica branco só enquanto ainda está em cima da faixa */
+    const top = () => root.classList.toggle('lbg-top', window.scrollY < 150); top(); window.addEventListener('scroll', top, {passive: true}); }
+  root.classList.toggle('lbg-top', window.scrollY < 150);
+  let cor = null; try { const p = curPage(); const sx = p && p.type === 'session' ? curSess() : openSession(); if (sx && sx.cor != null) cor = sx.cor; else { const r = activeRoutine(); const w = r && suggested(r); if (w) cor = w.cor; } } catch (e) {}
+  const val = cor != null ? `var(--c${cor})` : 'var(--ember)'; if (root.style.getPropertyValue('--day') !== val) root.style.setProperty('--day', val);
+}
 try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if ((ST.prefs?.theme || 'system') === 'system') applyTheme(); }); } catch (e) {}
 function normSession(s){
   if (s.routine === undefined) s.routine = 'r-hip5';
@@ -4255,7 +4402,7 @@ function render(){
   const a = document.activeElement; const fid = a && a.id; const sel = a && a.selectionStart != null ? [a.selectionStart, a.selectionEnd] : null;
   const p = curPage(); const inSess = p && p.type === 'session';
   document.body.classList.toggle('in-session', !!inSess);
-  document.body.classList.toggle('auth-mode', !!(p && p.type === 'auth'));
+  { const am = !!(p && p.type === 'auth'); if (document.body.classList.contains('auth-mode') !== am){ document.body.classList.toggle('auth-mode', am); Platform.themeColor(am || isDark()); } }
   if (p && p.type === 'auth' && p.first && (Store.mode === 'cloud' || Store.mode === 'api')){ UI.stack.pop(); return render(); }
   document.querySelectorAll('nav.tabs a').forEach(x => x.setAttribute('aria-current', !p && x.dataset.tab === UI.tab ? 'page' : 'false'));
   { const fab = $('#fab'); const o = openSession(); fab.classList.toggle('live', !!o); const [pc, pci] = homeAccent(o);
@@ -4277,6 +4424,7 @@ function render(){
     head = `<button class="hbtn" data-act="back" aria-label="Voltar">${I.back}</button><span class="ttl">${esc((PAGES[p.type] ? PAGES[p.type].title(p) : (titles[p.type] || (() => ''))()) || '')}</span>${sync}<span style="width:12px"></span>`;
     body = PAGES[p.type] ? PAGES[p.type].view(p) : p.type === 'routine' ? vRoutine(p) : p.type === 'template' ? vTemplate(p) : p.type === 'workout' ? vWorkout(p) : p.type === 'exercise' ? vExercise(p) : p.type === 'past' ? vPast(p) : p.type === 'profile' ? vProfile() : '';
   }
+  applyLbg();
   morph($('#top'), head);
   morph($('#view'), body || `<div class="empty" style="margin-top:24px"><b>Este item não existe mais.</b></div>`);
   fitNames();
@@ -5113,6 +5261,7 @@ const PREF_OPTS = {
   rest: {t: 'Descanso padrão', o: [60, 90, 120, 180], f: v => fmtRest(v), s: 'Para exercícios novos e treino livre'},
   inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
   bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
+  lightbg: {t: 'Fundo do tema claro', o: LBG, f: v => ({aura: 'Gradiente do dia', tinta: 'Tinta do dia', nitido: 'Branco nítido', faixa: 'Faixa de energia'})[v] || 'Gradiente do dia', s: 'Usa a cor do treino do dia'},
   theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
   pics: {t: 'Imagens dos exercícios', o: () => ['anim'].concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => (({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D')},
 };
@@ -5123,7 +5272,7 @@ function vSettings(){
   const act = (a, ic, t, sub = '', cls = '', extra = '') => `<button class="s-row ${cls}" data-act="${a}" ${extra}><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span>${cls ? '' : I.chev}</button>`;
   const picsOk = !window.FORJA_FIG;
   return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}</div></section>
-  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}
+  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}${row('lightbg', SI.img)}
     <button class="s-row" data-act="motion-open"><span class="s-ic">${SI.spark}</span><span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${motionPreview(motionMode())}${I.chev}</button>
     ${picsOk ? row('pics', SI.img) : ''}</div></section>
   <section class="s-group"><div class="eyebrow">Objetivo e corpo</div><div class="list">${act('plan-open', I.flame, 'Assistente de objetivo', ST.prefs.plan ? 'Calorias, proteína e ritmo do seu plano' : 'Calcule calorias e proteína para o seu objetivo')}${act('go-body', I.note, 'Peso e medidas', 'Registros do corpo e gráficos')}</div></section>
@@ -5529,8 +5678,11 @@ const XF_KEYS = {
 const tplById = id => id === '_bld' ? builderTpl() : TEMPLATES.find(t => t.id === id);
 /* Programa com os ajustes do usuário (local, duração, nível) aplicados, quando for gerado */
 function effTpl(t){
-  const o = t && t.gen && UI.tplOpt[t.id]; if (!o) return t;
-  const g = {...t.gen, ...o}; return {...t, gen: g, nivel: g.nivel, dur: g.dur, local: [g.local], workouts: genProgram(g)};
+  const o = t && t.gen && UI.tplOpt[t.id];
+  /* v4.28: programas de academia saem com o que a academia da pessoa tem */
+  const pg = t && t.gen && ((o && o.local) || t.gen.local) === 'academia' && ST.profile && ST.profile.gym;
+  if (!o && !pg) return t;
+  const g = {...t.gen, ...(o || {}), ...(pg ? {gym: ST.profile.gym} : {})}; return {...t, gen: g, nivel: g.nivel, dur: g.dur, local: [g.local], workouts: genProgram(g)};
 }
 function tplFilter(f, q){
   const nq = norm((q || '').trim());
@@ -5616,7 +5768,8 @@ function vTemplate(p){
 }
 
 // ---------- assistente ----------
-const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto', obs: ''};
+const BLD0 = {goal: 'hipertrofia', dias: 4, wd: [1, 2, 4, 5], local: 'academia', nivel: 'Intermediário', dur: 60, focos: [], div: 'auto', obs: '', gym: null};
+const gymDefault = () => ST.profile && ST.profile.gym ? {...ST.profile.gym, inv: [...ST.profile.gym.inv]} : {tipo: 'nsei', inv: [...GYM_TIPOS.nsei.inv], pref: 'equil'};
 const FOCO_MAX = 3;
 const focosTxt = fs => { const n = fs.map(k => FOCOS[k].n.toLowerCase()); return n.length > 1 ? n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1] : n[0] || ''; };
 function bldKeys(b){
@@ -5627,20 +5780,21 @@ function bldKeys(b){
   return SPLITS[b.dias];
 }
 function builderTpl(){
-  const b = UI.bld || (UI.bld = {...BLD0}); const o = {...b, keys: bldKeys(b), focos: b.focos || [], foco: undefined};
+  const b = UI.bld || (UI.bld = {...BLD0}); if (b.local === 'academia' && !b.gym) b.gym = gymDefault(); const o = {...b, keys: bldKeys(b), focos: b.focos || [], foco: undefined, gym: b.local === 'academia' ? b.gym : null};
   const nm = `${{hipertrofia: 'Hipertrofia', forca: 'Força', definicao: 'Definição', condicionamento: 'Condicionamento', saude: 'Saúde'}[b.goal]} sob medida ${b.dias}x`;
-  const ob = bldObs(genProgram(o), b.obs);
-  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.${ob.text ? ` Suas observações: “${ob.text}”.` : ''}`,
-    goal: [b.goal], local: [b.local], nivel: b.nivel, freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
+  o.nivel = bldNivel(b.nivel); o.novato = b.nivel === 'Começando';
+  const ob = bldObs(genProgram(o), b.obs, b.local === 'academia' && b.gym ? b.gym.inv : null);
+  return {id: '_bld', nome: nm, desc: `${GOALS[b.goal]}, ${b.dias} dias por semana, ${b.local === 'academia' && b.gym && b.gym.tipo !== 'nsei' ? GYM_TIPOS[b.gym.tipo].n.toLowerCase() : LOCAIS[b.local].n.toLowerCase()}, cerca de ${b.dur} minutos${b.focos.length ? ', prioridade para ' + focosTxt(b.focos) : ''}. Montado pelo assistente do Forja.${ob.text ? ` Suas observações: “${ob.text}”.` : ''}`,
+    goal: [b.goal], local: [b.local], nivel: bldNivel(b.nivel), freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob};
 }
 /* Cartão do assistente: borda com uma luz laranja girando em volta */
 function builderCta(){ return `<button class="builder-cta spin-b" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Algumas perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>6 passos</i><i class="hot">1 minuto</i></span></button>`; }
 /* Observações do assistente: as mesmas regras do campo do treino, aplicadas a cada treino do programa.
    Devolve os treinos ajustados e um resumo agrupado (o que mudou, em quais treinos, alertas e lembretes). */
-function bldObs(workouts, text){
+function bldObs(workouts, text, inv){
   text = String(text || '').trim().slice(0, 400); if (!text) return {workouts, text: '', rules: [], flags: [], notes: []};
   const rules = new Map(), flags = new Map(); const notes = [];
-  const out = workouts.map(w => { const res = obInterpret(text, w, new Set(), {program: true});
+  const out = workouts.map(w => { const res = obInterpret(text, w, new Set(), {program: true, inv: inv || null});
     res.rules.forEach(x => { const g = rules.get(x.title) || {title: x.title, ws: [], log: []}; g.ws.push(w.nome); g.log.push(...x.log.map(l => `${w.nome}: ${l}`)); rules.set(x.title, g); });
     res.flags.forEach(f => { const g = flags.get(f.title) || {...f, all: []}; if (f.list) g.all.push(...f.list); flags.set(f.title, g); }); notes.push(res.notes);
     return {...w, items: res.items.map(({_f, uid, ...x}) => x), ...(res.wset && 'restEx' in res.wset ? {restEx: res.wset.restEx} : {})}; });
@@ -5667,9 +5821,14 @@ function bldObsSummary(ob){
 /* Assistente em passos: uma pergunta por tela, cada passo é uma página da pilha
    (o voltar do celular e o do topo voltam uma pergunta). No fim, o programa recomendado
    e, discretamente, outras opções compatíveis com as respostas. */
-const BSTEPS = ['goal', 'dias', 'local', 'nivel', 'foco', 'obs'];
+const BSTEPS = ['goal', 'dias', 'local', 'gym', 'nivel', 'foco', 'obs'];
+/* o passo da academia só aparece para quem treina em academia */
+const bSteps = () => BSTEPS.filter(x => x !== 'gym' || (UI.bld && UI.bld.local === 'academia'));
 const GOAL_SUB = {hipertrofia: 'Aumentar a massa muscular, com volume e repetições moderadas.', forca: 'Levantar mais peso nos básicos. Poucas repetições e descansos longos.', definicao: 'Perder gordura mantendo os músculos. Bi-sets e cardio no fim.', condicionamento: 'Fôlego e gasto calórico. Circuitos quase sem descanso.', saude: 'Começar ou voltar a treinar com segurança e constância.'};
-const NIVEL_SUB = {Iniciante: 'Começando agora ou voltando depois de uma pausa longa.', 'Intermediário': 'Treina com regularidade e já conhece os exercícios básicos.', 'Avançado': 'Treina há anos e precisa de mais volume para evoluir.'};
+/* v4.28: quatro níveis no assistente. "Começando agora" gera como Iniciante, com treinos ainda mais simples. */
+const BLD_NIVEIS = [['Começando', 'Começando agora', 'Nunca treinou ou fez só algumas semanas.'], ['Iniciante', 'Iniciante', 'Menos de 6 meses treinando, ou voltando de uma pausa longa.'], ['Intermediário', 'Intermediário', 'De 6 meses a 2 anos treinando, sem parar.'], ['Avançado', 'Avançado', 'Mais de 2 anos treinando, com cargas altas.']];
+const NIVEL_SUB = Object.fromEntries(BLD_NIVEIS.map(([k, , d]) => [k, d]));
+const bldNivel = n => n === 'Começando' ? 'Iniciante' : n;
 function splitLabel(keys){ const ks = keys.join(); return /CI/.test(ks) ? 'Circuitos' : /GA/.test(ks) ? 'Glúteos em foco' : /^PU,PL,LG,PU2/.test(ks) ? 'Push Pull Legs 2x' : /^PU,PL,LG$/.test(ks) ? 'Push Pull Legs' : /^UA,LA,PU/.test(ks) ? 'Upper Lower + Push Pull Legs' : /^UA,LA/.test(ks) ? 'Superiores e inferiores' : 'Corpo inteiro'; }
 function splitWhy(keys, dias){ const l = splitLabel(keys);
   return l === 'Push Pull Legs' ? 'Cada treino foca um movimento: empurrar, puxar e pernas. Cada músculo é treinado 1 vez por semana, com mais volume por treino.'
@@ -5686,14 +5845,14 @@ function bldAlts(b){
   const tries = b.dias === 3 ? ['auto', 'ppl', 'std'] : b.dias === 4 ? ['auto', 'fb', 'std'] : []; const seen = new Set([cur]);
   if (b.goal !== 'condicionamento') tries.forEach(d => { const k = bldKeys({...b, div: d}); if (!seen.has(k.join())){ seen.add(k.join()); divs.push({div: d, label: splitLabel(k)}); } });
   // programas da biblioteca compatíveis com as respostas
-  const sc = t => (t.freq === b.dias ? 4 : Math.abs(t.freq - b.dias) === 1 ? 1 : -9) + (t.nivel === b.nivel ? 2 : 0) + 3 * b.focos.filter(f => (t.foco || []).includes(f)).length + (t.dur <= b.dur ? 1 : 0);
+  const sc = t => (t.freq === b.dias ? 4 : Math.abs(t.freq - b.dias) === 1 ? 1 : -9) + (t.nivel === bldNivel(b.nivel) ? 2 : 0) + 3 * b.focos.filter(f => (t.foco || []).includes(f)).length + (t.dur <= b.dur ? 1 : 0);
   const lib = tplFilter({goal: b.goal, local: b.local, tipo: 'programa'}).map(t => [sc(t), t]).filter(x => x[0] > 0).sort((x, y) => y[0] - x[0]).slice(0, 4).map(x => x[1]);
   return {divs, lib};
 }
-function bldProgress(i){ return `<div class="bq-prog" aria-label="Passo ${i + 1} de ${BSTEPS.length}">${BSTEPS.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'on' : ''}"></i>`).join('')}</div><div class="eyebrow" style="margin-top:14px">Passo ${i + 1} de ${BSTEPS.length}</div>`; }
+function bldProgress(i){ const ST_ = bSteps(); return `<div class="bq-prog" aria-label="Passo ${i + 1} de ${ST_.length}">${ST_.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'on' : ''}"></i>`).join('')}</div><div class="eyebrow" style="margin-top:14px">Passo ${i + 1} de ${ST_.length}</div>`; }
 const bqChoice = (k, v, cur, title, sub, lead = '') => `<button class="choice" data-act="bld-pick" data-k="${k}" data-v="${esc(v)}" aria-pressed="${String(cur) === String(v)}">${lead}<span class="grow"><b>${title}</b>${sub ? `<span>${sub}</span>` : ''}</span><i class="tick">${I.check}</i></button>`;
 function vBuilderStep(b, step){
-  const i = BSTEPS.indexOf(step); let q = '', body = '';
+  const i = bSteps().indexOf(step); let q = '', body = '';
   if (step === 'goal'){ q = 'Qual é o seu objetivo agora?'; body = `<div class="stack" style="gap:10px">${Object.entries(GOALS).map(([k, n]) => bqChoice('goal', k, b.goal, esc(n), GOAL_SUB[k])).join('')}</div>`; }
   else if (step === 'dias'){
     const ok = b.dias >= 2 && b.dias <= 6;
@@ -5706,7 +5865,14 @@ function vBuilderStep(b, step){
       <p>${ok ? (b.wd ? 'Os treinos já ficam marcados nesses dias e o Início mostra o treino certo de cada dia.' : 'Sem dias fixos, o app segue a sequência dos treinos. Dá para marcar os dias depois.') : 'O assistente monta programas de 2 a 6 treinos por semana.'} Prefira o que você mantém nas semanas corridas.</p></div>
       <button class="btn primary block" style="margin-top:18px" data-act="bld-next" data-step="dias" ${ok ? '' : 'disabled'}>Continuar</button>`; }
   else if (step === 'local'){ q = 'Onde você vai treinar?'; body = `<div class="stack" style="gap:10px">${Object.entries(LOCAIS).filter(([k]) => k !== 'cardio').map(([k, l]) => bqChoice('local', k, b.local, esc(l.n), l.d || 'Máquinas, polias, barras e halteres')).join('')}</div>`; }
-  else if (step === 'nivel'){ q = 'Como está a sua experiência?'; body = `<div class="stack" style="gap:10px">${NIVEIS.map(n => bqChoice('nivel', n, b.nivel, n, NIVEL_SUB[n])).join('')}</div>
+  else if (step === 'gym'){ q = 'Como é a sua academia?'; const g = b.gym || (b.gym = gymDefault()); const inv = new Set(g.inv);
+    body = `<p class="ink2" style="margin:-6px 0 16px">Escolha pelo que tem na sua academia.</p>
+      <div class="stack" style="gap:10px">${Object.entries(GYM_TIPOS).map(([k, t]) => `<button class="choice" data-act="bld-gym" data-v="${k}" aria-pressed="${g.tipo === k}"><span class="grow"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></span><i class="tick">${I.check}</i></button>`).join('')}</div>
+      <div class="og" style="margin-top:22px"><span class="eyebrow">Você prefere</span><div class="seg" style="margin-top:8px">${GYM_PREF.map(([k, n]) => `<button data-act="bld-gpref" data-v="${k}" aria-pressed="${g.pref === k}">${n}</button>`).join('')}</div></div>
+      <details class="gym-more" ${UI.gymMore ? 'open' : ''}><summary data-act="gym-more">Ajustar equipamentos <span>opcional</span>${I.down}</summary>
+        <div class="gym-inv">${GYM_INV.map(([k, n, d]) => `<button class="gym-it" data-act="bld-inv" data-v="${k}" aria-pressed="${inv.has(k)}"><i class="tick">${I.check}</i><span><b>${esc(n)}</b>${d ? `<small>${esc(d)}</small>` : ''}</span></button>`).join('')}</div></details>
+      <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="gym">Continuar</button></div>`; }
+  else if (step === 'nivel'){ q = 'Como está a sua experiência?'; body = `<div class="stack" style="gap:10px">${BLD_NIVEIS.map(([k, n, d]) => bqChoice('nivel', k, b.nivel, n, d)).join('')}</div>
     <div class="og" style="margin-top:22px"><span class="eyebrow">Tempo por treino</span><div class="seg">${[30, 45, 60, 75].map(m => `<button data-act="bld-set" data-k="dur" data-v="${m}" aria-pressed="${b.dur === m}">${m} min</button>`).join('')}</div></div>
     <button class="btn primary block" style="margin-top:22px" data-act="bld-next" data-step="nivel">Continuar</button>`; }
   else if (step === 'foco'){ q = 'Quer dar prioridade a algum músculo?'; const fs = b.focos;
@@ -5722,7 +5888,7 @@ function vBuilderStep(b, step){
 }
 function vBuilderResult(b){
   const t = builderTpl(); const keys = bldKeys(b); const al = UI.bldAlt ? bldAlts(b) : null;
-  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ['nivel', `${b.nivel} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
+  const ans = [['goal', GOAL_SHORT[b.goal]], ['dias', b.wd ? bldWdTxt(b.wd) : b.dias + ' dias'], ['local', LOCAIS[b.local].n], ...(b.local === 'academia' && b.gym ? [['gym', b.gym.tipo === 'nsei' ? 'Academia comum' : GYM_TIPOS[b.gym.tipo].n]] : []), ['nivel', `${(BLD_NIVEIS.find(x => x[0] === b.nivel) || [, b.nivel])[1]} · ${b.dur} min`], ['foco', b.focos.length ? b.focos.map(k => FOCOS[k].n).join(', ') : 'Sem prioridade'], ['obs', b.obs ? 'Com observações' : 'Sem observações']];
   return `<section class="bq-res" style="--ac:${GOAL_COLOR[b.goal]}"><div class="eyebrow" style="color:var(--ac)">Seu programa</div><h1 class="display h1" style="margin-top:8px">${esc(t.nome)}</h1>
     <p class="ink2" style="margin:10px 0 0"><b style="color:var(--ink)">${splitLabel(keys)}</b>. ${splitWhy(keys, b.dias)}</p>
     <div class="bq-ans">${ans.map(([k, v]) => `<button class="chip" data-act="bld-go" data-step="${k}">${esc(v)}</button>`).join('')}</div></section>
@@ -5744,7 +5910,7 @@ PAGES.builder = {title: () => 'Montar meu programa', view: p => {
   return p.step && p.step !== 'res' ? vBuilderStep(b, p.step) : p.step === 'res' ? vBuilderResult(b) : vBuilderStep(b, 'goal');
 }};
 const bldWdTxt = wd => wd.slice().sort((x, y) => WEEK.indexOf(x) - WEEK.indexOf(y)).map(d => DIA3[d]).join(' · ');
-const bldNext = step => { const i = BSTEPS.indexOf(step); push({type: 'builder', step: i < BSTEPS.length - 1 ? BSTEPS[i + 1] : 'res'}); };
+const bldNext = step => { const L = bSteps(); const i = L.indexOf(step); push({type: 'builder', step: i < L.length - 1 ? L[i + 1] : 'res'}); };
 // ---------- ações ----------
 A.rtab = el => { UI.rtab = el.dataset.t; render(); };
 A['xf-open'] = el => { const k = el.dataset.k, d = XF_KEYS[k];
@@ -5757,19 +5923,24 @@ A['tpl-opt'] = el => { const tid = el.dataset.tid, k = el.dataset.k; const o = U
 A.bld = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; render(); };
 A['bld-set'] = el => { const k = el.dataset.k; UI.bld[k] = k === 'dias' || k === 'dur' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; render(); Platform.haptic('light'); };
 /* escolher avança sozinho depois de um instante, para a marcação aparecer */
-A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
+A['bld-pick'] = el => { const k = el.dataset.k; const step = curPage().step; UI.bld[k] = k === 'dias' ? +el.dataset.v : el.dataset.v; if (k === 'dias') UI.bld.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); clearTimeout(A._bt); if (k === 'nivel') return; A._bt = setTimeout(() => { if (curPage()?.type === 'builder' && curPage().step === step) bldNext(step); }, 220); };
 A['bld-next'] = el => { const ta = $('#bld-obs'); if (ta) UI.bld.obs = ta.value.trim().slice(0, 400); bldNext(el.dataset.step); };
 A['bld-obs-ex'] = el => { const ta = $('#bld-obs'); const cur = (ta ? ta.value : UI.bld.obs || '').trim(); const v = el.dataset.v; if (norm(cur).includes(norm(v))) return; UI.bld.obs = (cur ? cur.replace(/[.;,\s]+$/, '') + '. ' : '') + v; UI.bld.obsDraft = null; render(); const t = $('#bld-obs'); if (t){ t.focus({preventScroll: true}); t.setSelectionRange(t.value.length, t.value.length); } Platform.haptic('light'); };
 A['bld-obs-run'] = () => { const ta = $('#bld-obs'); UI.bld.obs = ta ? ta.value.trim().slice(0, 400) : ''; UI.bld.obsDraft = null; render(); Platform.haptic('light'); const n = tplById('_bld').obsRes; toast(UI.bld.obs ? (n.rules.length ? `Programa refeito com ${n.rules.length} ${n.rules.length === 1 ? 'ajuste' : 'ajustes'}` : 'Nenhum ajuste reconhecido nessa anotação') : 'Observações removidas'); };
 document.addEventListener('input', ev => { const t = ev.target; if (!t || t.id !== 'bld-obs' || !UI.bld) return; if (t.dataset.w === 'res') UI.bld.obsDraft = t.value.slice(0, 400); else UI.bld.obs = t.value.slice(0, 400); });
 A['bld-wd'] = el => { const d = +el.dataset.d; const b = UI.bld; b.wd = b.wd.includes(d) ? b.wd.filter(x => x !== d) : [...b.wd, d]; b.dias = b.wd.length; b.div = 'auto'; render(); Platform.haptic('light'); };
 A['bld-wdmode'] = el => { const b = UI.bld; if (el.dataset.v === '1'){ b.dias = Math.min(6, Math.max(2, b.dias)); b.wd = defaultDays(b.dias); } else { b.wd = null; b.dias = Math.min(6, Math.max(2, b.dias)); } render(); };
+A['gym-more'] = (el, ev) => { if (ev) ev.preventDefault(); UI.gymMore = !UI.gymMore; render(); };
+A['bld-gym'] = el => { const b = UI.bld; const k = el.dataset.v; b.gym = {tipo: k, inv: [...GYM_TIPOS[k].inv], pref: (b.gym && b.gym.pref) || 'equil'}; render(); Platform.haptic('light'); };
+A['bld-inv'] = el => { const g = UI.bld.gym; const k = el.dataset.v; g.inv = g.inv.includes(k) ? g.inv.filter(x => x !== k) : [...g.inv, k]; render(); Platform.haptic('light'); };
+A['bld-gpref'] = el => { UI.bld.gym.pref = el.dataset.v; render(); Platform.haptic('light'); };
 A['bld-foco'] = el => { const b = UI.bld; const k = el.dataset.v; if (!k) b.focos = []; else if (b.focos.includes(k)) b.focos = b.focos.filter(x => x !== k); else if (b.focos.length >= FOCO_MAX){ toast(`Até ${FOCO_MAX} músculos. Com mais, a prioridade se dilui e os treinos ficam longos.`); return; } else b.focos = [...b.focos, k]; b.div = 'auto'; UI.bldAlt = false; render(); Platform.haptic('light'); };
 A['bld-go'] = el => { const i = UI.stack.findIndex(p => p.type === 'builder' && p.step === el.dataset.step); if (i >= 0){ UI.stack = UI.stack.slice(0, i + 1); render(); window.scrollTo({top: 0}); } };
 A['bld-alt'] = () => { UI.bldAlt = !UI.bldAlt; render(); if (UI.bldAlt) setTimeout(() => $('.bq-more, .bq-res ~ section .sec-head')?.scrollIntoView({behavior: 'smooth', block: 'start'}), 30); };
 A['bld-div'] = el => { UI.bld.div = el.dataset.v; UI.bldAlt = false; render(); window.scrollTo({top: 0, behavior: 'smooth'}); toast('Divisão trocada'); };
 A['add-template'] = el => {
   const t = effTpl(tplById(el.dataset.tid)); if (!t) return;
+  if (t.id === '_bld' && UI.bld && UI.bld.local === 'academia' && UI.bld.gym){ ST.profile.gym = {...UI.bld.gym, inv: [...UI.bld.gym.inv]}; }
   const r = routineFromTemplate(t); const wd = t.id === '_bld' && UI.bld && UI.bld.wd && UI.bld.wd.length === r.workouts.length ? UI.bld.wd : null; if (wd) setDays(r, wd);
   ST.routines.push(r); if (!activeRoutine()) ST.active = r.id; saveState();
   UI.tab = 'rotinas'; UI.rtab = 'minhas'; UI.stack = [{type: 'routine', rid: r.id}]; render(); window.scrollTo({top: 0}); Platform.haptic('success'); if (wd) toast(`${t.nome} salvo, com treinos em ${bldWdTxt(wd)}.`); else if (r.workouts.length) openDaysSheet(r.id, true); else toast(`${t.nome} salvo nas suas rotinas`);
@@ -5793,7 +5964,9 @@ document.addEventListener('input', ev => { const t = ev.target; if (t.dataset &&
    - Por refeição: 0,4 g/kg em pelo menos 4 refeições (Schoenfeld & Aragon, 2018).
    - Emagrecer: 0,5 a 1% do peso por semana (Helms et al., 2014). Ganhar: superávit de 10 a 20%, 0,25 a 0,5% do peso
      por semana (Iraki et al., 2019).
-   - Gordura: 20 a 35% das calorias e pelo menos 0,5 g/kg (Iraki et al., 2019). Fibras: 14 g por 1.000 kcal
+   - Gordura (v4.29): 22% das calorias e pelo menos 0,5 g/kg. Fica na parte baixa da faixa de 20 a 35% para quem treina
+     (Academy of Nutrition and Dietetics, Dietitians of Canada e ACSM, 2016; Iraki et al., 2019) e abaixo do teto de 30%
+     da OMS (diretriz sobre gordura total, 2023), que também pede menos de 10% das calorias em gordura saturada. Fibras: 14 g por 1.000 kcal
      (Dietary Guidelines for Americans). Água total de referência: 2,0 L (mulheres) e 2,5 L (homens) por dia, EFSA 2010.
    - 7.700 kcal por kg de peso é a aproximação clássica; por isso o check-in semanal corrige o plano pelo seu peso real.
    Gasto do dia (v4.6), em partes, em vez dos fatores de atividade "sedentário/moderado/..." que misturam rotina e treino:
@@ -5916,7 +6089,7 @@ function planCalc(i){
   else { const k = i.goal === 'gain' ? 1.8 : 2.0; p = refKg * k; plo = refKg * 1.6; phi = refKg * 2.2; basis = `${fmtN(k)} g por kg${refKg !== i.kg ? ' do peso de referência' : ''}`; }
   p = r5(p); out.p = p; out.plo = r5(plo); out.phi = r5(phi); out.pBasis = basis;
   // gordura e carboidrato
-  let f = Math.max(kcal * 0.25 / 9, 0.5 * i.kg); let c = (kcal - p * 4 - f * 9) / 4;
+  let f = Math.max(kcal * 0.22 / 9, 0.5 * i.kg); let c = (kcal - p * 4 - f * 9) / 4;
   if (c < 0){ f = Math.max(0.5 * i.kg, (kcal - p * 4) / 9); c = Math.max(0, (kcal - p * 4 - f * 9) / 4); }
   out.f = r5(f); out.c = r5(c); out.cKg = c / i.kg;
   if (i.goal === 'gain' && out.cKg < 3) out.warn.push('Carboidratos abaixo de 3 g/kg: em fase de ganho, vale priorizar carboidrato para render no treino.');
@@ -6133,7 +6306,7 @@ function planDash(){
       ${gasto}
       <li><b>${pl.goal === 'cut' ? 'Déficit' : pl.goal === 'gain' ? 'Superávit' : 'Manutenção'}${res.delta ? `: ${sgn(res.delta)}${fmtK(Math.abs(res.delta))} kcal` : ''}</b><span>${pl.goal === 'cut' ? `${fmtN(inp.rate)}% do peso por semana, usando a aproximação de 7.700 kcal por kg. Ritmo indicado para o seu corpo: ${fmtN(res.rec)}%.` : pl.goal === 'gain' ? `${inp.gain}% acima do gasto, para ganhar cerca de ${(GAIN_RATES.find(x => x.v === inp.gain) || {}).w}% do peso por semana.` : 'Calorias iguais ao gasto.'}${pl.adj ? ` Ajustes dos check-ins: ${sgn(pl.adj)}${fmtK(Math.abs(pl.adj))} kcal.` : ''}${res.floor ? ' Limitado para não ficar abaixo do basal.' : ''}</span></li>
       <li><b>Proteína: ${res.p} g</b><span>${res.pBasis}. Faixa com respaldo: ${res.plo} a ${res.phi} g.${res.refKg !== inp.kg && !res.lbm ? ' Acima de IMC 25, usamos o peso de referência (IMC 25) para não superestimar.' : ''}</span></li>
-      <li><b>Gorduras: ${res.f} g · Carboidratos: ${res.c} g</b><span>Gordura em 25% das calorias (mínimo de 0,5 g/kg); carboidratos completam o restante (${fmtN(Math.round(res.cKg * 10) / 10)} g/kg).</span></li>
+      <li><b>Gorduras: ${res.f} g · Carboidratos: ${res.c} g</b><span>Gordura em 22% das calorias (mínimo de 0,5 g/kg), abaixo do teto de 30% da OMS; carboidratos completam o restante (${fmtN(Math.round(res.cKg * 10) / 10)} g/kg).</span></li>
     </ol>
     <p class="tiny muted" style="margin:12px 0 0">Por que o gasto é calculado em partes: os fatores tradicionais ("sedentário", "moderado"...) misturam rotina e treino e costumam contar a musculação como se fosse corrida. Aqui a rotina parte do limite inferior medido em pessoas sedentárias com água duplamente marcada, e o treino entra pelo tempo real, com o desconto da compensação do corpo.</p>
     <p class="tiny muted" style="margin:8px 0 0">Referências: Mifflin et al. 1990; Frankenfield et al. 2005; Plucker et al. 2024; FAO/OMS/UNU 2004; Compendium of Physical Activities 2024; Tudor-Locke et al. 2013; Careau et al. 2021; Katch-McArdle; Hodgdon &amp; Beckett 1984; Morton et al. 2018; Schoenfeld &amp; Aragon 2018; Helms et al. 2014; Garthe et al. 2011; Iraki et al. 2019; Dietary Guidelines for Americans; EFSA 2010.</p></details>
@@ -6520,7 +6693,9 @@ function obAddFor(m, items, ban){
 /* v4.25: contexto da leitura (equipamentos liberados por "só halteres") e foco em ângulos/porções do músculo */
 const OB_CTX = {plus: new Set(), pref: {}, home: false};
 /* em casa, nada que precise de barra fixa, paralelas ou outro aparelho */
-const obNeedsOk = k => !OB_CTX.home || !(typeof NEEDS_X !== 'undefined' && NEEDS_X[k] || []).some(n => !CASA.includes(n));
+const obNeedsOk = k => (!OB_CTX.home || !(typeof NEEDS_X !== 'undefined' && NEEDS_X[k] || []).some(n => !CASA.includes(n))) && (!OB_CTX.inv || gymOk(k, OB_CTX.inv));
+/* v4.28: em treino de academia, só o que a academia da pessoa tem */
+function obGymInv(items){ const g = ST.profile && ST.profile.gym; if (!g || !g.inv) return null; const used = new Set(items.map(x => (getEx(x.ex) || {}).e)); return ['maquina', 'cabo', 'smith', 'barra'].some(e => used.has(e)) ? new Set(g.inv) : null; }
 const OB_FOCUS = /\b(mais|foco|focar|priori\w*|enfase|enfatizar|reforc\w*|caprich\w*|fraco|atrasad\w*|desenvolver|crescer|atencao|incluir|adicion\w*|acrescent\w*|trabalhar|pegar|quero)\b/;
 const OB_ANG = [
   {re: /\b(peito|peitoral) (superior|de cima|alto)\b|\bparte (de cima|superior|alta) do peito\b|\bclavicular\b/, m: 'peito', t: 'peito superior', p: ['press-incl'], ex: ['crossover-baixo', 'supino-incl-halter']},
@@ -6570,7 +6745,7 @@ let OB_POP = null; const obPop = () => OB_POP || (OB_POP = new Set(Object.values
 function obFindEx(phrase, items = [], ban = new Set()){
   const ws = obWords(phrase); const core = ws.filter(w => !OB_EQ.some(([re]) => re.test(w)) && !OB_MUS.some(([re]) => re.test(w))); if (!core.length) return null; const qeq = (OB_EQ.find(([re]) => re.test(norm(phrase))) || [])[1];
   let best = null, bs = 0; const pop = obPop();
-  Object.keys(CAT).forEach(k => { const c = CAT[k]; if (c.hid || ban.has(c.e)) return; const toks = norm(c.n).split(/[^a-z0-9]+/).filter(Boolean);
+  Object.keys(CAT).forEach(k => { const c = CAT[k]; if (c.hid || ban.has(c.e) || !obNeedsOk(k)) return; const toks = norm(c.n).split(/[^a-z0-9]+/).filter(Boolean);
     const hc = core.filter(w => obTokHit(toks, w)).length; if (!hc) return; const ha = ws.filter(w => obTokHit(toks, w)).length;
     const sc = hc * 10 + ha * 3 + (qeq && c.e === qeq ? 8 : 0) - toks.length * .4 - (OB_HARD.has(k) ? 2 : 0) - (items.some(x => x.ex === k) ? 5 : 0) + (pop.has(k) ? 2 : 0);
     if (hc >= Math.min(2, core.length) && sc > bs){ bs = sc; best = k; } });
@@ -6598,7 +6773,7 @@ function obFitTime(items, mins){
 /* opts.program: leitura para um programa inteiro (assistente). Foco em músculo só mexe nos treinos que já trabalham aquele músculo. */
 function obInterpret(text, w0, off = new Set(), opts = {}){
   let items = w0.items.map(x => ({...x})); const rules = [], flags = [], notes = [];
-  const ban = new Set(); let fitTo = null; let wset = {}; OB_CTX.plus = new Set(); const S = !!opts.session; const lockd = x => S && x._done > 0; const tot = x => (x._done || 0) + x.sets; const used = new Set();
+  const ban = new Set(); let fitTo = null; let wset = {}; OB_CTX.plus = new Set(); OB_CTX.inv = opts.inv !== undefined ? (opts.inv ? new Set(opts.inv) : null) : obGymInv(w0.items || []); const S = !!opts.session; const lockd = x => S && x._done > 0; const tot = x => (x._done || 0) + x.sets; const used = new Set();
   const FILL = /\b(por favor|pfv|pf|obrigad[oa]|valeu|ok|blz|beleza)\b/g;
   const clauses = norm(text).replace(/\s+e\s+(?=(nao|sem|mais|quero|prefiro|tenho|tirar|trocar|foco|focar|priorizar|descanso|estou|odeio|evitar)\b)/g, ';').split(/[\n.;!?]+|,|\bmas\b/).map(c => c.replace(FILL, '').trim()).filter(c => c.length > 2);
   const push = (title, fn) => { const i = rules.length; const before = items.map(x => ({...x})); const bw = {...wset}; const log = fn(); if (!log || !log.length){ items = before; wset = bw; return false; } if (off.has(i)){ items = before; wset = bw; } rules.push({title, log, on: !off.has(i)}); return true; };
@@ -6858,9 +7033,9 @@ function adjBar(attrs, S){
 
 /* Alimentos do cardápio. Gerado por gen_foods.py; não edite à mão.
    Composição por 100 g: Tabela Brasileira de Composição de Alimentos (TACO), 4ª edição, NEPA/UNICAMP, 2011.
-   Medidas caseiras: IBGE, Pesquisa de Orçamentos Familiares 2008-2009, Tabela de Medidas Referidas para os Alimentos Consumidos no Brasil, 2011.
+   Medidas caseiras (padronizadas em tools/medidas.py): IBGE, Pesquisa de Orçamentos Familiares 2008-2009, Tabela de Medidas Referidas para os Alimentos Consumidos no Brasil, 2011.
    r = papéis no prato; tg = etiquetas; q = passo da porção (g); lo/hi = porção mínima e máxima (g); m = [g por medida, singular, plural]. */
-const FOODS = {"arroz":{"n":"Arroz branco","t":3,"r":["base"],"tg":["barato"],"k":128.3,"p":2.5,"c":28.1,"f":0.2,"fb":1.6,"q":22.5,"lo":45,"hi":450,"kw":["arroz"],"m":[45.0,"colher de servir","colheres de servir"],"pof":"6300101"},"arrozi":{"n":"Arroz integral","t":1,"r":["base"],"tg":[],"k":123.5,"p":2.6,"c":25.8,"f":1.0,"fb":2.7,"q":5,"lo":45,"hi":450,"kw":["arroz integral","integral"],"m":[63.0,"colher de servir","colheres de servir"],"pof":"6300201"},"batdoce":{"n":"Batata-doce cozida","t":88,"r":["base","bcarb"],"tg":["barato","pre"],"k":76.8,"p":0.6,"c":18.4,"f":0.1,"fb":2.2,"q":5,"lo":70,"hi":500,"kw":["batata doce","batata-doce"],"m":[70.0,"pedaço","pedaços"],"pof":"6400401"},"batata":{"n":"Batata inglesa cozida","t":91,"r":["base"],"tg":["barato"],"k":51.6,"p":1.2,"c":11.9,"f":0,"fb":1.3,"q":5,"lo":70,"hi":600,"kw":["batata inglesa","batata"],"m":[140.0,"batata média","batatas médias"],"pof":"6400101"},"mandioca":{"n":"Mandioca cozida","t":129,"r":["base"],"tg":["barato"],"k":125.4,"p":0.6,"c":30.1,"f":0.3,"fb":1.6,"q":5,"lo":50,"hi":400,"kw":["mandioca","aipim","macaxeira"],"m":[100.0,"pedaço","pedaços"],"pof":"6400601"},"cara":{"n":"Cará cozido","t":102,"r":["base"],"tg":[],"k":77.6,"p":1.5,"c":18.9,"f":0.1,"fb":2.6,"q":30.0,"lo":60,"hi":450,"kw":["cará","inhame"],"m":[60.0,"colher de servir","colheres de servir"],"pof":"6400701"},"macarrao":{"n":"Macarrão","t":40,"r":["base"],"tg":["glu","barato","denso"],"k":371.1,"p":10.0,"c":77.9,"f":1.3,"fb":2.9,"q":5,"lo":30,"hi":200,"kw":["macarrão","massa","espaguete","macarrao"]},"cuscuz":{"n":"Cuscuz de milho","t":533,"r":["base","bcarb"],"tg":["barato","pratico"],"k":113.5,"p":2.2,"c":25.3,"f":0.7,"fb":2.1,"q":5,"lo":60,"hi":450,"kw":["cuscuz"],"m":[135.0,"pedaço","pedaços"],"pof":"6902901"},"fcarioca":{"n":"Feijão carioca","t":561,"r":["leg"],"tg":["barato"],"k":76.4,"p":4.8,"c":13.6,"f":0.5,"fb":8.5,"q":10,"lo":70,"hi":280,"kw":["feijão","feijao","carioca"],"m":[140.0,"concha","conchas"],"pof":"6303102"},"fpreto":{"n":"Feijão preto","t":567,"r":["leg"],"tg":["barato"],"k":77.0,"p":4.5,"c":14.0,"f":0.5,"fb":8.4,"q":10,"lo":70,"hi":280,"kw":["feijão preto","feijão","feijao"],"m":[140.0,"concha","conchas"],"pof":"6303102"},"ffradinho":{"n":"Feijão-fradinho","t":563,"r":["leg"],"tg":[],"k":78.0,"p":5.1,"c":13.5,"f":0.6,"fb":7.5,"q":10,"lo":70,"hi":280,"kw":["fradinho","feijão de corda","feijão"],"m":[140.0,"concha","conchas"],"pof":"6301603"},"lentilha":{"n":"Lentilha","t":577,"r":["leg"],"tg":[],"k":92.6,"p":6.3,"c":16.3,"f":0.5,"fb":7.9,"q":10,"lo":80,"hi":320,"kw":["lentilha"],"m":[160.0,"concha","conchas"],"pof":"6302901"},"frango":{"n":"Peito de frango grelhado","t":410,"r":["prot","bprot"],"tg":["frango","barato","magro","pratico"],"k":159.2,"p":32.0,"c":0.0,"f":2.5,"fb":0,"q":10,"lo":40,"hi":300,"kw":["frango","peito de frango","galinha"],"m":[100.0,"filé","filés"],"pof":"7800402"},"coxa":{"n":"Coxa de frango sem pele","t":398,"r":["prot"],"tg":["frango","barato"],"k":167.4,"p":26.9,"c":0.0,"f":5.8,"fb":0,"q":27.5,"lo":55,"hi":330,"kw":["coxa","frango","sobrecoxa"],"m":[55.0,"coxa","coxas"],"pof":"7800302"},"patinho":{"n":"Patinho grelhado","t":377,"r":["prot"],"tg":["carne","magro"],"k":219.3,"p":35.9,"c":0.0,"f":7.3,"fb":0,"q":10,"lo":40,"hi":300,"kw":["patinho","carne","bife","carne vermelha","boi"],"m":[100.0,"bife","bifes"],"pof":"7100501"},"contra":{"n":"Contrafilé grelhado","t":346,"r":["prot"],"tg":["carne","magro"],"k":193.7,"p":35.9,"c":0.0,"f":4.5,"fb":0,"q":10,"lo":40,"hi":300,"kw":["contrafilé","contra filé","carne","bife","carne vermelha","boi"],"m":[100.0,"bife","bifes"],"pof":"7100201"},"maminha":{"n":"Maminha grelhada","t":368,"r":["prot"],"tg":["carne","magro"],"k":153.1,"p":30.7,"c":0.0,"f":2.4,"fb":0,"q":10,"lo":40,"hi":300,"kw":["maminha","carne","carne vermelha","boi"],"m":[100.0,"bife","bifes"],"pof":"7100303"},"musculo":{"n":"Músculo cozido","t":371,"r":["prot"],"tg":["carne","barato"],"k":193.8,"p":31.2,"c":0.0,"f":6.7,"fb":0,"q":17.5,"lo":35,"hi":280,"kw":["músculo","carne","carne vermelha","boi","carne cozida"],"m":[35.0,"pedaço","pedaços"],"pof":"7101001"},"moida":{"n":"Carne moída (acém)","t":326,"r":["prot"],"tg":["carne","barato","pratico"],"k":212.4,"p":26.7,"c":0.0,"f":10.9,"fb":0,"q":12.5,"lo":25,"hi":250,"kw":["carne moída","moída","carne","carne vermelha","boi"],"m":[25.0,"colher de sopa","colheres de sopa"],"pof":"7104301"},"lagarto":{"n":"Lagarto cozido","t":363,"r":["prot"],"tg":["carne"],"k":222.5,"p":32.9,"c":0.0,"f":9.1,"fb":0,"q":17.5,"lo":35,"hi":280,"kw":["lagarto","carne","carne vermelha","boi"],"m":[35.0,"pedaço","pedaços"],"pof":"7106401"},"lombo":{"n":"Lombo de porco assado","t":432,"r":["prot"],"tg":["porco"],"k":210.2,"p":35.7,"c":0.0,"f":6.4,"fb":0,"q":5,"lo":45,"hi":280,"kw":["lombo","porco","suíno","carne de porco"],"m":[95.0,"pedaço","pedaços"],"pof":"7103701"},"merluza":{"n":"Merluza assada","t":301,"r":["prot"],"tg":["peixe","magro"],"k":121.9,"p":26.6,"c":0.0,"f":0.9,"fb":0,"q":10,"lo":60,"hi":360,"kw":["merluza","peixe"],"m":[120.0,"filé","filés"],"pof":"7200101"},"abadejo":{"n":"Abadejo grelhado","t":276,"r":["prot"],"tg":["peixe","magro"],"k":129.6,"p":27.6,"c":0.0,"f":1.3,"fb":0,"q":10,"lo":60,"hi":360,"kw":["abadejo","peixe"],"m":[120.0,"filé","filés"],"pof":"7200101"},"pintado":{"n":"Pintado grelhado","t":313,"r":["prot"],"tg":["peixe","magro"],"k":152.2,"p":30.8,"c":0.0,"f":2.3,"fb":0,"q":10,"lo":60,"hi":360,"kw":["pintado","peixe"],"m":[120.0,"filé","filés"],"pof":"7400101"},"salmao":{"n":"Salmão grelhado","t":317,"r":["prot"],"tg":["peixe"],"k":242.7,"p":26.1,"c":0.0,"f":14.5,"fb":0,"q":10,"lo":60,"hi":300,"kw":["salmão","salmao","peixe"],"m":[120.0,"filé","filés"],"pof":"7200101"},"sardinha":{"n":"Sardinha assada","t":318,"r":["prot"],"tg":["peixe","barato"],"k":164.4,"p":32.2,"c":0.0,"f":3.0,"fb":0,"q":5,"lo":40,"hi":300,"kw":["sardinha","peixe"]},"atum":{"n":"Atum em conserva","t":277,"r":["prot","bprot"],"tg":["peixe","pratico"],"k":165.9,"p":26.2,"c":0.0,"f":6.0,"fb":0,"q":8.0,"lo":30,"hi":200,"kw":["atum","peixe"],"m":[16.0,"colher de sopa","colheres de sopa"],"pof":"7703402"},"camarao":{"n":"Camarão cozido","t":284,"r":["prot"],"tg":["mar","magro"],"k":90.0,"p":19.0,"c":0.0,"f":1.0,"fb":0,"q":17.5,"lo":35,"hi":300,"kw":["camarão","camarao","frutos do mar"],"m":[35.0,"colher de servir","colheres de servir"],"pof":"7260101"},"ovo":{"n":"Ovo cozido","t":488,"r":["prot","bprot"],"tg":["ovo","barato","pratico"],"k":145.7,"p":13.3,"c":0.6,"f":9.5,"fb":0,"q":45,"lo":45,"hi":225,"kw":["ovo","ovos"],"m":[45.0,"ovo","ovos"],"pof":"7803301"},"clara":{"n":"Clara de ovo cozida","t":486,"r":["bprot"],"tg":["ovo","magro"],"k":59.4,"p":13.4,"c":0.0,"f":0.1,"fb":0,"q":10,"lo":30,"hi":200,"kw":["clara","claras"]},"tofu":{"n":"Tofu","t":584,"r":["prot","bprot"],"tg":["soja"],"k":64.5,"p":6.6,"c":2.1,"f":4.0,"fb":0.8,"q":10.0,"lo":60,"hi":400,"kw":["tofu","queijo de soja"],"m":[20.0,"fatia","fatias"],"pof":"7903402"},"paof":{"n":"Pão francês","t":53,"r":["bcarb"],"tg":["glu","barato","pratico","pre"],"k":299.8,"p":8.0,"c":58.6,"f":3.1,"fb":2.3,"q":25,"lo":25,"hi":150,"kw":["pão francês","pão","pao","pãozinho","pão de sal"],"m":[50.0,"pão","pães"],"pof":"8000105"},"paoi":{"n":"Pão de forma integral","t":52,"r":["bcarb"],"tg":["glu","pratico"],"k":253.2,"p":9.4,"c":49.9,"f":3.7,"fb":6.9,"q":25,"lo":25,"hi":150,"kw":["pão integral","pão de forma","pão","pao"],"m":[25.0,"fatia","fatias"],"pof":"8001401"},"aveia":{"n":"Aveia em flocos","t":7,"r":["bcarb"],"tg":["glu","barato","pratico"],"k":393.8,"p":13.9,"c":66.6,"f":8.5,"fb":9.1,"q":7.5,"lo":15,"hi":90,"kw":["aveia"],"m":[15.0,"colher de sopa","colheres de sopa"],"pof":"6500401"},"tapioca":{"n":"Tapioca com manteiga","t":551,"r":["bcarb"],"tg":["lac","pre"],"k":347.8,"p":0.1,"c":63.6,"f":10.9,"fb":0,"q":25,"lo":50,"hi":150,"kw":["tapioca"],"m":[50.0,"tapioca","tapiocas"],"pof":"6501516"},"torrada":{"n":"Torrada","t":63,"r":["bcarb"],"tg":["glu","pratico"],"k":377.4,"p":10.5,"c":74.6,"f":3.3,"fb":3.4,"q":8,"lo":16,"hi":64,"kw":["torrada","torradas"],"m":[8.0,"torrada","torradas"],"pof":"8001901"},"iogurte":{"n":"Iogurte natural","t":448,"r":["bprot"],"tg":["lac","pratico"],"k":51.5,"p":4.1,"c":1.9,"f":3.0,"fb":0,"q":10,"lo":100,"hi":400,"kw":["iogurte"],"m":[200.0,"pote","potes"],"pof":"7901204"},"iogurted":{"n":"Iogurte natural desnatado","t":449,"r":["bprot"],"tg":["lac","pratico","magro"],"k":41.5,"p":3.8,"c":5.8,"f":0.3,"fb":0,"q":10,"lo":100,"hi":400,"kw":["iogurte desnatado","iogurte"],"m":[200.0,"pote","potes"],"pof":"7901203"},"minas":{"n":"Queijo minas frescal","t":461,"r":["bprot"],"tg":["lac","pratico"],"k":264.3,"p":17.4,"c":3.2,"f":20.2,"fb":0,"q":22.5,"lo":30,"hi":120,"kw":["queijo minas","queijo branco","queijo"],"m":[45.0,"fatia","fatias"],"pof":"7902001"},"mussarela":{"n":"Muçarela","t":463,"r":["bprot"],"tg":["lac","pratico"],"k":329.9,"p":22.6,"c":3.0,"f":25.2,"fb":0,"q":10.0,"lo":20,"hi":80,"kw":["muçarela","mussarela","mozarela","queijo"],"m":[20.0,"fatia","fatias"],"pof":"7901803"},"ricota":{"n":"Ricota","t":469,"r":["bprot"],"tg":["lac","magro"],"k":139.7,"p":12.6,"c":3.8,"f":8.1,"fb":0,"q":17.5,"lo":35,"hi":150,"kw":["ricota"],"m":[35.0,"fatia","fatias"],"pof":"7902201"},"requeijao":{"n":"Requeijão cremoso","t":468,"r":["bprot"],"tg":["lac"],"k":256.6,"p":9.6,"c":2.4,"f":23.4,"fb":0,"q":15.0,"lo":15,"hi":45,"kw":["requeijão","requeijao"],"m":[30.0,"colher de sopa","colheres de sopa"],"pof":"7902901"},"presunto":{"n":"Presunto magro","t":439,"r":["bprot"],"tg":["porco","pratico"],"k":93.7,"p":14.3,"c":2.1,"f":2.7,"fb":0,"q":7.5,"lo":15,"hi":90,"kw":["presunto"],"m":[15.0,"fatia","fatias"],"pof":"8102901"},"leitepo":{"n":"Leite desnatado em pó","t":456,"r":["bprot"],"tg":["lac","pratico","magro"],"k":361.6,"p":34.7,"c":53.0,"f":0.9,"fb":0,"q":5.0,"lo":10,"hi":50,"kw":["leite","leite em pó"],"m":[10.0,"colher de sopa","colheres de sopa"],"pof":"7900710"},"sojapo":{"n":"Bebida de soja em pó","t":583,"r":["bprot"],"tg":["soja","pratico"],"k":458.9,"p":35.7,"c":28.5,"f":26.2,"fb":7.3,"q":6.5,"lo":13,"hi":52,"kw":["leite de soja","soja","bebida de soja","extrato de soja"],"m":[13.0,"colher de sopa","colheres de sopa"],"pof":"7903501"},"banana":{"n":"Banana-prata","t":182,"r":["fruit"],"tg":["barato","pre","denso"],"k":98.2,"p":1.3,"c":26.0,"f":0.1,"fb":2.0,"q":37.5,"lo":37.5,"hi":225,"kw":["banana"],"m":[75.0,"banana","bananas"],"pof":"6801101"},"maca":{"n":"Maçã","t":222,"r":["fruit"],"tg":["pre"],"k":55.5,"p":0.3,"c":15.2,"f":0,"fb":1.3,"q":75,"lo":75,"hi":300,"kw":["maçã","maca"],"m":[150.0,"maçã","maçãs"],"pof":"6803001"},"mamao":{"n":"Mamão formosa","t":225,"r":["fruit"],"tg":["barato"],"k":45.3,"p":0.8,"c":11.6,"f":0.1,"fb":1.8,"q":85,"lo":85,"hi":340,"kw":["mamão","mamao","papaia"],"m":[170.0,"fatia","fatias"],"pof":"6803101"},"laranja":{"n":"Laranja-pera","t":214,"r":["fruit"],"tg":["barato"],"k":36.8,"p":1.0,"c":8.9,"f":0.1,"fb":0.8,"q":90,"lo":90,"hi":360,"kw":["laranja"],"m":[180.0,"laranja","laranjas"],"pof":"6801801"},"morango":{"n":"Morango","t":239,"r":["fruit"],"tg":[],"k":30.1,"p":0.9,"c":6.8,"f":0.3,"fb":1.7,"q":60,"lo":60,"hi":360,"kw":["morango","morangos"],"m":[120.0,"xícara","xícaras"],"pof":"6805201"},"uva":{"n":"Uva","t":256,"r":["fruit"],"tg":[],"k":52.9,"p":0.7,"c":13.6,"f":0.2,"fb":0.9,"q":35,"lo":70,"hi":210,"kw":["uva","uvas"],"m":[70.0,"copo americano","copos americanos"],"pof":"6803901"},"manga":{"n":"Manga","t":231,"r":["fruit"],"tg":[],"k":50.7,"p":0.9,"c":12.8,"f":0.2,"fb":2.1,"q":70,"lo":70,"hi":280,"kw":["manga"],"m":[140.0,"manga","mangas"],"pof":"6803201"},"abacaxi":{"n":"Abacaxi","t":164,"r":["fruit"],"tg":[],"k":48.3,"p":0.9,"c":12.3,"f":0.1,"fb":1.0,"q":75,"lo":75,"hi":300,"kw":["abacaxi"],"m":[75.0,"fatia","fatias"],"pof":"6802601"},"melancia":{"n":"Melancia","t":235,"r":["fruit"],"tg":["barato"],"k":32.6,"p":0.9,"c":8.1,"f":0,"fb":0.1,"q":100,"lo":200,"hi":400,"kw":["melancia"],"m":[200.0,"fatia","fatias"],"pof":"6803401"},"melao":{"n":"Melão","t":236,"r":["fruit"],"tg":[],"k":29.4,"p":0.7,"c":7.5,"f":0,"fb":0.2,"q":90,"lo":90,"hi":360,"kw":["melão","melao"],"m":[90.0,"fatia","fatias"],"pof":"6803501"},"kiwi":{"n":"Kiwi","t":207,"r":["fruit"],"tg":[],"k":51.1,"p":1.3,"c":11.5,"f":0.6,"fb":2.7,"q":94,"lo":94,"hi":282,"kw":["kiwi"],"m":[94.0,"kiwi","kiwis"],"pof":"6807801"},"goiaba":{"n":"Goiaba","t":200,"r":["fruit"],"tg":["barato"],"k":54.2,"p":1.1,"c":13.0,"f":0.4,"fb":6.2,"q":85,"lo":85,"hi":340,"kw":["goiaba"],"m":[170.0,"goiaba","goiabas"],"pof":"6804201"},"tangerina":{"n":"Tangerina","t":251,"r":["fruit"],"tg":["barato"],"k":37.8,"p":0.8,"c":9.6,"f":0.1,"fb":0.9,"q":135,"lo":135,"hi":405,"kw":["tangerina","mexerica","bergamota","ponkan"],"m":[135.0,"tangerina","tangerinas"],"pof":"6802201"},"pera":{"n":"Pera","t":243,"r":["fruit"],"tg":[],"k":53.3,"p":0.6,"c":14.0,"f":0.1,"fb":3.0,"q":65,"lo":65,"hi":260,"kw":["pera","pêra"],"m":[130.0,"pera","peras"],"pof":"6803601"},"abacate":{"n":"Abacate","t":163,"r":["fat"],"tg":[],"k":96.2,"p":1.2,"c":6.0,"f":8.4,"fb":6.3,"q":22.5,"lo":45,"hi":180,"kw":["abacate"],"m":[45.0,"colher de sopa","colheres de sopa"],"pof":"6802701"},"alface":{"n":"Alface","t":78,"r":["salad"],"tg":["barato"],"k":10.7,"p":1.3,"c":1.7,"f":0.2,"fb":1.8,"q":5.0,"lo":20,"hi":80,"kw":["alface","salada","folhas"],"m":[10.0,"folha","folhas"],"pof":"6700101"},"tomate":{"n":"Tomate","t":157,"r":["salad"],"tg":["barato"],"k":15.3,"p":1.1,"c":3.1,"f":0.2,"fb":1.2,"q":50,"lo":50,"hi":150,"kw":["tomate"],"m":[100.0,"tomate","tomates"],"pof":"6705101"},"rucula":{"n":"Rúcula","t":152,"r":["salad"],"tg":[],"k":13.1,"p":1.8,"c":2.2,"f":0.1,"fb":1.7,"q":15.0,"lo":15,"hi":60,"kw":["rúcula","rucula","folhas","salada"],"m":[30.0,"prato de sobremesa","pratos de sobremesa"],"pof":"6702001"},"agriao":{"n":"Agrião","t":75,"r":["salad"],"tg":[],"k":16.6,"p":2.7,"c":2.3,"f":0.2,"fb":2.1,"q":18.75,"lo":20,"hi":75,"kw":["agrião","agriao","folhas","salada"],"m":[37.5,"porção","porções"],"pof":"6701301"},"pepino":{"n":"Pepino","t":142,"r":["salad"],"tg":["barato"],"k":9.5,"p":0.9,"c":2.0,"f":0,"fb":1.1,"q":25,"lo":50,"hi":150,"kw":["pepino"],"m":[100.0,"pepino","pepinos"],"pof":"6704001"},"cenoura":{"n":"Cenoura ralada","t":110,"r":["salad"],"tg":["barato"],"k":34.1,"p":1.3,"c":7.7,"f":0.2,"fb":3.2,"q":6.0,"lo":24,"hi":96,"kw":["cenoura"],"m":[12.0,"colher de sopa","colheres de sopa"],"pof":"6401201"},"repolho":{"n":"Repolho","t":149,"r":["salad"],"tg":["barato"],"k":17.1,"p":0.9,"c":3.9,"f":0.1,"fb":1.9,"q":5.0,"lo":30,"hi":100,"kw":["repolho"],"m":[10.0,"colher de sopa","colheres de sopa"],"pof":"6700901"},"brocolis":{"n":"Brócolis cozido","t":100,"r":["cooked"],"tg":[],"k":24.6,"p":2.1,"c":4.4,"f":0.5,"fb":3.4,"q":10.0,"lo":40,"hi":160,"kw":["brócolis","brocolis"],"m":[20.0,"colher de servir","colheres de servir"],"pof":"6701704"},"couveflor":{"n":"Couve-flor cozida","t":118,"r":["cooked"],"tg":[],"k":19.1,"p":1.2,"c":3.9,"f":0.3,"fb":2.1,"q":25.0,"lo":50,"hi":200,"kw":["couve-flor","couve flor"],"m":[50.0,"colher de servir","colheres de servir"],"pof":"6700601"},"abobrinha":{"n":"Abobrinha cozida","t":70,"r":["cooked"],"tg":["barato"],"k":15.0,"p":1.1,"c":3.0,"f":0.2,"fb":1.6,"q":35,"lo":70,"hi":210,"kw":["abobrinha"],"m":[70.0,"colher de servir","colheres de servir"],"pof":"6703701"},"abobora":{"n":"Abóbora cabotiá cozida","t":64,"r":["cooked"],"tg":["barato"],"k":48.0,"p":1.4,"c":10.8,"f":0.7,"fb":2.5,"q":36,"lo":72,"hi":216,"kw":["abóbora","abobora","jerimum"],"m":[72.0,"colher de servir","colheres de servir"],"pof":"6703901"},"beterraba":{"n":"Beterraba cozida","t":97,"r":["cooked"],"tg":["barato"],"k":32.2,"p":1.3,"c":7.2,"f":0.1,"fb":1.9,"q":10.0,"lo":40,"hi":120,"kw":["beterraba"],"m":[20.0,"colher de sopa","colheres de sopa"],"pof":"6401101"},"chuchu":{"n":"Chuchu cozido","t":112,"r":["cooked"],"tg":["barato"],"k":18.5,"p":0.4,"c":4.8,"f":0,"fb":1.0,"q":22.5,"lo":45,"hi":180,"kw":["chuchu"],"m":[45.0,"colher de servir","colheres de servir"],"pof":"6704101"},"couve":{"n":"Couve refogada","t":116,"r":["cooked"],"tg":["barato"],"k":90.3,"p":1.7,"c":8.7,"f":6.6,"fb":5.7,"q":21.0,"lo":42,"hi":126,"kw":["couve"],"m":[42.0,"colher de servir","colheres de servir"],"pof":"6700501"},"cenourac":{"n":"Cenoura cozida","t":109,"r":["cooked"],"tg":["barato"],"k":29.9,"p":0.8,"c":6.7,"f":0.2,"fb":2.6,"q":12.5,"lo":50,"hi":150,"kw":["cenoura"],"m":[25.0,"colher de sopa","colheres de sopa"],"pof":"6401201"},"berinjela":{"n":"Berinjela cozida","t":95,"r":["cooked"],"tg":[],"k":18.8,"p":0.7,"c":4.5,"f":0.1,"fb":2.5,"q":12.5,"lo":50,"hi":150,"kw":["berinjela"],"m":[25.0,"colher de sopa","colheres de sopa"],"pof":"6705401"},"azeite":{"n":"Azeite de oliva","t":260,"r":["fat"],"tg":[],"k":884.0,"p":0,"c":0,"f":100.0,"fb":0,"q":4.0,"lo":4,"hi":24,"kw":["azeite"],"m":[8.0,"colher de sopa","colheres de sopa"],"pof":"8400101"},"castpara":{"n":"Castanha-do-pará","t":589,"r":["fat"],"tg":["cast","pratico"],"k":643.0,"p":14.5,"c":15.1,"f":63.5,"fb":7.9,"q":4.0,"lo":4,"hi":24,"kw":["castanha","castanhas","castanha-do-pará","castanha do pará","oleaginosas"],"m":[4.0,"castanha","castanhas"],"pof":"6600701"},"caju":{"n":"Castanha de caju","t":588,"r":["fat"],"tg":["cast","pratico"],"k":570.2,"p":18.5,"c":29.1,"f":46.3,"fb":3.7,"q":2.5,"lo":5,"hi":40,"kw":["caju","castanha de caju","castanhas","oleaginosas"],"m":[2.5,"castanha","castanhas"],"pof":"6600801"},"nozes":{"n":"Nozes","t":597,"r":["fat"],"tg":["cast","pratico"],"k":620.1,"p":14.0,"c":18.4,"f":59.4,"fb":7.2,"q":5.0,"lo":5,"hi":40,"kw":["noz","nozes","oleaginosas"],"m":[5.0,"noz","nozes"],"pof":"6601501"},"amendoa":{"n":"Amêndoas","t":587,"r":["fat"],"tg":["cast","pratico"],"k":580.7,"p":18.6,"c":29.5,"f":47.3,"fb":11.6,"q":1.0,"lo":5,"hi":40,"kw":["amêndoa","amêndoas","amendoa","oleaginosas"],"m":[1.0,"amêndoa","amêndoas"],"pof":"6600501"},"amendoim":{"n":"Amendoim torrado","t":558,"r":["fat"],"tg":["amend","barato","pratico"],"k":605.8,"p":22.5,"c":18.7,"f":54.0,"fb":7.8,"q":8.5,"lo":10,"hi":50,"kw":["amendoim"],"m":[17.0,"colher de sopa","colheres de sopa"],"pof":"6301001"},"linhaca":{"n":"Linhaça","t":594,"r":["fat"],"tg":[],"k":495.1,"p":14.1,"c":43.3,"f":32.3,"fb":33.5,"q":6.5,"lo":6.5,"hi":26,"kw":["linhaça","linhaca"],"m":[13.0,"colher de sopa","colheres de sopa"],"pof":"6302001"},"manteiga":{"n":"Manteiga","t":261,"r":["fat"],"tg":["lac"],"k":726.0,"p":0.4,"c":0.1,"f":82.4,"fb":0,"q":4.0,"lo":4,"hi":16,"kw":["manteiga"],"m":[8.0,"colher de chá","colheres de chá"],"pof":"7901501"},"mel":{"n":"Mel","t":507,"r":["sweet"],"tg":["mel","pre"],"k":309.2,"p":0.0,"c":84.0,"f":0.0,"fb":0,"q":7.5,"lo":7.5,"hi":30,"kw":["mel","doce","açúcar"],"m":[15.0,"colher de sopa","colheres de sopa"],"pof":"6901602"},"cafe":{"n":"Café sem açúcar","t":471,"r":["drink"],"tg":["cafe"],"k":9.1,"p":0.7,"c":1.5,"f":0.1,"fb":0,"q":50,"lo":50,"hi":200,"kw":["café","cafe","cafeína"],"m":[200.0,"xícara","xícaras"],"pof":"8501302"}};
+const FOODS = {"arroz":{"n":"Arroz branco","t":3,"r":["base"],"tg":["barato"],"k":128.3,"p":2.5,"c":28.1,"f":0.2,"fb":1.6,"q":25.0,"lo":45,"hi":450,"kw":["arroz"],"m":[25.0,"colher de sopa","colheres de sopa"],"pof":"6300101"},"arrozi":{"n":"Arroz integral","t":1,"r":["base"],"tg":[],"k":123.5,"p":2.6,"c":25.8,"f":1.0,"fb":2.7,"q":20.0,"lo":45,"hi":450,"kw":["arroz integral","integral"],"m":[20.0,"colher de sopa","colheres de sopa"],"pof":"6300201"},"batdoce":{"n":"Batata-doce cozida","t":88,"r":["base","bcarb"],"tg":["barato","pre"],"k":76.8,"p":0.6,"c":18.4,"f":0.1,"fb":2.2,"q":42.0,"lo":70,"hi":500,"kw":["batata doce","batata-doce"],"m":[42.0,"colher de sopa","colheres de sopa"],"pof":"6400401"},"batata":{"n":"Batata inglesa cozida","t":91,"r":["base"],"tg":["barato"],"k":51.6,"p":1.2,"c":11.9,"f":0,"fb":1.3,"q":5,"lo":70,"hi":600,"kw":["batata inglesa","batata"],"m":[140.0,"batata média","batatas médias"],"pof":"6400101"},"mandioca":{"n":"Mandioca cozida","t":129,"r":["base"],"tg":["barato"],"k":125.4,"p":0.6,"c":30.1,"f":0.3,"fb":1.6,"q":30.0,"lo":50,"hi":400,"kw":["mandioca","aipim","macaxeira"],"m":[30.0,"colher de sopa","colheres de sopa"],"pof":"6400601"},"cara":{"n":"Cará cozido","t":102,"r":["base"],"tg":[],"k":77.6,"p":1.5,"c":18.9,"f":0.1,"fb":2.6,"q":30.0,"lo":60,"hi":450,"kw":["cará","inhame"],"m":[30.0,"colher de sopa","colheres de sopa"],"pof":"6400701"},"macarrao":{"n":"Macarrão","t":40,"r":["base"],"tg":["glu","barato","denso"],"k":371.1,"p":10.0,"c":77.9,"f":1.3,"fb":2.9,"q":5,"lo":30,"hi":200,"kw":["macarrão","massa","espaguete","macarrao"]},"cuscuz":{"n":"Cuscuz de milho","t":533,"r":["base","bcarb"],"tg":["barato","pratico"],"k":113.5,"p":2.2,"c":25.3,"f":0.7,"fb":2.1,"q":67.5,"lo":67.5,"hi":450,"kw":["cuscuz"],"m":[135.0,"fatia","fatias"],"pof":"6902901"},"fcarioca":{"n":"Feijão carioca","t":561,"r":["leg"],"tg":["barato"],"k":76.4,"p":4.8,"c":13.6,"f":0.5,"fb":8.5,"q":10,"lo":70,"hi":280,"kw":["feijão","feijao","carioca"],"m":[140.0,"concha","conchas"],"pof":"6303102"},"fpreto":{"n":"Feijão preto","t":567,"r":["leg"],"tg":["barato"],"k":77.0,"p":4.5,"c":14.0,"f":0.5,"fb":8.4,"q":10,"lo":70,"hi":280,"kw":["feijão preto","feijão","feijao"],"m":[140.0,"concha","conchas"],"pof":"6303102"},"ffradinho":{"n":"Feijão-fradinho","t":563,"r":["leg"],"tg":[],"k":78.0,"p":5.1,"c":13.5,"f":0.6,"fb":7.5,"q":10,"lo":70,"hi":280,"kw":["fradinho","feijão de corda","feijão"],"m":[140.0,"concha","conchas"],"pof":"6301603"},"lentilha":{"n":"Lentilha","t":577,"r":["leg"],"tg":[],"k":92.6,"p":6.3,"c":16.3,"f":0.5,"fb":7.9,"q":10,"lo":80,"hi":320,"kw":["lentilha"],"m":[160.0,"concha","conchas"],"pof":"6302901"},"frango":{"n":"Peito de frango grelhado","t":410,"r":["prot","bprot"],"tg":["frango","barato","magro","pratico"],"k":159.2,"p":32.0,"c":0.0,"f":2.5,"fb":0,"q":10,"lo":40,"hi":300,"kw":["frango","peito de frango","galinha"],"m":[100.0,"filé","filés"],"pof":"7800402"},"coxa":{"n":"Coxa de frango sem pele","t":398,"r":["prot"],"tg":["frango","barato"],"k":167.4,"p":26.9,"c":0.0,"f":5.8,"fb":0,"q":27.5,"lo":55,"hi":330,"kw":["coxa","frango","sobrecoxa"],"m":[55.0,"coxa","coxas"],"pof":"7800302"},"patinho":{"n":"Patinho grelhado","t":377,"r":["prot"],"tg":["carne","magro"],"k":219.3,"p":35.9,"c":0.0,"f":7.3,"fb":0,"q":10,"lo":40,"hi":300,"kw":["patinho","carne","bife","carne vermelha","boi"],"m":[100.0,"bife","bifes"],"pof":"7100501"},"contra":{"n":"Contrafilé grelhado","t":346,"r":["prot"],"tg":["carne","magro"],"k":193.7,"p":35.9,"c":0.0,"f":4.5,"fb":0,"q":10,"lo":40,"hi":300,"kw":["contrafilé","contra filé","carne","bife","carne vermelha","boi"],"m":[100.0,"bife","bifes"],"pof":"7100201"},"maminha":{"n":"Maminha grelhada","t":368,"r":["prot"],"tg":["carne","magro"],"k":153.1,"p":30.7,"c":0.0,"f":2.4,"fb":0,"q":10,"lo":40,"hi":300,"kw":["maminha","carne","carne vermelha","boi"],"m":[100.0,"bife","bifes"],"pof":"7100303"},"musculo":{"n":"Músculo cozido","t":371,"r":["prot"],"tg":["carne","barato"],"k":193.8,"p":31.2,"c":0.0,"f":6.7,"fb":0,"q":30.0,"lo":35,"hi":280,"kw":["músculo","carne","carne vermelha","boi","carne cozida"],"m":[30.0,"colher de sopa","colheres de sopa"],"pof":"7101001"},"moida":{"n":"Carne moída (acém)","t":326,"r":["prot"],"tg":["carne","barato","pratico"],"k":212.4,"p":26.7,"c":0.0,"f":10.9,"fb":0,"q":12.5,"lo":25,"hi":250,"kw":["carne moída","moída","carne","carne vermelha","boi"],"m":[25.0,"colher de sopa","colheres de sopa"],"pof":"7104301"},"lagarto":{"n":"Lagarto cozido","t":363,"r":["prot"],"tg":["carne"],"k":222.5,"p":32.9,"c":0.0,"f":9.1,"fb":0,"q":50.0,"lo":50.0,"hi":280,"kw":["lagarto","carne","carne vermelha","boi"],"m":[100.0,"bife","bifes"],"pof":"7106401"},"lombo":{"n":"Lombo de porco assado","t":432,"r":["prot"],"tg":["porco"],"k":210.2,"p":35.7,"c":0.0,"f":6.4,"fb":0,"q":50.0,"lo":50.0,"hi":280,"kw":["lombo","porco","suíno","carne de porco"],"m":[100.0,"filé","filés"],"pof":"7103701"},"merluza":{"n":"Merluza assada","t":301,"r":["prot"],"tg":["peixe","magro"],"k":121.9,"p":26.6,"c":0.0,"f":0.9,"fb":0,"q":10,"lo":60,"hi":360,"kw":["merluza","peixe"],"m":[120.0,"filé","filés"],"pof":"7200101"},"abadejo":{"n":"Abadejo grelhado","t":276,"r":["prot"],"tg":["peixe","magro"],"k":129.6,"p":27.6,"c":0.0,"f":1.3,"fb":0,"q":10,"lo":60,"hi":360,"kw":["abadejo","peixe"],"m":[120.0,"filé","filés"],"pof":"7200101"},"pintado":{"n":"Pintado grelhado","t":313,"r":["prot"],"tg":["peixe","magro"],"k":152.2,"p":30.8,"c":0.0,"f":2.3,"fb":0,"q":10,"lo":60,"hi":360,"kw":["pintado","peixe"],"m":[120.0,"filé","filés"],"pof":"7400101"},"salmao":{"n":"Salmão grelhado","t":317,"r":["prot"],"tg":["peixe"],"k":242.7,"p":26.1,"c":0.0,"f":14.5,"fb":0,"q":10,"lo":60,"hi":300,"kw":["salmão","salmao","peixe"],"m":[120.0,"filé","filés"],"pof":"7200101"},"sardinha":{"n":"Sardinha assada","t":318,"r":["prot"],"tg":["peixe","barato"],"k":164.4,"p":32.2,"c":0.0,"f":3.0,"fb":0,"q":5,"lo":40,"hi":300,"kw":["sardinha","peixe"]},"atum":{"n":"Atum em conserva","t":277,"r":["prot","bprot"],"tg":["peixe","pratico"],"k":165.9,"p":26.2,"c":0.0,"f":6.0,"fb":0,"q":8.0,"lo":30,"hi":200,"kw":["atum","peixe"],"m":[16.0,"colher de sopa","colheres de sopa"],"pof":"7703402"},"camarao":{"n":"Camarão cozido","t":284,"r":["prot"],"tg":["mar","magro"],"k":90.0,"p":19.0,"c":0.0,"f":1.0,"fb":0,"q":20.0,"lo":35,"hi":300,"kw":["camarão","camarao","frutos do mar"],"m":[20.0,"colher de sopa","colheres de sopa"],"pof":"7260101"},"ovo":{"n":"Ovo cozido","t":488,"r":["prot","bprot"],"tg":["ovo","barato","pratico"],"k":145.7,"p":13.3,"c":0.6,"f":9.5,"fb":0,"q":45,"lo":45,"hi":225,"kw":["ovo","ovos"],"m":[45.0,"ovo","ovos"],"pof":"7803301"},"clara":{"n":"Clara de ovo cozida","t":486,"r":["bprot"],"tg":["ovo","magro"],"k":59.4,"p":13.4,"c":0.0,"f":0.1,"fb":0,"q":10,"lo":30,"hi":200,"kw":["clara","claras"]},"tofu":{"n":"Tofu","t":584,"r":["prot","bprot"],"tg":["soja"],"k":64.5,"p":6.6,"c":2.1,"f":4.0,"fb":0.8,"q":10.0,"lo":60,"hi":400,"kw":["tofu","queijo de soja"],"m":[20.0,"fatia","fatias"],"pof":"7903402"},"paof":{"n":"Pão francês","t":53,"r":["bcarb"],"tg":["glu","barato","pratico","pre"],"k":299.8,"p":8.0,"c":58.6,"f":3.1,"fb":2.3,"q":25,"lo":25,"hi":150,"kw":["pão francês","pão","pao","pãozinho","pão de sal"],"m":[50.0,"pão","pães"],"pof":"8000105"},"paoi":{"n":"Pão de forma integral","t":52,"r":["bcarb"],"tg":["glu","pratico"],"k":253.2,"p":9.4,"c":49.9,"f":3.7,"fb":6.9,"q":25,"lo":25,"hi":150,"kw":["pão integral","pão de forma","pão","pao"],"m":[25.0,"fatia","fatias"],"pof":"8001401"},"aveia":{"n":"Aveia em flocos","t":7,"r":["bcarb"],"tg":["glu","barato","pratico"],"k":393.8,"p":13.9,"c":66.6,"f":8.5,"fb":9.1,"q":7.5,"lo":15,"hi":90,"kw":["aveia"],"m":[15.0,"colher de sopa","colheres de sopa"],"pof":"6500401"},"tapioca":{"n":"Tapioca com manteiga","t":551,"r":["bcarb"],"tg":["lac","pre"],"k":347.8,"p":0.1,"c":63.6,"f":10.9,"fb":0,"q":25,"lo":50,"hi":150,"kw":["tapioca"],"m":[50.0,"tapioca","tapiocas"],"pof":"6501516"},"torrada":{"n":"Torrada","t":63,"r":["bcarb"],"tg":["glu","pratico"],"k":377.4,"p":10.5,"c":74.6,"f":3.3,"fb":3.4,"q":8,"lo":16,"hi":64,"kw":["torrada","torradas"],"m":[8.0,"torrada","torradas"],"pof":"8001901"},"iogurte":{"n":"Iogurte natural","t":448,"r":["bprot"],"tg":["lac","pratico"],"k":51.5,"p":4.1,"c":1.9,"f":3.0,"fb":0,"q":10,"lo":100,"hi":400,"kw":["iogurte"],"m":[200.0,"pote","potes"],"pof":"7901204"},"iogurted":{"n":"Iogurte natural desnatado","t":449,"r":["bprot"],"tg":["lac","pratico","magro"],"k":41.5,"p":3.8,"c":5.8,"f":0.3,"fb":0,"q":10,"lo":100,"hi":400,"kw":["iogurte desnatado","iogurte"],"m":[200.0,"pote","potes"],"pof":"7901203"},"minas":{"n":"Queijo minas frescal","t":461,"r":["bprot"],"tg":["lac","pratico"],"k":264.3,"p":17.4,"c":3.2,"f":20.2,"fb":0,"q":22.5,"lo":30,"hi":120,"kw":["queijo minas","queijo branco","queijo"],"m":[45.0,"fatia","fatias"],"pof":"7902001"},"mussarela":{"n":"Muçarela","t":463,"r":["bprot"],"tg":["lac","pratico"],"k":329.9,"p":22.6,"c":3.0,"f":25.2,"fb":0,"q":10.0,"lo":20,"hi":80,"kw":["muçarela","mussarela","mozarela","queijo"],"m":[20.0,"fatia","fatias"],"pof":"7901803"},"ricota":{"n":"Ricota","t":469,"r":["bprot"],"tg":["lac","magro"],"k":139.7,"p":12.6,"c":3.8,"f":8.1,"fb":0,"q":17.5,"lo":35,"hi":150,"kw":["ricota"],"m":[35.0,"fatia","fatias"],"pof":"7902201"},"requeijao":{"n":"Requeijão cremoso","t":468,"r":["bprot"],"tg":["lac"],"k":256.6,"p":9.6,"c":2.4,"f":23.4,"fb":0,"q":15.0,"lo":15,"hi":45,"kw":["requeijão","requeijao"],"m":[30.0,"colher de sopa","colheres de sopa"],"pof":"7902901"},"presunto":{"n":"Presunto magro","t":439,"r":["bprot"],"tg":["porco","pratico"],"k":93.7,"p":14.3,"c":2.1,"f":2.7,"fb":0,"q":7.5,"lo":15,"hi":90,"kw":["presunto"],"m":[15.0,"fatia","fatias"],"pof":"8102901"},"leitepo":{"n":"Leite desnatado em pó","t":456,"r":["bprot"],"tg":["lac","pratico","magro"],"k":361.6,"p":34.7,"c":53.0,"f":0.9,"fb":0,"q":5.0,"lo":10,"hi":50,"kw":["leite","leite em pó"],"m":[10.0,"colher de sopa","colheres de sopa"],"pof":"7900710"},"sojapo":{"n":"Bebida de soja em pó","t":583,"r":["bprot"],"tg":["soja","pratico"],"k":458.9,"p":35.7,"c":28.5,"f":26.2,"fb":7.3,"q":6.5,"lo":13,"hi":52,"kw":["leite de soja","soja","bebida de soja","extrato de soja"],"m":[13.0,"colher de sopa","colheres de sopa"],"pof":"7903501"},"banana":{"n":"Banana-prata","t":182,"r":["fruit"],"tg":["barato","pre","denso"],"k":98.2,"p":1.3,"c":26.0,"f":0.1,"fb":2.0,"q":37.5,"lo":37.5,"hi":225,"kw":["banana"],"m":[75.0,"banana","bananas"],"pof":"6801101"},"maca":{"n":"Maçã","t":222,"r":["fruit"],"tg":["pre"],"k":55.5,"p":0.3,"c":15.2,"f":0,"fb":1.3,"q":75,"lo":75,"hi":300,"kw":["maçã","maca"],"m":[150.0,"maçã","maçãs"],"pof":"6803001"},"mamao":{"n":"Mamão formosa","t":225,"r":["fruit"],"tg":["barato"],"k":45.3,"p":0.8,"c":11.6,"f":0.1,"fb":1.8,"q":85,"lo":85,"hi":340,"kw":["mamão","mamao","papaia"],"m":[170.0,"fatia","fatias"],"pof":"6803101"},"laranja":{"n":"Laranja-pera","t":214,"r":["fruit"],"tg":["barato"],"k":36.8,"p":1.0,"c":8.9,"f":0.1,"fb":0.8,"q":90,"lo":90,"hi":360,"kw":["laranja"],"m":[180.0,"laranja","laranjas"],"pof":"6801801"},"morango":{"n":"Morango","t":239,"r":["fruit"],"tg":[],"k":30.1,"p":0.9,"c":6.8,"f":0.3,"fb":1.7,"q":60,"lo":60,"hi":360,"kw":["morango","morangos"],"m":[120.0,"xícara","xícaras"],"pof":"6805201"},"uva":{"n":"Uva","t":256,"r":["fruit"],"tg":[],"k":52.9,"p":0.7,"c":13.6,"f":0.2,"fb":0.9,"q":8.0,"lo":70,"hi":210,"kw":["uva","uvas"],"m":[8.0,"uva","uvas"],"pof":"6803901"},"manga":{"n":"Manga","t":231,"r":["fruit"],"tg":[],"k":50.7,"p":0.9,"c":12.8,"f":0.2,"fb":2.1,"q":70,"lo":70,"hi":280,"kw":["manga"],"m":[140.0,"manga","mangas"],"pof":"6803201"},"abacaxi":{"n":"Abacaxi","t":164,"r":["fruit"],"tg":[],"k":48.3,"p":0.9,"c":12.3,"f":0.1,"fb":1.0,"q":75,"lo":75,"hi":300,"kw":["abacaxi"],"m":[75.0,"fatia","fatias"],"pof":"6802601"},"melancia":{"n":"Melancia","t":235,"r":["fruit"],"tg":["barato"],"k":32.6,"p":0.9,"c":8.1,"f":0,"fb":0.1,"q":100,"lo":200,"hi":400,"kw":["melancia"],"m":[200.0,"fatia","fatias"],"pof":"6803401"},"melao":{"n":"Melão","t":236,"r":["fruit"],"tg":[],"k":29.4,"p":0.7,"c":7.5,"f":0,"fb":0.2,"q":90,"lo":90,"hi":360,"kw":["melão","melao"],"m":[90.0,"fatia","fatias"],"pof":"6803501"},"kiwi":{"n":"Kiwi","t":207,"r":["fruit"],"tg":[],"k":51.1,"p":1.3,"c":11.5,"f":0.6,"fb":2.7,"q":94,"lo":94,"hi":282,"kw":["kiwi"],"m":[94.0,"kiwi","kiwis"],"pof":"6807801"},"goiaba":{"n":"Goiaba","t":200,"r":["fruit"],"tg":["barato"],"k":54.2,"p":1.1,"c":13.0,"f":0.4,"fb":6.2,"q":85,"lo":85,"hi":340,"kw":["goiaba"],"m":[170.0,"goiaba","goiabas"],"pof":"6804201"},"tangerina":{"n":"Tangerina","t":251,"r":["fruit"],"tg":["barato"],"k":37.8,"p":0.8,"c":9.6,"f":0.1,"fb":0.9,"q":135,"lo":135,"hi":405,"kw":["tangerina","mexerica","bergamota","ponkan"],"m":[135.0,"tangerina","tangerinas"],"pof":"6802201"},"pera":{"n":"Pera","t":243,"r":["fruit"],"tg":[],"k":53.3,"p":0.6,"c":14.0,"f":0.1,"fb":3.0,"q":65,"lo":65,"hi":260,"kw":["pera","pêra"],"m":[130.0,"pera","peras"],"pof":"6803601"},"abacate":{"n":"Abacate","t":163,"r":["fat"],"tg":[],"k":96.2,"p":1.2,"c":6.0,"f":8.4,"fb":6.3,"q":22.5,"lo":45,"hi":180,"kw":["abacate"],"m":[45.0,"colher de sopa","colheres de sopa"],"pof":"6802701"},"alface":{"n":"Alface","t":78,"r":["salad"],"tg":["barato"],"k":10.7,"p":1.3,"c":1.7,"f":0.2,"fb":1.8,"q":5.0,"lo":20,"hi":80,"kw":["alface","salada","folhas"],"m":[10.0,"folha","folhas"],"pof":"6700101"},"tomate":{"n":"Tomate","t":157,"r":["salad"],"tg":["barato"],"k":15.3,"p":1.1,"c":3.1,"f":0.2,"fb":1.2,"q":50,"lo":50,"hi":150,"kw":["tomate"],"m":[100.0,"tomate","tomates"],"pof":"6705101"},"rucula":{"n":"Rúcula","t":152,"r":["salad"],"tg":[],"k":13.1,"p":1.8,"c":2.2,"f":0.1,"fb":1.7,"q":40.0,"lo":40.0,"hi":60,"kw":["rúcula","rucula","folhas","salada"],"m":[80.0,"prato raso","pratos rasos"],"pof":"6702001"},"agriao":{"n":"Agrião","t":75,"r":["salad"],"tg":[],"k":16.6,"p":2.7,"c":2.3,"f":0.2,"fb":2.1,"q":40.0,"lo":40.0,"hi":75,"kw":["agrião","agriao","folhas","salada"],"m":[80.0,"prato raso","pratos rasos"],"pof":"6701301"},"pepino":{"n":"Pepino","t":142,"r":["salad"],"tg":["barato"],"k":9.5,"p":0.9,"c":2.0,"f":0,"fb":1.1,"q":25,"lo":50,"hi":150,"kw":["pepino"],"m":[100.0,"pepino","pepinos"],"pof":"6704001"},"cenoura":{"n":"Cenoura ralada","t":110,"r":["salad"],"tg":["barato"],"k":34.1,"p":1.3,"c":7.7,"f":0.2,"fb":3.2,"q":6.0,"lo":24,"hi":96,"kw":["cenoura"],"m":[12.0,"colher de sopa","colheres de sopa"],"pof":"6401201"},"repolho":{"n":"Repolho","t":149,"r":["salad"],"tg":["barato"],"k":17.1,"p":0.9,"c":3.9,"f":0.1,"fb":1.9,"q":5.0,"lo":30,"hi":100,"kw":["repolho"],"m":[10.0,"colher de sopa","colheres de sopa"],"pof":"6700901"},"brocolis":{"n":"Brócolis cozido","t":100,"r":["cooked"],"tg":[],"k":24.6,"p":2.1,"c":4.4,"f":0.5,"fb":3.4,"q":10.0,"lo":40,"hi":160,"kw":["brócolis","brocolis"],"m":[10.0,"colher de sopa","colheres de sopa"],"pof":"6701704"},"couveflor":{"n":"Couve-flor cozida","t":118,"r":["cooked"],"tg":[],"k":19.1,"p":1.2,"c":3.9,"f":0.3,"fb":2.1,"q":25.0,"lo":50,"hi":200,"kw":["couve-flor","couve flor"],"m":[25.0,"colher de sopa","colheres de sopa"],"pof":"6700601"},"abobrinha":{"n":"Abobrinha cozida","t":70,"r":["cooked"],"tg":["barato"],"k":15.0,"p":1.1,"c":3.0,"f":0.2,"fb":1.6,"q":30.0,"lo":70,"hi":210,"kw":["abobrinha"],"m":[30.0,"colher de sopa","colheres de sopa"],"pof":"6703701"},"abobora":{"n":"Abóbora cabotiá cozida","t":64,"r":["cooked"],"tg":["barato"],"k":48.0,"p":1.4,"c":10.8,"f":0.7,"fb":2.5,"q":36.0,"lo":72,"hi":216,"kw":["abóbora","abobora","jerimum"],"m":[36.0,"colher de sopa","colheres de sopa"],"pof":"6703901"},"beterraba":{"n":"Beterraba cozida","t":97,"r":["cooked"],"tg":["barato"],"k":32.2,"p":1.3,"c":7.2,"f":0.1,"fb":1.9,"q":42.0,"lo":42.0,"hi":120,"kw":["beterraba"],"m":[84.0,"xícara","xícaras"],"pof":"6401101"},"chuchu":{"n":"Chuchu cozido","t":112,"r":["cooked"],"tg":["barato"],"k":18.5,"p":0.4,"c":4.8,"f":0,"fb":1.0,"q":20.0,"lo":45,"hi":180,"kw":["chuchu"],"m":[20.0,"colher de sopa","colheres de sopa"],"pof":"6704101"},"couve":{"n":"Couve refogada","t":116,"r":["cooked"],"tg":["barato"],"k":90.3,"p":1.7,"c":8.7,"f":6.6,"fb":5.7,"q":42.0,"lo":42,"hi":126,"kw":["couve"],"m":[84.0,"xícara","xícaras"],"pof":"6700501"},"cenourac":{"n":"Cenoura cozida","t":109,"r":["cooked"],"tg":["barato"],"k":29.9,"p":0.8,"c":6.7,"f":0.2,"fb":2.6,"q":24.0,"lo":50,"hi":150,"kw":["cenoura"],"m":[48.0,"xícara","xícaras"],"pof":"6401201"},"berinjela":{"n":"Berinjela cozida","t":95,"r":["cooked"],"tg":[],"k":18.8,"p":0.7,"c":4.5,"f":0.1,"fb":2.5,"q":12.5,"lo":50,"hi":150,"kw":["berinjela"],"m":[25.0,"colher de sopa","colheres de sopa"],"pof":"6705401"},"azeite":{"n":"Azeite de oliva","t":260,"r":["fat"],"tg":[],"k":884.0,"p":0,"c":0,"f":100.0,"fb":0,"q":4.0,"lo":4,"hi":24,"kw":["azeite"],"m":[8.0,"colher de sopa","colheres de sopa"],"pof":"8400101"},"castpara":{"n":"Castanha-do-pará","t":589,"r":["fat"],"tg":["cast","pratico"],"k":643.0,"p":14.5,"c":15.1,"f":63.5,"fb":7.9,"q":4.0,"lo":4,"hi":24,"kw":["castanha","castanhas","castanha-do-pará","castanha do pará","oleaginosas"],"m":[4.0,"castanha","castanhas"],"pof":"6600701"},"caju":{"n":"Castanha de caju","t":588,"r":["fat"],"tg":["cast","pratico"],"k":570.2,"p":18.5,"c":29.1,"f":46.3,"fb":3.7,"q":2.5,"lo":5,"hi":40,"kw":["caju","castanha de caju","castanhas","oleaginosas"],"m":[2.5,"castanha","castanhas"],"pof":"6600801"},"nozes":{"n":"Nozes","t":597,"r":["fat"],"tg":["cast","pratico"],"k":620.1,"p":14.0,"c":18.4,"f":59.4,"fb":7.2,"q":5.0,"lo":5,"hi":40,"kw":["noz","nozes","oleaginosas"],"m":[5.0,"noz","nozes"],"pof":"6601501"},"amendoa":{"n":"Amêndoas","t":587,"r":["fat"],"tg":["cast","pratico"],"k":580.7,"p":18.6,"c":29.5,"f":47.3,"fb":11.6,"q":1.0,"lo":5,"hi":40,"kw":["amêndoa","amêndoas","amendoa","oleaginosas"],"m":[1.0,"amêndoa","amêndoas"],"pof":"6600501"},"amendoim":{"n":"Amendoim torrado","t":558,"r":["fat"],"tg":["amend","barato","pratico"],"k":605.8,"p":22.5,"c":18.7,"f":54.0,"fb":7.8,"q":8.5,"lo":10,"hi":50,"kw":["amendoim"],"m":[17.0,"colher de sopa","colheres de sopa"],"pof":"6301001"},"linhaca":{"n":"Linhaça","t":594,"r":["fat"],"tg":[],"k":495.1,"p":14.1,"c":43.3,"f":32.3,"fb":33.5,"q":6.5,"lo":6.5,"hi":26,"kw":["linhaça","linhaca"],"m":[13.0,"colher de sopa","colheres de sopa"],"pof":"6302001"},"manteiga":{"n":"Manteiga","t":261,"r":["fat"],"tg":["lac"],"k":726.0,"p":0.4,"c":0.1,"f":82.4,"fb":0,"q":4.0,"lo":4,"hi":16,"kw":["manteiga"],"m":[8.0,"colher de chá","colheres de chá"],"pof":"7901501"},"mel":{"n":"Mel","t":507,"r":["sweet"],"tg":["mel","pre"],"k":309.2,"p":0.0,"c":84.0,"f":0.0,"fb":0,"q":7.5,"lo":7.5,"hi":30,"kw":["mel","doce","açúcar"],"m":[15.0,"colher de sopa","colheres de sopa"],"pof":"6901602"},"cafe":{"n":"Café sem açúcar","t":471,"r":["drink"],"tg":["cafe"],"k":9.1,"p":0.7,"c":1.5,"f":0.1,"fb":0,"q":50,"lo":50,"hi":200,"kw":["café","cafe","cafeína"],"m":[200.0,"xícara","xícaras"],"pof":"8501302"}};
 
 /* ---------- Cardápios sugeridos (v4.18) ----------
    Monta cardápios de um dia inteiro a partir das metas do plano (calorias, proteína, carboidrato e gordura),
@@ -6880,29 +7055,58 @@ const MN_STYLES = [['trad', 'Tradicional', 'Arroz e feijão no almoço e no jant
 const MN_DIETS = [['oni', 'Como de tudo'], ['semver', 'Sem carne vermelha'], ['pesc', 'Pescetariana'], ['veg', 'Vegetariana'], ['vegan', 'Vegana']];
 const MN_TRAIN = [['manha', 'Manhã'], ['tarde', 'Tarde'], ['noite', 'Noite'], ['none', 'Varia']];
 const DIET_EX = {oni: [], semver: ['carne', 'porco'], pesc: ['carne', 'porco', 'frango'], veg: ['carne', 'porco', 'frango', 'peixe', 'mar'], vegan: ['carne', 'porco', 'frango', 'peixe', 'mar', 'ovo', 'lac', 'mel']};
-const MN_NOTE = {leitepo: 'dissolvido em água', sojapo: 'dissolvida em água', macarrao: 'peso cru', cafe: 'ou chá, sem açúcar'};
+const MN_NOTE = {macarrao: 'peso cru', cafe: 'ou chá, sem açúcar'};
 const MAIN = ['alm', 'jan'];
+/* v4.28: alimentos que você gosta e que evita, escolhidos na lista, e o quanto variar */
+const MN_GROUPS = [['Proteínas', ['prot', 'bprot']], ['Carboidratos', ['base', 'bcarb']], ['Feijões', ['leg']], ['Frutas', ['fruit']], ['Saladas e legumes', ['salad', 'cooked']], ['Gorduras, castanhas e outros', ['fat', 'sweet', 'drink']]];
+const MN_RANGE = [['basic', 'Básicos', 'O que tem em qualquer mercado'], ['mid', 'Equilibrado', 'Básicos e alguns diferentes'], ['wide', 'Bem variado', 'Inclui os menos comuns']];
+/* o básico do mercado brasileiro: fácil de achar e de preparar */
+const MN_COMMON = new Set(['arroz', 'batata', 'batdoce', 'mandioca', 'macarrao', 'cuscuz', 'fcarioca', 'fpreto', 'frango', 'coxa', 'patinho', 'moida', 'musculo', 'ovo', 'atum', 'sardinha', 'paof', 'paoi', 'aveia', 'tapioca', 'torrada', 'iogurte', 'minas', 'mussarela', 'requeijao', 'presunto', 'leitepo', 'banana', 'maca', 'mamao', 'laranja', 'melancia', 'goiaba', 'tangerina', 'abacaxi', 'alface', 'tomate', 'pepino', 'cenoura', 'repolho', 'abobrinha', 'abobora', 'chuchu', 'beterraba', 'couve', 'cenourac', 'brocolis', 'azeite', 'amendoim', 'manteiga', 'mel', 'cafe']);
 
-/* Modelos de refeição. Cada vaga: r = papel do alimento, from = alimentos aceitos (sem from, qualquer um do papel),
-   n = quantos diferentes, fix = porção fixa (não entra no ajuste), opt = some se não houver opção. */
+/* Modelos de refeição (v4.29): cada um é um prato ou lanche conhecido, com nome. Os alimentos de cada vaga combinam
+   entre si; nada de juntar itens soltos. Cada vaga: r = papel do alimento, from = alimentos aceitos (sem from, qualquer um
+   do papel), n = quantos diferentes, fix = porção fixa, opt = some se não houver opção, only = só nessas refeições,
+   dg = porção padrão em gramas, nt = observação curta do item. pre = bom antes do treino. nm = nome do prato. */
+const CAFE_FRUIT = ['mamao', 'banana', 'melao', 'abacaxi', 'laranja', 'maca', 'tangerina', 'melancia', 'pera', 'goiaba'];
+const kw0 = k => FOODS[k] ? FOODS[k].kw[0] : '';
+const itF = (it, rs) => (it.find(i => rs.includes(i.r) || rs.includes(i.f)) || {}).f;
+const withCafe = (nm, it) => it.some(i => i.f === 'cafe') ? `${nm} e café${it.some(i => i.nt === 'no café') ? ' com leite' : ''}` : nm;
+const CAFE = [{r: 'drink', fix: 1, only: ['cafe'], opt: 1}, {r: 'bprot', from: ['leitepo'], fix: 1, only: ['cafe'], opt: 1, dg: 20, nt: 'no café'}, {r: 'fruit', from: CAFE_FRUIT, only: ['cafe'], opt: 1, fix: 1}];
 const TPL = [
-  {id: 'pao', at: ['cafe', 'lm', 'lt'], s: [{r: 'bcarb', from: ['paof', 'paoi', 'torrada', 'tapioca']}, {r: 'bprot', from: ['ovo', 'minas', 'mussarela', 'ricota', 'presunto', 'frango', 'atum', 'tofu']}, {r: 'fruit', opt: 1}, {r: 'drink', fix: 1, only: ['cafe'], opt: 1}]},
-  {id: 'iog', at: ['cafe', 'lm', 'lt', 'ceia'], s: [{r: 'bprot', from: ['iogurte', 'iogurted']}, {r: 'bprot', from: ['leitepo'], opt: 1}, {r: 'bcarb', from: ['aveia']}, {r: 'fruit', from: ['banana', 'morango', 'mamao', 'manga', 'maca', 'kiwi', 'abacaxi']}, {r: 'fat', from: ['castpara', 'caju', 'nozes', 'amendoa', 'linhaca', 'amendoim'], opt: 1}]},
-  {id: 'cuscuz', at: ['cafe', 'lt'], s: [{r: 'bcarb', from: ['cuscuz', 'batdoce']}, {r: 'bprot', from: ['ovo', 'frango', 'minas', 'tofu']}, {r: 'fruit', opt: 1}, {r: 'drink', fix: 1, only: ['cafe'], opt: 1}]},
-  {id: 'vit', lbl: 'Vitamina', at: ['cafe', 'lm', 'lt', 'ceia'], s: [{r: 'bprot', from: ['leitepo', 'sojapo']}, {r: 'fruit', from: ['banana', 'morango', 'mamao', 'manga', 'abacate']}, {r: 'bcarb', from: ['aveia'], opt: 1}, {r: 'fat', from: ['linhaca', 'amendoim'], opt: 1}]},
-  {id: 'ovos', at: ['lm', 'lt', 'ceia', 'cafe'], s: [{r: 'bprot', from: ['ovo']}, {r: 'bcarb', from: ['torrada', 'paoi', 'batdoce'], opt: 1}, {r: 'fruit'}]},
-  {id: 'tap', at: ['cafe', 'lt'], s: [{r: 'bcarb', from: ['tapioca']}, {r: 'bprot', from: ['ovo', 'frango', 'minas', 'mussarela', 'tofu', 'atum']}, {r: 'fruit', opt: 1}, {r: 'drink', fix: 1, only: ['cafe'], opt: 1}]},
-  {id: 'fcast', at: ['lm', 'lt', 'ceia'], s: [{r: 'fruit'}, {r: 'bprot', from: ['iogurte', 'iogurted', 'minas', 'ricota', 'sojapo']}, {r: 'fat', from: ['castpara', 'caju', 'nozes', 'amendoa', 'amendoim']}]},
-  {id: 'ricota', at: ['ceia', 'lm'], s: [{r: 'bprot', from: ['ricota', 'minas', 'iogurted', 'tofu']}, {r: 'bcarb', from: ['torrada', 'paoi'], opt: 1}, {r: 'fat', from: ['nozes', 'castpara', 'amendoa'], opt: 1}]},
-  {id: 'pf', lbl: 'Prato feito', at: MAIN, main: 1, s: [{r: 'base', from: ['arroz', 'arrozi']}, {r: 'leg'}, {r: 'prot'}, {r: 'salad', n: 2, fix: 1}, {r: 'cooked', fix: 1}, {r: 'fat', from: ['azeite'], opt: 1}]},
-  {id: 'tuber', at: MAIN, main: 1, s: [{r: 'base', from: ['batdoce', 'batata', 'mandioca', 'cara', 'cuscuz']}, {r: 'leg', opt: 1, vegOnly: 1}, {r: 'prot'}, {r: 'salad', fix: 1}, {r: 'cooked', n: 2, fix: 1}, {r: 'fat', from: ['azeite'], opt: 1}]},
-  {id: 'massa', at: MAIN, main: 1, s: [{r: 'base', from: ['macarrao']}, {r: 'prot', from: ['moida', 'frango', 'atum', 'camarao', 'tofu', 'sardinha']}, {r: 'leg', opt: 1, vegOnly: 1}, {r: 'salad', fix: 1}, {r: 'cooked', from: ['abobrinha', 'brocolis', 'berinjela', 'couveflor'], fix: 1}, {r: 'fat', from: ['azeite'], opt: 1}]},
-  {id: 'sand', lbl: 'Sanduíche', at: ['jan'], dn: 1, s: [{r: 'bcarb', from: ['paof', 'paoi']}, {r: 'bprot', from: ['frango', 'ovo', 'atum', 'presunto', 'moida', 'tofu']}, {r: 'bprot', from: ['minas', 'mussarela', 'ricota', 'requeijao'], opt: 1}, {r: 'salad', from: ['alface', 'tomate', 'rucula', 'cenoura', 'pepino', 'agriao'], n: 2, fix: 1}, {r: 'fruit', opt: 1}]},
-  {id: 'tapj', lbl: 'Tapioca recheada', at: ['jan'], dn: 1, s: [{r: 'bcarb', from: ['tapioca']}, {r: 'bprot', from: ['frango', 'ovo', 'atum', 'moida', 'tofu']}, {r: 'bprot', from: ['minas', 'mussarela', 'ricota'], opt: 1}, {r: 'salad', from: ['alface', 'tomate', 'rucula', 'cenoura', 'pepino'], n: 2, fix: 1}]},
-  {id: 'omel', lbl: 'Omelete', at: ['jan'], dn: 1, s: [{r: 'bprot', from: ['ovo']}, {r: 'bprot', from: ['minas', 'mussarela', 'ricota', 'frango', 'presunto'], opt: 1}, {r: 'bcarb', from: ['paoi', 'torrada', 'batdoce', 'paof']}, {r: 'salad', n: 2, fix: 1}, {r: 'fat', from: ['azeite'], opt: 1}]},
-  {id: 'cuscj', lbl: 'Cuscuz recheado', at: ['jan'], dn: 1, s: [{r: 'bcarb', from: ['cuscuz']}, {r: 'bprot', from: ['ovo', 'frango', 'moida', 'atum', 'tofu']}, {r: 'bprot', from: ['minas', 'mussarela'], opt: 1}, {r: 'salad', n: 2, fix: 1}, {r: 'fat', from: ['azeite', 'manteiga'], opt: 1}]},
-  {id: 'leve', lbl: 'Prato leve', at: ['jan'], main: 1, s: [{r: 'prot'}, {r: 'cooked', n: 2, fix: 1}, {r: 'salad', fix: 1}, {r: 'base', from: ['batdoce', 'arroz', 'arrozi', 'mandioca', 'cara']}, {r: 'leg', opt: 1, vegOnly: 1}, {r: 'fat', from: ['azeite'], opt: 1}]}
+  {id: 'paoovo', at: ['cafe', 'lm', 'lt'], pre: 1, s: [{r: 'bcarb', from: ['paof', 'paoi']}, {r: 'bprot', from: ['ovo'], nt: 'mexido ou cozido'}, {r: 'bprot', from: ['clara'], cut: 1, nt: 'junto com o ovo'}, ...CAFE], nm: it => withCafe('Pão com ovo', it)},
+  {id: 'paoqj', at: ['cafe', 'lm', 'lt'], s: [{r: 'bcarb', from: ['paof', 'paoi']}, {r: 'bprot', from: ['minas', 'mussarela', 'requeijao']}, ...CAFE], nm: it => withCafe(itF(it, ['requeijao']) ? 'Pão com requeijão' : 'Pão com queijo', it)},
+  {id: 'misto', at: ['cafe', 'lm', 'lt'], s: [{r: 'bcarb', from: ['paof', 'paoi']}, {r: 'bprot', from: ['mussarela']}, {r: 'bprot', from: ['presunto']}, ...CAFE], nm: it => withCafe('Misto quente', it)},
+  {id: 'sandn', at: ['lm', 'lt'], pre: 1, s: [{r: 'bcarb', from: ['paoi', 'paof']}, {r: 'bprot', from: ['frango', 'atum']}, {r: 'salad', from: ['cenoura', 'alface', 'tomate'], fix: 1, dg: 30}], nm: it => `Sanduíche natural de ${kw0(itF(it, ['frango', 'atum']))}`},
+  {id: 'tap', at: ['cafe', 'lm', 'lt'], pre: 1, s: [{r: 'bcarb', from: ['tapioca']}, {r: 'bprot', from: ['ovo', 'minas', 'mussarela', 'frango']}, ...CAFE], nm: it => { const f = itF(it, ['ovo', 'minas', 'mussarela', 'frango']); return withCafe(f === 'ovo' ? 'Tapioca com ovo' : f === 'frango' ? 'Tapioca de frango' : 'Tapioca com queijo', it); }},
+  {id: 'cuscuz', at: ['cafe', 'lt'], pre: 1, s: [{r: 'bcarb', from: ['cuscuz']}, {r: 'bprot', from: ['ovo']}, ...CAFE], nm: it => withCafe('Cuscuz com ovo', it)},
+  {id: 'ovostor', at: ['cafe', 'lm'], s: [{r: 'bprot', from: ['ovo'], nt: 'mexidos'}, {r: 'bprot', from: ['clara'], cut: 1, nt: 'mexidas junto'}, {r: 'bcarb', from: ['torrada', 'paoi']}, ...CAFE], nm: it => withCafe('Ovos mexidos com torrada', it)},
+  {id: 'iog', at: ['cafe', 'lm', 'lt', 'ceia'], s: [{r: 'bprot', from: ['iogurte', 'iogurted']}, {r: 'fruit', from: ['banana', 'morango', 'mamao', 'manga', 'kiwi', 'abacaxi', 'maca']}, {r: 'bcarb', from: ['aveia']}, {r: 'sweet', from: ['mel'], opt: 1, fix: 1, dg: 8}], nm: it => `Iogurte com ${kw0(itF(it, ['fruit']))} e aveia`},
+  {id: 'vit', at: ['cafe', 'lm', 'lt', 'ceia'], pre: 1, s: [{r: 'bprot', from: ['leitepo', 'sojapo'], nt: 'batido com água ou gelo'}, {r: 'fruit', from: ['banana', 'morango', 'mamao', 'manga', 'abacate']}, {r: 'bcarb', from: ['aveia'], opt: 1}], nm: it => `Vitamina de ${kw0(itF(it, ['fruit']))}`},
+  {id: 'mingau', at: ['cafe', 'lt', 'ceia'], s: [{r: 'bprot', from: ['leitepo', 'sojapo'], nt: 'com água, no fogo'}, {r: 'bcarb', from: ['aveia']}, {r: 'fruit', from: ['banana', 'maca'], opt: 1}], nm: () => 'Mingau de aveia'},
+  {id: 'panq', at: ['cafe', 'lt'], pre: 1, s: [{r: 'fruit', from: ['banana']}, {r: 'bprot', from: ['ovo']}, {r: 'bcarb', from: ['aveia']}], nm: () => 'Panqueca de banana com aveia'},
+  {id: 'fcast', at: ['lm', 'lt'], s: [{r: 'fruit'}, {r: 'fat', from: ['castpara', 'caju', 'nozes', 'amendoa', 'amendoim']}], nm: it => `${(kw0(itF(it, ['fruit'])) || 'Fruta').replace(/^./, c => c.toUpperCase())} com castanhas`},
+  {id: 'batfr', at: ['lm', 'lt'], pre: 1, s: [{r: 'bcarb', from: ['batdoce']}, {r: 'bprot', from: ['frango', 'ovo']}], nm: it => `Batata-doce com ${kw0(itF(it, ['frango', 'ovo']))}`},
+  {id: 'ricota', at: ['ceia', 'lm'], s: [{r: 'bcarb', from: ['torrada', 'paoi']}, {r: 'bprot', from: ['ricota', 'minas']}], nm: it => `Torrada com ${itF(it, ['ricota']) ? 'ricota' : 'queijo minas'}`},
+  {id: 'pf', lbl: 'Prato feito', at: MAIN, main: 1, s: [{r: 'base', from: ['arroz', 'arrozi']}, {r: 'leg'}, {r: 'prot'}, {r: 'salad', n: 2, fix: 1}, {r: 'cooked', fix: 1}, {r: 'fat', from: ['azeite'], opt: 1, fix: 1, dg: 8, nt: 'na salada'}, {r: 'fruit', from: CAFE_FRUIT, only: ['alm'], opt: 1, fix: 1, nt: 'de sobremesa'}], nm: it => `Arroz, feijão e ${kw0(itF(it, ['prot']))}`},
+  {id: 'tuber', at: MAIN, main: 1, s: [{r: 'base', from: ['batdoce', 'batata', 'mandioca', 'cara']}, {r: 'leg', opt: 1, vegOnly: 1}, {r: 'prot'}, {r: 'salad', fix: 1}, {r: 'cooked', n: 2, fix: 1}, {r: 'fat', from: ['azeite'], opt: 1, fix: 1, dg: 8, nt: 'na salada'}, {r: 'fruit', from: CAFE_FRUIT, only: ['alm'], opt: 1, fix: 1, nt: 'de sobremesa'}], nm: it => `${kw0(itF(it, ['prot'])).replace(/^./, c => c.toUpperCase())} com ${kw0(itF(it, ['base']))}`},
+  {id: 'massa', at: MAIN, main: 1, s: [{r: 'base', from: ['macarrao']}, {r: 'prot', from: ['moida', 'frango', 'atum', 'camarao', 'tofu']}, {r: 'leg', opt: 1, vegOnly: 1}, {r: 'salad', fix: 1}, {r: 'cooked', from: ['abobrinha', 'brocolis', 'berinjela'], fix: 1}, {r: 'fruit', from: CAFE_FRUIT, only: ['alm'], opt: 1, fix: 1, nt: 'de sobremesa'}], nm: it => `Macarrão com ${kw0(itF(it, ['prot']))}`},
+  {id: 'sand', lbl: 'Sanduíche', at: ['jan'], dn: 1, s: [{r: 'bcarb', from: ['paof', 'paoi']}, {r: 'bprot', from: ['frango', 'ovo', 'atum', 'moida', 'tofu']}, {r: 'bprot', from: ['minas', 'mussarela'], opt: 1}, {r: 'salad', from: ['alface', 'tomate', 'cenoura'], n: 2, fix: 1}], nm: it => `Sanduíche de ${kw0(itF(it, ['frango', 'ovo', 'atum', 'moida', 'tofu']))}`},
+  {id: 'tapj', lbl: 'Tapioca recheada', at: ['jan'], dn: 1, s: [{r: 'bcarb', from: ['tapioca']}, {r: 'bprot', from: ['frango', 'ovo', 'moida', 'tofu']}, {r: 'bprot', from: ['minas', 'mussarela'], opt: 1}, {r: 'salad', from: ['alface', 'tomate', 'cenoura'], n: 2, fix: 1}], nm: it => `Tapioca de ${kw0(itF(it, ['frango', 'ovo', 'moida', 'tofu']))} com salada`},
+  {id: 'omel', lbl: 'Omelete', at: ['jan'], dn: 1, s: [{r: 'bprot', from: ['ovo']}, {r: 'bprot', from: ['minas', 'mussarela', 'frango'], opt: 1}, {r: 'bcarb', from: ['paoi', 'torrada', 'paof']}, {r: 'salad', n: 2, fix: 1}], nm: () => 'Omelete com salada e pão'},
+  {id: 'cuscj', lbl: 'Cuscuz recheado', at: ['jan'], dn: 1, s: [{r: 'bcarb', from: ['cuscuz']}, {r: 'bprot', from: ['ovo', 'frango', 'moida']}, {r: 'salad', from: ['alface', 'tomate', 'cenoura'], n: 2, fix: 1}], nm: it => `Cuscuz com ${kw0(itF(it, ['ovo', 'frango', 'moida']))} e salada`},
+  {id: 'leve', lbl: 'Prato leve', at: ['jan'], main: 1, s: [{r: 'prot'}, {r: 'cooked', n: 2, fix: 1}, {r: 'salad', fix: 1}, {r: 'base', from: ['batdoce', 'arroz', 'arrozi', 'mandioca']}, {r: 'leg', opt: 1, vegOnly: 1}, {r: 'fat', from: ['azeite'], opt: 1, fix: 1, dg: 8, nt: 'na salada'}], nm: it => `${kw0(itF(it, ['prot'])).replace(/^./, c => c.toUpperCase())} com legumes`}
 ];
+/* v4.29: whey protein. Não está na TACO: usa os números do rótulo que a pessoa informa (proteína e calorias por dose).
+   Entra como item fixo na refeição de depois do treino (e numa segunda refeição, com 2 doses), e o resto do dia se ajusta. */
+const WHEY0 = {doses: 0, p: 21, k: 120}; // dose padrão de 30 g dos concentrados mais vendidos no Brasil (20 a 23 g de proteína, 118 a 122 kcal no rótulo)
+function ensureWhey(w){ w = {...WHEY0, doses: w && w.doses ? 1 : 0}; const per = x => x / 30 * 100;
+  FOODS.whey = {n: 'Whey protein', t: 0, r: ['supl'], tg: ['lac', 'pratico'], k: per(w.k), p: per(w.p), c: per(Math.max(0, w.k - w.p * 4) / 4), f: 0, fb: 0, q: 30, lo: 30, hi: 60, kw: ['whey'], m: [30, 'dose', 'doses']}; return w; }
+ensureWhey();
+function wheyMeals(keys, ts, w){ const d = w && w.doses ? 1 : 0; if (!d) return [];
+  const first = ts.pos && keys.includes(ts.pos) ? ts.pos : keys.includes('lt') ? 'lt' : keys.includes('lm') ? 'lm' : keys[keys.length - 1];
+  if (d < 2) return [first]; const second = ['lm', 'lt', 'cafe', 'ceia'].find(k => keys.includes(k) && k !== first) || keys.find(k => k !== first); return second ? [first, second] : [first]; }
+/* nome do prato de uma refeição já montada */
+function dishName(m){ const t = TPL.find(x => x.id === m.t); if (!t || !t.nm) return ''; try { return t.nm(m.it) || ''; } catch (e) { return ''; } }
 const ROLE_D = {base: 140, leg: 140, prot: 120, bcarb: 50, bprot: 70, fruit: 120, salad: 40, cooked: 90, fat: 8, sweet: 10, drink: 200};
 const LEVER = {base: 'c', bcarb: 'c', fruit: 'k', sweet: 'c', leg: 'k', prot: 'p', bprot: 'p', fat: 'f', salad: 'd', cooked: 'd', drink: 'd'};
 
@@ -6911,8 +7115,14 @@ function rng(seed){ let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 
 const deacc = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const qnt = (f, g, hi, lo) => { const F = FOODS[f]; const L = Math.max(F.lo, lo || 0); const H = Math.max(L, Math.min(F.hi, hi || F.hi)); let v = Math.round(g / F.q) * F.q; if (v > H) v = Math.floor(H / F.q) * F.q || L; if (v < L) v = Math.ceil(L / F.q) * F.q; return Math.round(Math.min(v, Math.max(H, L)) * 10) / 10; };
 /* teto por papel: porções que fazem sentido num prato */
-function capOf(f, r, main, veg){ const F = FOODS[f]; if (r === 'fruit') return Math.max(F.lo, 260); if (r === 'base') return Math.min(F.hi, 300); if (f === 'ovo' && !main) return 180; if (f === 'tofu') return 200; if (r === 'bcarb' && !main) return 200; if (r === 'fat' && f !== 'azeite') return 30; if (r === 'leg' && !veg) return 210; return F.hi; }
-function floorOf(f, r, main){ const F = FOODS[f]; if (main && r === 'prot') return Math.max(F.lo, f === 'ovo' ? 90 : f === 'tofu' ? 100 : 80); if (main && r === 'base') return Math.max(F.lo, 60); return F.lo; }
+/* v4.29: tetos de porção que parecem comida de verdade (2 pães, 4 fatias de pão de forma, 3 ovos num lanche) */
+const SNACK_CAP = {paof: 100, paoi: 100, torrada: 40, tapioca: 100, cuscuz: 135, ovo: 135, iogurte: 300, iogurted: 300, aveia: 45, batdoce: 210, mussarela: 40, presunto: 45, minas: 60, requeijao: 30, ricota: 70};
+const SNACK_FLOOR = {frango: 60, atum: 45, ovo: 90, minas: 30, mussarela: 20, presunto: 30, ricota: 35, iogurte: 160, iogurted: 160};
+/* planos com mais calorias aceitam porções um pouco maiores (até 1,5x), sem virar comida para três */
+let MN_SCALE = 1;
+let MN_GAIN = false;
+function capOf(f, r, main, veg, dn){ const F = FOODS[f]; const sc = (f === 'ovo' || ['mussarela', 'presunto', 'requeijao', 'minas'].includes(f) ? 1 : MN_SCALE) * (dn && ['bcarb'].includes(r) ? 1.5 : 1); if (!main && SNACK_CAP[f]) return Math.round(SNACK_CAP[f] * sc); if (r === 'fruit') return main ? Math.max(F.lo, 260) : Math.max(F.lo, Math.min(220, F.m ? F.m[0] * 2 : 200)); if (r === 'base') return Math.min(F.hi, Math.round(220 * sc * (MN_GAIN ? 1.15 : 1))); if (f === 'ovo' && !main) return 180; if (f === 'tofu') return 200; if (r === 'bcarb' && !main) return 200; if (r === 'fat' && f !== 'azeite') return 30; if (f === 'azeite') return MN_GAIN ? 13 : 10; if (r === 'bprot' && f === 'leitepo') return 40; if (r === 'leg' && !veg) return 210; return F.hi; }
+function floorOf(f, r, main){ const F = FOODS[f]; if (!main && r === 'bprot' && SNACK_FLOOR[f]) return Math.max(F.lo, SNACK_FLOOR[f]); if (main && r === 'prot') return Math.max(F.lo, f === 'ovo' ? 90 : f === 'tofu' ? 100 : 80); if (main && r === 'base') return Math.max(F.lo, 60); return F.lo; }
 function dflt(f, r, goal){
   const F = FOODS[f]; let d = ROLE_D[r] || 60;
   if (r === 'fruit' && F.m) d = F.m[0] >= 60 ? F.m[0] : F.m[0] * 2;
@@ -6966,7 +7176,8 @@ const OBS_RULES = [
   {re: /jantar leve|janto pouco|jantar cedo|jantar pequeno|pouca fome a noite/, set: o => { o.light = true; }, t: 'Jantar mais leve'},
   {re: /mais (fome|apetite) (de|pela|a) manha|cafe da manha (grande|reforcado)/, set: o => { o.bigBf = true; }, t: 'Café da manhã reforçado'},
   {re: /frit/, set: () => {}, t: 'Sem frituras', s: 'Já é assim: tudo é cozido, assado ou grelhado.'},
-  {re: /whey|suplement|albumina/, set: () => {}, t: 'Sem suplementos no cardápio', s: 'Os cardápios usam só comida. Suplementos ficam a seu critério.'},
+  {re: /whey|albumina/, set: () => {}, t: 'Whey: use a opção acima', s: 'Marque "Toma whey protein?" acima e o cardápio desconta da meta do dia.'},
+  {re: /suplement/, set: () => {}, t: 'Suplementos ficam a seu critério', s: 'Whey dá para marcar na opção acima.'},
   {re: /comida (caseira|simples|de casa|de verdade|brasileira)|trivial|arroz e feijao (todo dia|sempre)|(gosto|adoro) de arroz e feijao/, set: o => { o.style = 'trad'; }, t: 'Comida caseira: arroz, feijão e mistura'},
   {re: /variar|variedade|variado|enjoo|enjoei|nao gosto de repetir|diferente todo dia|nada repetido/, set: o => { o.style = 'var'; }, t: 'Mais variedade'},
   {re: /(sem|nao gosto de|odeio|detesto|evito|nao como) frutas?\b/, set: o => { o.noFruit = true; }, t: 'Sem frutas'},
@@ -6978,6 +7189,8 @@ const OBS_RULES = [
   {re: /como de tudo|sem restric/, set: () => {}, t: 'Sem restrições'}
 ];
 const NOT_IN_DB = [[/quinoa/, 'quinoa'], [/granola/, 'granola'], [/\bchia\b/, 'chia'], [/cottage/, 'queijo cottage'], [/pasta de amendoim|manteiga de amendoim/, 'pasta de amendoim'], [/peito de peru|blanquet/, 'peito de peru'], [/grao.?de.?bico/, 'grão-de-bico'], [/salsicha|linguica|bacon|salame/, 'embutidos'], [/pizza|hamburguer|lanche(s)? (de|da) rua|fast.?food/, 'fast-food'], [/refri|refrigerante/, 'refrigerante'], [/chocolate|sorvete|bolo|doces? de/, 'doces'], [/iogurte grego|kefir|skyr/, 'iogurte grego e kefir'], [/acai/, 'açaí'], [/whey|albumina|hipercalor/, 'suplementos'], [/tilapia/, 'tilápia'], [/frango desfiado/, 'frango desfiado (use peito de frango)'], [/batata frita|fritura/, 'frituras']];
+/* pratos citados pelo nome ("adoro pão com ovo", "costumo comer cuscuz") */
+const DISH_KW = [['paoovo', /pao com ovo/, 'pão com ovo'], ['misto', /misto( quente)?/, 'misto quente'], ['paoqj', /pao com (queijo|requeijao)/, 'pão com queijo'], ['tap', /tapioca/, 'tapioca'], ['cuscuz', /cuscuz/, 'cuscuz'], ['iog', /iogurte/, 'iogurte com fruta'], ['vit', /vitamina/, 'vitamina'], ['mingau', /mingau/, 'mingau'], ['panq', /panqueca/, 'panqueca de banana'], ['sandn', /sanduiche natural|lanche natural/, 'sanduíche natural'], ['batfr', /batata.?doce com frango/, 'batata-doce com frango'], ['ovostor', /ovos? mexidos?/, 'ovos mexidos'], ['pf', /arroz e feijao|prato feito/, 'arroz e feijão'], ['massa', /macarrao|macarronada|massa/, 'macarrão'], ['omel', /omelete/, 'omelete'], ['fcast', /fruta com castanha/, 'fruta com castanhas']];
 const NEG_RE = /\b(nao|sem|odeio|detesto|evito|evitar|alergi\w*|intoleran\w*|nada de|nunca|tirar|tira|exceto|menos|nem|enjoei|enjoo)\b/;
 let _kwIdx = null;
 function kwIndex(){
@@ -6987,7 +7200,7 @@ function kwIndex(){
   _kwIdx = [...m.entries()].map(([n, v]) => [n, v.keys, v.w]).sort((a, b) => b[0].length - a[0].length); return _kwIdx;
 }
 function parseMenuObs(text){
-  const o = {diet: null, ex: new Set(), no: new Set(), like: new Set(), meals: null, skipBf: false, train: null, prat: false, budget: false, lowcarb: false, hiprot: false, light: false, bigBf: false, noSalad: false, noFruit: false, noCooked: false, din: null, lunchOut: false, lightLunch: false, lowCarbNight: false, smallBf: false, bigNight: false, fastTrain: false, style: null, missing: [], health: [], log: [], unk: []};
+  const o = {likeDish: new Set(), noDish: new Set(), diet: null, ex: new Set(), no: new Set(), like: new Set(), meals: null, skipBf: false, train: null, prat: false, budget: false, lowcarb: false, hiprot: false, light: false, bigBf: false, noSalad: false, noFruit: false, noCooked: false, din: null, lunchOut: false, lightLunch: false, lowCarbNight: false, smallBf: false, bigNight: false, fastTrain: false, style: null, missing: [], health: [], log: [], unk: []};
   const raw = String(text || '').trim(); if (!raw) return o;
   const segs = raw.split(/[.;\n!?]+|,(?![^(]*\))|\b(?:mas|porem|porém)\b|\be(?=\s+(?:nao|não|sem|odeio|detesto|gosto|adoro|prefiro|amo|treino)\b)/i).map(s => s && s.trim()).filter(Boolean);
   const seen = new Set();
@@ -7000,6 +7213,8 @@ function parseMenuObs(text){
       R.set(o, m); add(typeof R.t === 'function' ? R.t(m) : R.t, R.s); hit = true;
       n = n.replace(m[0], ' ');
     }
+    // pratos citados
+    for (const [id, re, nm] of DISH_KW){ if (!re.test(n)) continue; hit = true; if (neg){ o.noDish.add(id); add(`Sem ${nm}`); } else { o.likeDish.add(id); add(`Mais ${nm}`); } }
     // alimentos citados
     const found = [];
     for (const [w, keys, orig] of kwIndex()){
@@ -7056,7 +7271,7 @@ function mealTargets(keys, T, ts, o){
 /* ---------- porções: busca local sobre passos de medida caseira ---------- */
 function solveMeal(items, t){
   const adj = items.filter(i => !i.x);
-  const err = () => { const s = macOf(items); let e = 4 * ((s.p - t.p) / Math.max(6, t.p * .1)) ** 2 + ((s.c - t.c) / Math.max(10, t.c * .12)) ** 2 + 1.4 * ((s.f - t.f) / Math.max(4, t.f * .13)) ** 2 + 2 * ((s.k - t.k) / Math.max(40, t.k * .07)) ** 2;
+  const err = () => { const s = macOf(items); let e = 4 * ((s.p - t.p) / Math.max(6, t.p * .1)) ** 2 + ((s.c - t.c) / Math.max(10, t.c * .12)) ** 2 + (s.f > t.f ? 4 : 1.2) * ((s.f - t.f) / Math.max(4, t.f * .13)) ** 2 + 2 * ((s.k - t.k) / Math.max(40, t.k * .07)) ** 2;
     for (const i of adj) e += .06 * ((i.g - i.d) / i.d) ** 2; return e; };
   let cur = err();
   for (let it = 0; it < 500; it++){
@@ -7071,7 +7286,7 @@ function solveMeal(items, t){
 function solveDay(meals, T, MT){
   const adj = meals.flatMap(m => m.it.filter(i => !i.x).map(i => ({m, i})));
   const all = () => meals.flatMap(m => m.it);
-  const err = () => { const s = macOf(all()); let e = 4 * ((s.p - T.p) / (T.p * .05)) ** 2 + ((s.c - T.c) / (T.c * .06)) ** 2 + 1.5 * ((s.f - T.f) / (T.f * .08)) ** 2 + 2 * ((s.k - T.k) / (T.k * .04)) ** 2;
+  const err = () => { const s = macOf(all()); let e = 4 * ((s.p - T.p) / (T.p * .05)) ** 2 + ((s.c - T.c) / (T.c * .06)) ** 2 + (s.f > T.f ? 5 : 1.5) * ((s.f - T.f) / (T.f * .08)) ** 2 + 2 * ((s.k - T.k) / (T.k * .04)) ** 2;
     for (const m of meals){ const t = MT[m.k]; if (!t) continue; const q = macOf(m.it); e += .6 * ((q.k - t.k) / Math.max(60, t.k * .12)) ** 2 + 1.2 * ((q.p - t.p) / Math.max(8, t.p * .15)) ** 2; }
     for (const {i} of adj) e += .04 * ((i.g - i.d) / i.d) ** 2; return e; };
   let cur = err();
@@ -7081,25 +7296,28 @@ function solveDay(meals, T, MT){
     if (!best) break; best.i.g = best.g; cur = best.e;
   }
 }
-const slim = m => ({k: m.k, t: m.t, it: m.it.map(i => ({f: i.f, g: i.g, r: i.r, x: i.x}))});
+const slim = m => ({k: m.k, t: m.t, it: m.it.map(i => ({f: i.f, g: i.g, r: i.r, x: i.x, ...(i.nt ? {nt: i.nt} : {})}))});
 function fatten(m, cx){ const main = MAIN.includes(m.k); return {...m, it: m.it.map(i => { const hi = capOf(i.f, i.r, main, cx.veg), lo = floorOf(i.f, i.r, main); return {...i, hi, lo, d: qnt(i.f, dflt(i.f, i.r, cx.goal), hi, lo)}; })}; }
 
 /* ---------- escolha dos alimentos ---------- */
 function menuCtx(cfg, o, res){
+  const fp = cfg.fp || {}; (fp.like || []).forEach(k => FOODS[k] && o.like.add(k)); (fp.no || []).forEach(k => FOODS[k] && o.no.add(k)); const range = cfg.range || 'mid';
   const ex = new Set([...(DIET_EX[o.diet || cfg.diet] || []), ...o.ex]);
   const vg = ['veg', 'vegan'].includes(o.diet || cfg.diet);
-  const ok = k => { const F = FOODS[k]; if (o.no.has(k)) return false; if (o.noFruit && F.r.includes('fruit')) return false; if (o.noCooked && F.r.includes('cooked')) return false; if (!vg && k === 'tofu' && !o.like.has(k)) return false; if (!vg && k === 'sojapo' && !o.like.has(k) && !ex.has('lac')) return false; if (F.tg.some(t => ex.has(t))) return false; if (ex.has('glu') && k === 'aveia') return false; if (ex.has('cafe') && k === 'cafe') return false; return true; };
+  const ok = k => { const F = FOODS[k]; if (o.no.has(k)) return false; if (range === 'basic' && !MN_COMMON.has(k) && !o.like.has(k)) return false; if (o.noFruit && F.r.includes('fruit')) return false; if (o.noCooked && F.r.includes('cooked')) return false; if (!vg && k === 'tofu' && !o.like.has(k)) return false; if (!vg && k === 'sojapo' && !o.like.has(k) && !ex.has('lac')) return false; if (F.tg.some(t => ex.has(t))) return false; if (ex.has('glu') && k === 'aveia') return false; if (ex.has('cafe') && k === 'cafe') return false; return true; };
   const diet = o.diet || cfg.diet; const goal = (ST.prefs.plan || {}).goal || 'maint';
-  return {cfg, o, res, ex, ok, diet, goal, style: o.prat ? 'prat' : o.style || cfg.style, din: o.din || cfg.din || 'prato', veg: diet === 'veg' || diet === 'vegan'};
+  return {cfg, o, res, ex, ok, diet, goal, range, style: o.prat ? 'prat' : o.style || cfg.style, din: o.din || cfg.din || 'prato', veg: diet === 'veg' || diet === 'vegan'};
 }
 function weightOf(k, r, cx, used, mealUsed, dayU){
   const F = FOODS[k]; let w = 1;
   if (cx.o.like.has(k)) w *= 3.5;
-  if (cx.goal === 'cut'){ if (F.tg.includes('magro')) w *= 1.8; if (F.tg.includes('denso')) w *= .6; if (r === 'fruit' && F.k < 50) w *= 1.5; }
+  if (cx.goal === 'cut'){ if (F.tg.includes('magro')) w *= 1.8; if (r === 'prot' && F.p > 15 && F.f / F.p > .35) w *= .45; /* carnes gordas deixam pouco espaço para proteína no déficit */ if (F.tg.includes('denso')) w *= .6; if (r === 'fruit' && F.k < 50) w *= 1.5; }
   if (cx.goal === 'gain'){ if (F.tg.includes('denso')) w *= 1.8; if (F.tg.includes('magro')) w *= .8; }
   if (cx.style === 'prat' && F.tg.includes('pratico')) w *= 2;
   if (cx.o.budget){ if (F.tg.includes('barato')) w *= 2.4; else if (['salmao', 'camarao', 'nozes', 'amendoa', 'castpara', 'kiwi', 'morango', 'contra', 'maminha'].includes(k)) w *= .3; }
   if (cx.style === 'var') w *= 1;
+  if (cx.range === 'wide' && !MN_COMMON.has(k)) w *= 1.9;
+  if (cx.range === 'mid' && !MN_COMMON.has(k) && !cx.o.like.has(k)) w *= .7;
   if (k === 'arroz' && cx.style === 'trad') w *= 1.6;
   if ((k === 'tofu' || k === 'sojapo') && !cx.veg && !cx.o.like.has(k)) w *= .12;
   if (k === 'clara' && cx.goal !== 'cut') w *= .4;
@@ -7109,7 +7327,18 @@ function weightOf(k, r, cx, used, mealUsed, dayU){
   return w;
 }
 function pickW(cands, R){ const tot = cands.reduce((a, b) => a + b[1], 0); if (!tot) return null; let x = R() * tot; for (const [k, w] of cands){ x -= w; if (x <= 0) return k; } return cands[cands.length - 1][0]; }
-function tplFor(mk, cx, R, used, ts, avoid){
+/* quanto um prato consegue entregar no máximo (kcal), com as porções no limite: evita sugerir um lanche pequeno para uma meta grande */
+function tplCap(t, mk, cx){
+  let k = 0;
+  for (const sl of t.s){
+    if (sl.only && !sl.only.includes(mk)) continue; if (sl.vegOnly && !cx.veg) continue; if (sl.cut && cx.goal !== 'cut') continue;
+    const pool = slotPool(sl, cx); if (!pool.length) continue;
+    const best = Math.max(...pool.map(f => FOODS[f].k * (sl.r === 'drink' || sl.fix ? qnt(f, sl.dg || dflt(f, sl.r, cx.goal), 9999, 0) : capOf(f, sl.r, !!t.main, cx.veg, !!t.dn)) / 100));
+    k += best * (sl.n || 1);
+  }
+  return k;
+}
+function tplFor(mk, cx, R, used, ts, avoid, tk){
   let L = TPL.filter(t => t.at.includes(mk));
   if (mk === 'jan'){ if (cx.din === 'lanche') L = L.filter(t => t.dn); else if (cx.din !== 'misto') L = L.filter(t => !t.dn); }
   if (MAIN.includes(mk) && !(mk === 'jan' && cx.din === 'lanche')){
@@ -7117,27 +7346,31 @@ function tplFor(mk, cx, R, used, ts, avoid){
     if (cx.style === 'prat') L = L.filter(t => t.dn || t.id === 'pf' || t.id === 'massa');
     if (cx.ex.has('glu')) L = L.filter(t => t.id !== 'massa');
   } else {
-    if (cx.ex.has('lac')) L = L.filter(t => t.id !== 'iog' && t.id !== 'ricota');
-    if (cx.ex.has('glu')) L = L.filter(t => t.id !== 'pao');
-    if (cx.ex.has('ovo')) L = L.filter(t => t.id !== 'ovos');
   }
-  L = L.filter(t => tplOk(t, mk, cx));
+  L = L.filter(t => tplOk(t, mk, cx) && !cx.o.noDish.has(t.id) && !((t.id === 'vit' || t.id === 'mingau') && !cx.veg && !cx.ok('leitepo') && !cx.o.likeDish.has(t.id))); // sem leite em pó, o extrato de soja deixa a vitamina com pouca proteína e muita gordura
   const ws = L.map(t => { let w = 1;
     if (MAIN.includes(mk)){ if (cx.style === 'trad') w = t.id === 'pf' ? (mk === 'alm' ? 1 : 3) : 1; if (cx.style === 'var') w = t.id === 'pf' ? 1.6 : 1; if (mk === 'jan' && (cx.o.light || cx.goal === 'cut') && t.id === 'leve') w *= 2.5; if (t.dn) w = cx.din === 'misto' ? 2.2 : 1; if (t.id === 'sand' && cx.din === 'lanche') w *= 1.5; }
-    else { if (mk === 'cafe' && t.id === 'pao') w = 2; if (mk === 'ceia' && (t.id === 'iog' || t.id === 'ricota')) w = 1.6; if (ts.pre === mk && (t.id === 'fcast' || t.id === 'ricota')) w *= .2; if (cx.style === 'prat' && (t.id === 'cuscuz' || t.id === 'tap')) w *= .5; }
-    w *= Math.pow(.5, used['tpl:' + t.id] || 0); if (avoid && t.id === avoid) w *= .05; return [t, w]; });
+    else { if (mk === 'cafe' && ['paoovo', 'paoqj', 'tap', 'cuscuz'].includes(t.id)) w = 1.8; if (mk === 'ceia' && ['iog', 'ricota', 'mingau'].includes(t.id)) w = 1.6; if (ts.pre === mk) w *= t.pre ? 2 : .35; if (cx.style === 'prat' && ['cuscuz', 'tap', 'panq', 'mingau'].includes(t.id)) w *= .5; }
+    if (cx.o.likeDish.has(t.id)) w *= 6;
+    if (tk){ const cap = tplCap(t, mk, cx); if (cap < tk) w *= Math.pow(Math.max(.05, cap / tk), 4); }
+    w *= Math.pow(cx.o.likeDish.has(t.id) ? .85 : .5, used['tpl:' + t.id] || 0); if (avoid && t.id === avoid) w *= .05; return [t, w]; });
   return pickW(ws, R);
 }
 function slotPool(sl, cx){ return (sl.from || Object.keys(FOODS).filter(k => FOODS[k].r.includes(sl.r))).filter(k => FOODS[k] && cx.ok(k)); }
 function tplOk(t, mk, cx){ return t.s.every(sl => sl.opt || (sl.only && !sl.only.includes(mk)) || (sl.vegOnly && !cx.veg) || (sl.r === 'salad' && cx.o.noSalad) || (sl.r === 'cooked' && cx.o.noCooked) || slotPool(sl, cx).length); }
-const BOOST = {snack: ['leitepo', 'ovo', 'iogurted', 'minas', 'clara', 'sojapo', 'frango', 'atum', 'tofu'], main: ['ovo', 'frango', 'tofu', 'lentilha'], dn: ['frango', 'ovo', 'atum', 'minas', 'mussarela', 'presunto', 'clara', 'tofu']};
+/* v4.29: reforço de proteína só onde faz sentido no prato (um ovo no prato feito, tofu no vegetariano). Nos lanches, nada de item avulso:
+   a proteína do próprio lanche aumenta, e o que faltar o dia compensa nas outras refeições. */
+const BOOST = {main: ['ovo', 'tofu']};
 function buildMeal(mk, cx, R, used, ts, tgt, avoid, dayU = new Map()){
-  const tpl = tplFor(mk, cx, R, used, ts, avoid); if (!tpl) return {k: mk, t: null, it: []};
+  const wh = (cx.wm || []).includes(mk); if (wh){ const W = macOf([{f: 'whey', g: 30}]); tgt = {p: Math.max(0, tgt.p - W.p), c: Math.max(0, tgt.c - W.c), f: tgt.f, k: Math.max(0, tgt.k - W.k)}; }
+  const done = m => { if (wh) m.it.push({f: 'whey', g: 30, d: 30, r: 'supl', x: 1, hi: 30, lo: 30, nt: 'com água ou no leite'}); return m; };
+  const tpl = tplFor(mk, cx, R, used, ts, avoid, tgt.k); if (!tpl) return done({k: mk, t: null, it: []});
   used['tpl:' + tpl.id] = (used['tpl:' + tpl.id] || 0) + 1;
   const items = []; const mu = new Set(); const pre = ts.pre === mk;
   for (const sl of tpl.s){
     if (sl.only && !sl.only.includes(mk)) continue;
     if (sl.vegOnly && !cx.veg) continue;
+    if (sl.cut && cx.goal !== 'cut') continue; /* no déficit, claras completam a proteína sem somar gordura */
     if (sl.r === 'fat' && pre && !MAIN.includes(mk)) continue;
     if (sl.r === 'salad' && cx.o.noSalad) continue;
     if (sl.r === 'cooked' && cx.o.noCooked) continue;
@@ -7148,26 +7381,26 @@ function buildMeal(mk, cx, R, used, ts, tgt, avoid, dayU = new Map()){
       if (pre && sl.r !== 'drink') { const pp = pool.filter(k => !FOODS[k].tg.includes('cast')); if (pp.length) pool = pp; }
       const k = pickW(pool.map(k => [k, weightOf(k, sl.r, cx, used, mu, dayU)]), R); if (!k || mu.has(k)) continue;
       mu.add(k); used[k] = (used[k] || 0) + 1; dayU.set(k, (dayU.get(k) || 0) + 1);
-      const fix = !!sl.fix || sl.r === 'drink';
-      const hi = capOf(k, sl.r, !!tpl.main, cx.veg), lo = floorOf(k, sl.r, !!tpl.main); const d = qnt(k, dflt(k, sl.r, cx.goal), hi, lo);
-      items.push({f: k, g: d, d, r: sl.r, x: fix ? 1 : 0, hi, lo});
+      const fix = (!!sl.fix && !(cx.goal === 'gain' && (sl.r === 'fruit' || k === 'azeite'))) || sl.r === 'drink'; /* no ganho, a fruta e o azeite também podem crescer */
+      let hi = capOf(k, sl.r, !!tpl.main, cx.veg, !!tpl.dn), lo = floorOf(k, sl.r, !!tpl.main);
+      if (wh){ if (sl.r === 'prot' || sl.r === 'bprot') lo = Math.min(lo, k === 'ovo' ? 45 : FOODS[k].lo); if (sl.r === 'base' || sl.r === 'bcarb') hi = Math.round(hi * 1.3); } // com whey, a comida da refeição pode ter menos proteína e mais carboidrato
+      const d = qnt(k, sl.dg || dflt(k, sl.r, cx.goal), hi, lo);
+      items.push({f: k, g: d, d, r: sl.r, x: fix ? 1 : 0, hi, lo, ...(sl.nt ? {nt: sl.nt} : {})});
     }
   }
   solveMeal(items, tgt);
-  // proteína curta: um reforço comum para aquela refeição (leite em pó no iogurte, um ovo no prato...)
-  for (let b = 0; b < (tpl.main ? 1 : 2) && macOf(items).p < tgt.p * (tpl.main ? .82 : .88); b++){
-    const L = (tpl.main ? BOOST.main : tpl.dn ? BOOST.dn : BOOST.snack).filter(k => FOODS[k] && cx.ok(k) && !mu.has(k) && !(k === 'tofu' && !cx.veg) && !(k === 'clara' && cx.goal !== 'cut') && (dayU.get(k) || 0) < 2 && (tpl.id !== 'vit' || ['leitepo', 'sojapo', 'iogurted'].includes(k)) && !((k === 'leitepo' && mu.has('sojapo')) || (k === 'sojapo' && mu.has('leitepo'))));
-    const k = pickW(L.map((k, j) => [k, (L.length - j) * (cx.o.like.has(k) ? 3 : 1)]), R); if (!k) break;
-    const r = FOODS[k].r.includes(tpl.main ? 'prot' : 'bprot') ? (tpl.main ? 'prot' : 'bprot') : FOODS[k].r[0]; const hi = capOf(k, r, !!tpl.main, cx.veg);
-    mu.add(k); used[k] = (used[k] || 0) + 1; dayU.set(k, (dayU.get(k) || 0) + 1); const d = qnt(k, dflt(k, r, cx.goal), hi); items.push({f: k, g: d, d, r, x: 0, hi}); solveMeal(items, tgt);
+  // proteína curta no prato principal: um ovo (ou tofu no vegetariano), como num prato feito com ovo
+  if (tpl.main && tpl.id !== 'massa' && macOf(items).p < tgt.p * .82){
+    const k = BOOST.main.find(k => FOODS[k] && cx.ok(k) && !mu.has(k) && (k !== 'tofu' || cx.veg) && (dayU.get(k) || 0) < 2);
+    if (k){ const r = 'prot'; const hi = Math.min(capOf(k, r, true, cx.veg), k === 'ovo' ? 90 : 150); mu.add(k); used[k] = (used[k] || 0) + 1; dayU.set(k, (dayU.get(k) || 0) + 1); const d = qnt(k, k === 'ovo' ? 45 : 100, hi); items.push({f: k, g: d, d, r, x: 0, hi, nt: k === 'ovo' ? 'cozido ou frito com pouco óleo' : ''}); solveMeal(items, tgt); }
   }
-  return {k: mk, t: tpl.id, it: items};
+  return done({k: mk, t: tpl.id, it: items});
 }
 const MN_DAYS = 5;
 function genMenu(cfg, res, seed, nDays = MN_DAYS){
-  const o = parseMenuObs(cfg.obs); const cx = menuCtx(cfg, o, res);
-  const keys = mealKeys(o.meals || cfg.n, o.skipBf); const ts = trainSlots(keys, o.train || cfg.train, o.fastTrain);
-  const T = menuTargets(res, o); const MT = mealTargets(keys, T, ts, o);
+  const o = parseMenuObs(cfg.obs); const cx = menuCtx(cfg, o, res); ensureWhey(cfg.whey);
+  const keys = mealKeys(o.meals || cfg.n, o.skipBf); const ts = trainSlots(keys, o.train || cfg.train, o.fastTrain); cx.wm = wheyMeals(keys, ts, cfg.whey);
+  const T = menuTargets(res, o); const MT = mealTargets(keys, T, ts, o); MN_SCALE = Math.min(1.7, Math.max(1, T.k / 2000)); MN_GAIN = cx.goal === 'gain';
   const R = rng(seed); const used = {}; const days = [];
   for (let d = 0; d < nDays; d++){
     const meals = []; let lunchProt = null; const dayU = new Map();
@@ -7176,7 +7409,7 @@ function genMenu(cfg, res, seed, nDays = MN_DAYS){
       if (mk === 'jan' && cx.style === 'prat' && lunchProt && lunchProt !== 'ovo' && m.t && TPL.find(t => t.id === m.t).main){ // marmita: mesma proteína do almoço
         const p = m.it.find(i => i.r === 'prot'); if (p && p.f !== lunchProt && cx.ok(lunchProt) && !m.it.some(i => i.f === lunchProt)){ p.f = lunchProt; m = fatten(m, cx); solveMeal(m.it, MT[mk]); }
       }
-      if (mk === 'alm'){ const p = m.it.find(i => i.r === 'prot'); lunchProt = p ? p.f : null; }
+      if (mk === 'alm'){ const p = m.it.find(i => i.r === 'prot'); lunchProt = p && m.t !== 'massa' ? p.f : null; } // molho do macarrão não vira a proteína da marmita
       meals.push(m);
     }
     solveDay(meals, T, MT); days.push({meals: meals.map(slim)});
@@ -7197,8 +7430,8 @@ function makeMenu(keepSeed){
 /* Re-ajusta só as porções, mantendo os alimentos (quando o plano muda) */
 function resolveMenu(){
   const M = ST.prefs.menu; const res = planRes(); if (!M || !M.days || !res) return;
-  const o = parseMenuObs(M.obs); const T = menuTargets(res, o); const MT = mealTargets(M.keys, T, M.ts || {}, o); const goal = (ST.prefs.plan || {}).goal;
-  const cx = menuCtx(M, o, res);
+  const o = parseMenuObs(M.obs); const T = menuTargets(res, o); const MT = mealTargets(M.keys, T, M.ts || {}, o); const goal = (ST.prefs.plan || {}).goal; MN_SCALE = Math.min(1.7, Math.max(1, T.k / 2000)); MN_GAIN = goal === 'gain';
+  const cx = menuCtx(M, o, res); ensureWhey(M.whey); cx.wm = wheyMeals(M.keys, M.ts || {}, M.whey);
   M.days.forEach(d => { const ms = d.meals.map(m => fatten(m, cx)); ms.forEach(m => { m.it.forEach(i => { if (!i.x) i.g = i.d; }); solveMeal(m.it, MT[m.k]); }); solveDay(ms, T, MT); d.meals = ms.map(slim); });
   M.T = {p: Math.round(T.p), c: Math.round(T.c), f: Math.round(T.f), k: Math.round(T.k)}; saveState();
 }
@@ -7206,11 +7439,13 @@ function resolveMenu(){
 /* ---------- apresentação ---------- */
 const frTxt = u => u % 1 ? `${u >= 1 ? Math.floor(u) : ''}½` : String(u);
 function amountTxt(f, g, unit){
-  const F = FOODS[f]; const gR = g < 20 ? Math.round(g) : Math.round(g / 5) * 5;
+  const F = FOODS[f];
+  if (f === 'whey'){ const d = Math.max(1, Math.round(g / 30)); return {q: `${d} ${d > 1 ? 'doses' : 'dose'}`, sub: `${Math.round(F.p * g / 100)} g de proteína`}; } const gR = g < 20 ? Math.round(g) : Math.round(g / 5) * 5;
   if (f === 'cafe') return {q: unit === 'g' ? `${fmtInt(gR)} ml` : `${frTxt(Math.max(.5, Math.round(g / F.m[0] * 2) / 2))} ${g > F.m[0] ? F.m[2] : F.m[1]}`, sub: MN_NOTE[f]};
   if (unit === 'g' || !F.m) return {q: `${fmtInt(gR)} g`, sub: unit !== 'g' && MN_NOTE[f] ? MN_NOTE[f] : MN_NOTE[f] || ''};
-  const [ug, s, p] = F.m; let u = g / ug; u = ug < 6 ? Math.max(1, Math.round(u)) : Math.max(.5, Math.round(u * 2) / 2);
-  if (u > 8 && ug >= 6) return {q: `${fmtInt(gR)} g`, sub: MN_NOTE[f] || ''};
+  /* v4.28: colheres e unidades pequenas sempre inteiras; xícara, concha, prato, fatia e unidades grandes aceitam meio */
+  const [ug, s, p] = F.m; const whole = ug < 6 || /^colher/.test(s) || ['ovo', 'tapioca', 'torrada', 'castanha', 'noz', 'amêndoa', 'coxa', 'uva'].includes(s); let u = g / ug; u = whole ? Math.max(1, Math.round(u)) : Math.max(.5, Math.round(u * 2) / 2);
+  if ((/^colher/.test(s) ? u > 16 : u > 8) && ug >= 6) return {q: `${fmtInt(gR)} g`, sub: MN_NOTE[f] || ''};
   const approx = Math.abs(u * ug - g) / g > .12;
   const num = frTxt(u);
   return {q: `${approx ? '≈ ' : ''}${num} ${u > 1 ? p : s}`, sub: `${fmtInt(gR)} g${MN_NOTE[f] ? ' · ' + MN_NOTE[f] : ''}`};
@@ -7223,12 +7458,12 @@ function menuOptInCard(res){
     <button class="btn primary" data-act="mn-setup">Montar meus cardápios</button></section>`;
 }
 function menuView(){
-  const M = menuState(); const res = planRes();
+  const M = menuState(); const res = planRes(); if (M) ensureWhey(M.whey);
   if (!M || !M.on || !M.days || !res) return menuOptInCard(res);
   const o = parseMenuObs(M.obs); const unit = M.unit || 'cas'; const di = Math.min(M.day || 0, M.days.length - 1); const day = M.days[di]; const ts = M.ts || {};
   const T = menuTargets(res, o); const changed = Math.abs(T.k - (M.T ? M.T.k : 0)) > 40 || Math.abs(T.p - (M.T ? M.T.p : 0)) > 5;
   const s = dayMac(day); const pct = (v, t) => Math.max(0, Math.min(100, v / (t || 1) * 100)).toFixed(0);
-  const cfgTxt = [`${M.keys.length} refeições`, (MN_STYLES.find(x => x[0] === (o.prat ? 'prat' : o.style || M.style)) || [])[1], (o.din || M.din) === 'lanche' ? 'jantar tipo lanche' : (o.din || M.din) === 'misto' ? 'jantar alterna' : null, (MN_DIETS.find(x => x[0] === (o.diet || M.diet)) || [])[1], M.train && M.train !== 'none' ? `treino ${({manha: 'de manhã', tarde: 'à tarde', noite: 'à noite'})[o.train || M.train]}` : null].filter(Boolean).join(' · ');
+  const cfgTxt = [`${M.keys.length} refeições`, (MN_STYLES.find(x => x[0] === (o.prat ? 'prat' : o.style || M.style)) || [])[1], (o.din || M.din) === 'lanche' ? 'jantar tipo lanche' : (o.din || M.din) === 'misto' ? 'jantar alterna' : null, (MN_DIETS.find(x => x[0] === (o.diet || M.diet)) || [])[1], M.train && M.train !== 'none' ? `treino ${({manha: 'de manhã', tarde: 'à tarde', noite: 'à noite'})[o.train || M.train]}` : null, M.whey && M.whey.doses ? 'com whey' : null].filter(Boolean).join(' · ');
   const shortP = s.p < M.T.p * .9;
   const upd = changed ? `<button class="mn-upd" data-act="mn-resolve">${I.info}<span><b>Seu plano mudou.</b> Ajustar as porções para ${fmtK(T.k)} kcal</span>${I.chev}</button>` : '';
   if (!UI.mnOpen){ /* minimizado: um resumo, e o toque abre tudo */
@@ -7248,13 +7483,13 @@ function menuView(){
     <div class="mn-meals">`;
   day.meals.forEach((m, mi) => {
     const ms = macOf(m.it); const tag = ts.pre === m.k ? 'Pré-treino' : ts.pos === m.k ? 'Pós-treino' : ''; const tp = TPL.find(t => t.id === m.t);
-    h += `<article class="mn-meal"><header><div><b>${MEALS[m.k].t}</b>${tag ? `<span class="mn-tag">${tag}</span>` : ''}${m.k === 'alm' && o.lunchOut ? '<span class="mn-tag out">Fora de casa</span>' : ''}${tp && tp.lbl ? `<span class="mn-lbl">${tp.lbl}</span>` : ''}</div><span class="mono">${fmtK(ms.k)} kcal · ${Math.round(ms.p)} g prot.</span></header>
-      <ul>${m.it.map((it, ii) => { const a = amountTxt(it.f, it.g, unit); return `<li><button data-act="mn-swap" data-m="${mi}" data-i="${ii}" aria-label="Trocar ${esc(FOODS[it.f].n)}"><span class="mn-q">${esc(a.q)}</span><span class="mn-n">${esc(FOODS[it.f].n)}${a.sub ? `<small>${esc(a.sub)}</small>` : ''}</span><i class="mn-sw">${I.swap}</i></button></li>`; }).join('')}</ul>
+    h += `<article class="mn-meal"><header><div><b>${MEALS[m.k].t}</b>${tag ? `<span class="mn-tag">${tag}</span>` : ''}${m.k === 'alm' && o.lunchOut ? '<span class="mn-tag out">Fora de casa</span>' : ''}${dishName(m) ? `<span class="mn-lbl mn-dish">${esc(dishName(m))}</span>` : ''}</div><span class="mono">${fmtK(ms.k)} kcal · ${Math.round(ms.p)} g prot.</span></header>
+      <ul>${m.it.map((it, ii) => { const a = amountTxt(it.f, it.g, unit); if (it.nt) a.sub = [a.sub, it.nt].filter(Boolean).join(' · '); const wh = it.f === 'whey'; return `<li><button data-act="${wh ? 'mn-setup' : 'mn-swap'}" data-m="${mi}" data-i="${ii}" aria-label="${wh ? 'Ajustar whey' : 'Trocar ' + esc(FOODS[it.f].n)}"><span class="mn-q">${esc(a.q)}</span><span class="mn-n">${esc(FOODS[it.f].n)}${a.sub ? `<small>${esc(a.sub)}</small>` : ''}</span>${wh ? '' : `<i class="mn-sw">${I.swap}</i>`}</button></li>`; }).join('')}</ul>
       <button class="link mn-other" data-act="mn-other" data-m="${mi}">${I.swap}Outra opção</button></article>`;
   });
   h += `</div><div class="row wrap mn-acts"><button class="btn ghost sm" data-act="mn-redo">Refazer todos</button><button class="btn ghost sm" data-act="mn-toggle">Minimizar</button></div>
     <p class="mn-disc">Sugestões para inspirar, não uma dieta prescrita. Para um plano preciso e seguro para você, procure um nutricionista.</p>
-    <p class="mn-src">Composição: TACO 4ª ed. (NEPA/UNICAMP). Medidas caseiras: POF 2008-2009 (IBGE).</p></section>`;
+    <p class="mn-src">Composição: TACO 4ª ed. (NEPA/UNICAMP). Medidas caseiras: POF 2008-2009 (IBGE), em colheres, xícaras, conchas, prato raso e unidades.</p></section>`;
   return h;
 }
 
@@ -7287,7 +7522,7 @@ function nutritionTab(){
 }
 
 /* ---------- folha de configuração ---------- */
-const MN_OBS_EX = ['jantar tipo lanche', 'sem lactose', 'não gosto de peixe', 'adoro ovos', 'treino à noite', 'levo marmita', 'orçamento apertado', 'como fora no almoço'];
+const MN_OBS_EX = ['adoro pão com ovo', 'costumo comer cuscuz', 'jantar tipo lanche', 'sem lactose', 'não gosto de peixe', 'levo marmita', 'orçamento apertado', 'como fora no almoço'];
 const MN_HELP = [
   ['Restrições', ['sem lactose', 'sem glúten', 'alergia a amendoim', 'sem frutos do mar', 'vegetariano', 'vegano', 'sem carne vermelha', 'sem porco', 'halal']],
   ['Gostos', ['adoro ovos', 'não gosto de peixe', 'odeio brócolis', 'prefiro arroz integral', 'sem frutas', 'não gosto de salada']],
@@ -7297,14 +7532,14 @@ const MN_HELP = [
   ['Saúde', ['diabetes', 'pressão alta', 'gestante']]
 ];
 function obsPreview(text){
-  const o = parseMenuObs(text); if (!String(text || '').trim()) return '<p class="tiny muted" style="margin:0">Escreva do seu jeito. O app entende restrições, alimentos que você gosta ou evita, horário de treino, número de refeições, praticidade e orçamento.</p>';
+  const o = parseMenuObs(text); if (!String(text || '').trim()) return '<p class="tiny muted" style="margin:0">Escreva do seu jeito: restrições, gostos, rotina ou orçamento.</p>';
   return `${o.log.length ? `<div class="mn-got"><span class="tiny muted">Entendi:</span>${o.log.map(x => `<span class="mn-chip" title="${esc(x.s || '')}">${I.check}${esc(x.t)}</span>`).join('')}</div>` : ''}
     ${o.log.filter(x => x.s).map(x => `<p class="tiny ink2" style="margin:6px 0 0">${esc(x.s)}</p>`).join('')}
-    ${o.unk.length ? `<p class="tiny mn-unk">Não entendi: ${o.unk.map(u => `"${esc(u)}"`).join(', ')}. Tente com outras palavras ou veja "O que dá para escrever".</p>` : ''}`;
+    ${o.unk.length ? `<p class="tiny mn-unk">Não entendi: ${o.unk.map(u => `"${esc(u)}"`).join(', ')}.</p>` : ''}`;
 }
 function openMenuSetup(){
   const M = ST.prefs.menu || {}; const pl = ST.prefs.plan || {}; const g = guessTrain();
-  const c = UI.mnc = {n: M.n || pl.meals || 4, style: M.style || 'trad', diet: M.diet || 'oni', din: M.din || 'prato', train: M.train || g || 'none', obs: M.obs || ''};
+  const c = UI.mnc = {whey: {...WHEY0, doses: M.whey && M.whey.doses ? 1 : 0}, n: M.n || pl.meals || 4, style: M.style || 'trad', diet: M.diet || 'oni', din: M.din || 'prato', train: M.train || g || 'none', obs: M.obs || '', range: M.range || 'mid', fp: {like: [...((M.fp || {}).like || [])], no: [...((M.fp || {}).no || [])]}};
   const chips = (act, opts, cur) => `<div class="pw-chips">${opts.map(([v, l]) => `<button data-act="${act}" data-v="${v}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join('')}</div>`;
   openSheet(`${sheetHead('Cardápios', M.on ? 'Ajustar cardápios' : 'Montar cardápios')}
     <div class="stack" style="margin-top:14px;gap:16px">
@@ -7313,15 +7548,22 @@ function openMenuSetup(){
     <div class="pw-f"><span class="pw-l">Alimentação</span>${chips('mnc-diet', MN_DIETS, c.diet)}</div>
     <div class="pw-f"><span class="pw-l">Jantar</span>${chips('mnc-din', [['prato', 'Prato de comida'], ['lanche', 'Lanche'], ['misto', 'Alternar']], c.din)}<span class="tiny muted">Lanche: sanduíche, tapioca, omelete ou cuscuz no lugar de arroz e feijão.</span></div>
     <div class="pw-f"><span class="pw-l">Horário do treino ${g ? '<small>(sugerido pelo seu histórico)</small>' : ''}</span>${chips('mnc-train', MN_TRAIN, c.train)}<span class="tiny muted">O lanche antes do treino ganha carboidrato e menos gordura; o depois, proteína.</span></div>
-    <div class="pw-f"><span class="pw-l">Observações e preferências</span>
-      <textarea id="mn-obs" class="field ob-ta" rows="3" maxlength="500" placeholder="Ex.: sem lactose · não gosto de peixe · adoro ovos · levo marmita · orçamento apertado" aria-label="Observações e preferências">${esc(c.obs)}</textarea>
+    <div class="pw-f"><span class="pw-l">Toma whey protein?</span><div class="seg">${[[0, 'Não'], [1, 'Sim']].map(([v, t]) => `<button data-act="mnc-whey" data-v="${v}" aria-pressed="${c.whey.doses === v}">${t}</button>`).join('')}</div>
+      <p class="tiny muted" id="mn-whey" style="margin:6px 0 0" ${c.whey.doses ? '' : 'hidden'}>1 dose por dia, depois do treino. A meta do dia já desconta.</p></div>
+    <div class="pw-f"><span class="pw-l">Que alimentos usar</span><div class="seg">${MN_RANGE.map(([v, t]) => `<button data-act="mnc-range" data-v="${v}" aria-pressed="${c.range === v}">${t}</button>`).join('')}</div></div>
+    <div class="pw-f"><span class="pw-l">Seus alimentos <small id="mnc-fp-n">${mnFpTxt(c.fp)}</small></span>
+      <p class="tiny muted" style="margin:0 0 6px">1 toque: <b class="fp-lk">gosto</b> · 2 toques: <b class="fp-no">não como</b></p>
+      ${MN_GROUPS.map(([t, rs], gi) => { const ks = Object.keys(FOODS).filter(k => FOODS[k].r.some(r => rs.includes(r))); return `<details class="fp-g"><summary>${t} <span class="tiny muted">${ks.length}</span>${I.down}</summary><div class="fp-l">${ks.map(k => { const st = c.fp.like.includes(k) ? 'like' : c.fp.no.includes(k) ? 'no' : ''; return `<button class="fp-c" data-act="mnc-fp" data-k="${k}" data-s="${st}" aria-label="${esc(FOODS[k].n)}">${esc(FOODS[k].n)}</button>`; }).join('')}</div></details>`; }).join('')}</div>
+    <div class="pw-f"><span class="pw-l">Preferências e ajustes <small>o que gosta, costuma comer ou evita</small></span>
+      <div class="adj-box mn-ai">${I_SPARK}<textarea id="mn-obs" class="adj-ta" rows="2" maxlength="500" placeholder="Ex.: adoro pão com ovo, costumo almoçar arroz e feijão, sem lactose" aria-label="Preferências e ajustes">${esc(c.obs)}</textarea></div>
+      <div class="adj-chips" role="group" aria-label="Sugestões">${MN_OBS_EX.map(x => `<button data-act="mnc-ex" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
       <div id="mn-obs-prev" class="mn-prev">${obsPreview(c.obs)}</div>
-      <div class="ob-ex" role="group" aria-label="Exemplos">${MN_OBS_EX.map(x => `<button class="chip" data-act="mnc-ex" data-v="${esc(x)}">+ ${esc(x)}</button>`).join('')}</div>
-      <details class="mn-help"><summary>O que dá para escrever ${I.down}</summary><p class="tiny muted">Escreva do seu jeito, separando por vírgula. Toque num exemplo para adicionar.</p>${MN_HELP.map(([t, L]) => `<div class="mn-hg"><b>${t}</b><div class="ob-ex">${L.map(x => `<button class="chip" data-act="mnc-ex" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`).join('')}</details>
+      <details class="mn-help"><summary>Mais exemplos ${I.down}</summary>${MN_HELP.map(([t, L]) => `<div class="mn-hg"><b>${t}</b><div class="ob-ex">${L.map(x => `<button class="chip" data-act="mnc-ex" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`).join('')}</details>
 </div>
     </div>
     <div class="sheet-foot"><button class="btn primary block" data-act="mn-create">${M.on ? 'Atualizar cardápios' : 'Criar cardápios'}</button>${M.on ? '<button class="link muted" style="width:100%;margin-top:4px" data-act="mn-off">Desligar sugestões de cardápio</button>' : ''}</div>`);
 }
+function mnFpTxt(fp){ const a = fp.like.length, b = fp.no.length; return a || b ? `${a ? a + ' gosto' : ''}${a && b ? ' · ' : ''}${b ? b + ' não como' : ''}` : ''; }
 function mnKeepObs(){ const t = $('#mn-obs'); if (t && UI.mnc) UI.mnc.obs = t.value; }
 function mnPress(act, v){ document.querySelectorAll(`[data-act="${act}"]`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === String(v)))); }
 A['mn-setup'] = () => openMenuSetup();
@@ -7330,11 +7572,16 @@ A['mnc-style'] = el => { UI.mnc.style = el.dataset.v; mnPress('mnc-style', el.da
 A['mnc-diet'] = el => { UI.mnc.diet = el.dataset.v; mnPress('mnc-diet', el.dataset.v); };
 A['mnc-din'] = el => { UI.mnc.din = el.dataset.v; mnPress('mnc-din', el.dataset.v); };
 A['mnc-train'] = el => { UI.mnc.train = el.dataset.v; mnPress('mnc-train', el.dataset.v); };
+A['mnc-whey'] = el => { UI.mnc.whey.doses = +el.dataset.v; mnPress('mnc-whey', el.dataset.v); const b = $('#mn-whey'); if (b) b.hidden = !UI.mnc.whey.doses; };
+A['mnc-range'] = el => { UI.mnc.range = el.dataset.v; mnPress('mnc-range', el.dataset.v); };
+A['mnc-fp'] = el => { const k = el.dataset.k; const fp = UI.mnc.fp; const st = el.dataset.s || ''; const nx = st === '' ? 'like' : st === 'like' ? 'no' : '';
+  fp.like = fp.like.filter(x => x !== k); fp.no = fp.no.filter(x => x !== k); if (nx === 'like') fp.like.push(k); if (nx === 'no') fp.no.push(k);
+  el.dataset.s = nx; const n = $('#mnc-fp-n'); if (n) n.textContent = mnFpTxt(fp); Platform.haptic('light'); };
 A['mnc-ex'] = el => { const t = $('#mn-obs'); if (!t) return; const v = t.value.trim(); t.value = v ? `${v.replace(/[,;.]\s*$/, '')}, ${el.dataset.v}` : el.dataset.v; mnKeepObs(); $('#mn-obs-prev').innerHTML = obsPreview(t.value); };
 A['mn-create'] = () => {
   mnKeepObs(); const c = UI.mnc; const old = ST.prefs.menu || {};
   const o = parseMenuObs(c.obs);
-  ST.prefs.menu = {...old, on: true, n: o.meals || c.n, style: o.style || c.style, diet: o.diet || c.diet, din: o.din || c.din, train: o.train || c.train, obs: c.obs.trim().slice(0, 500), unit: old.unit || 'cas', day: 0};
+  ST.prefs.menu = {...old, on: true, n: o.meals || c.n, style: o.style || c.style, diet: o.diet || c.diet, din: o.din || c.din, train: o.train || c.train, obs: c.obs.trim().slice(0, 500), unit: old.unit || 'cas', day: 0, range: c.range, fp: {like: c.fp.like.slice(), no: c.fp.no.slice()}, whey: {...c.whey}};
   if (!makeMenu(false)){ toast('Calcule suas metas primeiro.'); return; }
   UI.mnOpen = true; closeSheet(); render(); Platform.haptic('success'); toast('Cardápios prontos');
 };
@@ -7347,7 +7594,7 @@ A['mn-toggle'] = () => { const was = UI.mnOpen; UI.mnOpen = !UI.mnOpen; render()
 A['tips-all'] = () => { UI.tipsAll = !UI.tipsAll; render(); };
 A['mn-other'] = el => {
   const M = ST.prefs.menu; const res = planRes(); if (!M || !res) return; const di = M.day || 0; const mi = +el.dataset.m; const old = M.days[di].meals[mi];
-  const o = parseMenuObs(M.obs); const cx = menuCtx(M, o, res); const T = menuTargets(res, o); const MT = mealTargets(M.keys, T, M.ts || {}, o);
+  const o = parseMenuObs(M.obs); const cx = menuCtx(M, o, res); const T = menuTargets(res, o); const MT = mealTargets(M.keys, T, M.ts || {}, o); ensureWhey(M.whey); cx.wm = wheyMeals(M.keys, M.ts || {}, M.whey); MN_SCALE = Math.min(1.7, Math.max(1, T.k / 2000)); MN_GAIN = cx.goal === 'gain';
   const used = {}; M.days.forEach(d => d.meals.forEach(m => m.it.forEach(i => { used[i.f] = (used[i.f] || 0) + 1; }))); old.it.forEach(i => { used[i.f] = (used[i.f] || 0) + 3; });
   const dayU = new Map(); M.days[di].meals.forEach((m, j) => { if (j !== mi) m.it.forEach(i => dayU.set(i.f, (dayU.get(i.f) || 0) + 1)); });
   M.days[di].meals[mi] = slim(buildMeal(old.k, cx, rng(Math.floor(Math.random() * 2 ** 31)), used, M.ts || {}, MT[old.k], old.t, dayU));
@@ -7366,13 +7613,48 @@ A['mn-swap'] = el => {
   const M = ST.prefs.menu; const res = planRes(); if (!M) return; const di = M.day || 0; const mi = +el.dataset.m, ii = +el.dataset.i; const meal = M.days[di].meals[mi]; const it = meal.it[ii];
   const o = parseMenuObs(M.obs); const cx = menuCtx(M, o, res || {}); const unit = M.unit || 'cas'; const lv = LEVER[it.r] || 'k';
   const inMeal = new Set(meal.it.map(x => x.f));
-  const cands = Object.keys(FOODS).filter(k => k !== it.f && !inMeal.has(k) && FOODS[k].r.includes(it.r) && cx.ok(k)).map(k => { const g = swapGrams(it.f, k, it.g, it.r); const m = macOf([{f: k, g}]); return {k, g, m}; });
+  /* v4.29: a troca fica dentro do prato (no pão com queijo, outro queijo; no prato feito, outra mistura) */
+  const tp = TPL.find(t => t.id === meal.t); const sl = tp && tp.s.find(x => x.r === it.r && (!x.from || x.from.includes(it.f)));
+  const allowed = sl && sl.from && !tp.main ? new Set(sl.from) : null;
+  const cands = Object.keys(FOODS).filter(k => k !== it.f && !inMeal.has(k) && FOODS[k].r.includes(it.r) && cx.ok(k) && (!allowed || allowed.has(k))).map(k => { const g = swapGrams(it.f, k, it.g, it.r); const m = macOf([{f: k, g}]); return {k, g, m}; });
   const cur = macOf([it]); cands.sort((x, y) => (cx.o.like.has(y.k) - cx.o.like.has(x.k)) || Math.abs(x.m.k - cur.k) - Math.abs(y.m.k - cur.k)); const what = {p: 'a mesma proteína', c: 'o mesmo carboidrato', f: 'a mesma gordura', k: 'as mesmas calorias', d: 'uma porção equivalente'}[lv];
   UI.sheet = {kind: 'mnswap', di, mi, ii};
   const a0 = amountTxt(it.f, it.g, unit);
+  UI.sheet.cands = cands.slice(0, 1).map(c => c.k);
+  /* v4.29: também dá para trocar o prato inteiro, escolhendo entre outros pratos que cabem na refeição */
+  const alts = res ? mealAlts(M, di, mi, 3) : []; UI.sheet.alts = alts;
   openSheet(`${sheetHead(MEALS[meal.k].t, 'Trocar ' + FOODS[it.f].n.toLowerCase())}
-    <p class="small ink2" style="margin:8px 0 0">Agora: <b>${esc(a0.q)}</b>${a0.sub ? ` (${esc(a0.sub)})` : ''}, ${fmtK(cur.k)} kcal. As opções abaixo entregam ${what}.</p>
-    <div class="mn-swl">${cands.length ? cands.map(c => { const a = amountTxt(c.k, c.g, unit); const dk = Math.round(c.m.k - cur.k); return `<button class="mn-swi" data-act="mn-swap-do" data-f="${c.k}" data-g="${c.g}"><span class="grow"><b>${esc(FOODS[c.k].n)}</b><span>${esc(a.q)}${a.sub ? ` · ${esc(a.sub)}` : ''}</span></span><em class="mono ${Math.abs(dk) < 25 ? '' : dk > 0 ? 'up' : 'dn'}">${dk === 0 ? '=' : (dk > 0 ? '+' : '−') + Math.abs(dk)} kcal</em></button>`; }).join('') : '<p class="small muted">Nenhuma troca com as suas preferências.</p>'}</div>`);
+    <p class="small ink2" style="margin:8px 0 0">Agora: <b>${esc(a0.q)}</b>${a0.sub ? ` (${esc(a0.sub)})` : ''}, ${fmtK(cur.k)} kcal.</p>
+    ${cands.length ? `<div class="eyebrow" style="margin-top:16px">Trocar só este item</div><p class="tiny muted" style="margin:2px 0 0">Com ${what}.</p>` : ''}
+    <div class="mn-swl">${cands.length ? cands.map((c, ci) => { const more = ci === 5 ? `<details class="mn-more"><summary>Mais ${cands.length - 5} opções</summary><div class="mn-swl">` : ''; const a = amountTxt(c.k, c.g, unit); const dk = Math.round(c.m.k - cur.k); return `<button class="mn-swi" data-act="mn-swap-do" data-f="${c.k}" data-g="${c.g}"><span class="grow"><b>${esc(FOODS[c.k].n)}</b><span>${esc(a.q)}${a.sub ? ` · ${esc(a.sub)}` : ''}</span></span><em class="mono ${Math.abs(dk) < 25 ? '' : dk > 0 ? 'up' : 'dn'}">${dk === 0 ? '=' : (dk > 0 ? '+' : '−') + Math.abs(dk)} kcal</em></button>`.replace(/^/, more); }).join('') + (cands.length > 5 ? '</div></details>' : '') : ''}</div>
+    ${alts.length ? `<div class="eyebrow" style="margin-top:18px">${cands.length ? 'Ou trocar o prato' : 'Trocar o prato'}</div><div class="mn-swl">${alts.map((m, x) => { const q = macOf(m.it); return `<button class="mn-swi" data-act="mn-dish-do" data-x="${x}"><span class="grow"><b>${esc(dishName(m) || MEALS[m.k].t)}</b><span>${esc(m.it.map(i => kw0(i.f)).slice(0, 4).join(', '))}</span></span><em class="mono">${fmtK(q.k)} kcal</em></button>`; }).join('')}</div>` : ''}
+    <button class="btn ghost block mn-dis" data-act="mn-dislike">${I.swap}Não gosto, trocar por outro</button>
+    <p class="tiny muted" style="margin:6px 2px 0;text-align:center">O app escolhe a troca e não sugere mais ${esc(FOODS[it.f].n.toLowerCase())}.</p>`);
+};
+function mealAlts(M, di, mi, n){
+  const res = planRes(); const old = M.days[di].meals[mi]; const o = parseMenuObs(M.obs); const cx = menuCtx(M, o, res); const T = menuTargets(res, o); const MT = mealTargets(M.keys, T, M.ts || {}, o); ensureWhey(M.whey); cx.wm = wheyMeals(M.keys, M.ts || {}, M.whey); MN_SCALE = Math.min(1.7, Math.max(1, T.k / 2000)); MN_GAIN = cx.goal === 'gain'; cx.wm = wheyMeals(M.keys, M.ts || {}, M.whey);
+  const used = {}; M.days.forEach(d => d.meals.forEach(m => m.it.forEach(i => { used[i.f] = (used[i.f] || 0) + 1; })));
+  const out = []; const seen = new Set([old.t]); const names = new Set([dishName(old)]);
+  for (let t = 0; t < 16 && out.length < n; t++){
+    const dayU = new Map(); M.days[di].meals.forEach((m, j) => { if (j !== mi) m.it.forEach(i => dayU.set(i.f, (dayU.get(i.f) || 0) + 1)); });
+    const u = {...used}; [...seen].forEach(id => { u['tpl:' + id] = (u['tpl:' + id] || 0) + 3; }); old.it.forEach(i => { u[i.f] = (u[i.f] || 0) + 3; }); // prefere pratos e alimentos diferentes do atual
+    const m = slim(buildMeal(old.k, cx, rng(Math.floor(Math.random() * 2 ** 31)), u, M.ts || {}, MT[old.k], null, dayU)); const nm = dishName(m);
+    if (!m.t || !nm || names.has(nm)) continue; names.add(nm); seen.add(m.t); out.push(m);
+  }
+  return out;
+}
+A['mn-dish-do'] = el => { const s = UI.sheet; const M = ST.prefs.menu; if (!s || s.kind !== 'mnswap' || !M || !s.alts) return; const m = s.alts[+el.dataset.x]; if (!m) return; M.days[s.di].meals[s.mi] = m; saveState(); closeSheet(); render(); Platform.haptic('light'); };
+/* "não gosto": o alimento sai de todos os cardápios e entra a melhor troca equivalente em cada lugar */
+A['mn-dislike'] = () => {
+  const s = UI.sheet; const M = ST.prefs.menu; if (!s || s.kind !== 'mnswap' || !M) return; const k = M.days[s.di].meals[s.mi].it[s.ii].f;
+  M.fp = M.fp || {like: [], no: []}; M.fp.like = (M.fp.like || []).filter(x => x !== k); if (!(M.fp.no || []).includes(k)) M.fp.no = [...(M.fp.no || []), k];
+  /* as refeições com esse alimento são remontadas: entra outro prato que combine, sem ele */
+  const res = planRes(); if (!res) return; const o = parseMenuObs(M.obs); const cx = menuCtx(M, o, res); const T = menuTargets(res, o); const MT = mealTargets(M.keys, T, M.ts || {}, o); ensureWhey(M.whey); cx.wm = wheyMeals(M.keys, M.ts || {}, M.whey); MN_SCALE = Math.min(1.7, Math.max(1, T.k / 2000)); MN_GAIN = cx.goal === 'gain'; let n = 0;
+  const used = {}; M.days.forEach(d => d.meals.forEach(m => m.it.forEach(i => { used[i.f] = (used[i.f] || 0) + 1; })));
+  M.days.forEach(d => { const dayU = new Map(); d.meals.forEach(m => m.it.forEach(i => dayU.set(i.f, (dayU.get(i.f) || 0) + 1)));
+    d.meals = d.meals.map(m => { if (!m.it.some(i => i.f === k)) return m; n++; m.it.forEach(i => dayU.set(i.f, Math.max(0, (dayU.get(i.f) || 1) - 1)));
+      return slim(buildMeal(m.k, cx, rng(Math.floor(Math.random() * 2 ** 31)), used, M.ts || {}, MT[m.k], null, dayU)); }); });
+  saveState(); closeSheet(); render(); Platform.haptic('success'); toast(`${FOODS[k].n} trocado em ${n} ${n === 1 ? 'refeição' : 'refeições'}. Não aparece mais.`);
 };
 A['mn-swap-do'] = el => {
   const s = UI.sheet; const M = ST.prefs.menu; if (!s || s.kind !== 'mnswap' || !M) return;
