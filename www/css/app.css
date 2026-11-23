@@ -1648,3 +1648,28 @@ body.auth-mode #lbg{display:none}
 .mn-more{margin-top:2px}
 .mn-more>summary{list-style:none;cursor:pointer;padding:10px 2px;font-weight:600;font-size:14px;color:var(--accent,#e8541e)}
 .mn-more>summary::-webkit-details-marker{display:none}
+/* v4.30: dicas em card recolhível */
+.tips.mn-card{margin-top:14px}
+.tips.open .tips-l{margin-top:12px}
+.tips.open .tip{background:var(--s2);border-color:transparent}
+/* v4.30: tela de entrada com etiquetas em movimento e fundo de fotos */
+.auth-marq{margin:12px -20px 0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.auth-marq-t{display:flex;width:max-content;animation:marq 48s linear infinite}
+.auth-marq i{flex:none;margin-right:8px;font-style:normal;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);padding:6px 10px;border-radius:999px;background:rgba(14,15,17,.62);border:1px solid var(--line2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap}
+@keyframes marq{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.auth.start .auth-marq+.auth-hero{margin-top:16px}
+.auth.start.pics{background:#07080a}
+.auth-gap{flex:1 1 auto;min-height:24svh}
+.auth-pics{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 8px;transform:rotate(-5deg) scale(1.22);transform-origin:50% 40%}
+.ap-col{overflow:hidden}
+.ap-t{display:flex;flex-direction:column;animation:ap-up 70s linear infinite}
+.ap-col.c1 .ap-t{animation-name:ap-down;animation-duration:82s}
+.ap-col.c2 .ap-t{animation-duration:64s}
+.ap-t img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:16px;margin-bottom:8px;filter:saturate(.8) brightness(.78) contrast(1.05)}
+@keyframes ap-up{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+@keyframes ap-down{from{transform:translateY(-50%)}to{transform:translateY(0)}}
+.ap-fade{position:fixed;inset:0;transform:rotate(5deg) scale(1.2);background:linear-gradient(180deg,rgba(7,8,10,.55) 0%,rgba(7,8,10,.12) 16%,rgba(7,8,10,.3) 30%,rgba(7,8,10,.86) 44%,rgba(7,8,10,.96) 56%,#07080a 66%),radial-gradient(90% 50% at 85% 0%,color-mix(in srgb,var(--ember) 22%,transparent),transparent 70%)}
+.auth.start.pics .auth-top .brand{text-shadow:0 1px 12px rgba(0,0,0,.6)}
+.auth.start.pics .auth-hero p{color:rgba(255,255,255,.78)}
+@media (prefers-reduced-motion: reduce){.auth-marq-t,.ap-t{animation:none}}
+.auth.start .auth-hero h1.auth-h{font-size:clamp(34px,calc((min(100vw,440px) - 44px) / 7.7),52px);line-height:.95}

@@ -454,7 +454,7 @@ function menuView(){
   return h;
 }
 
-/* ---------- dicas com base científica (sempre visíveis) ---------- */
+/* ---------- dicas com base científica ---------- */
 function nutriTips(){
   const pl = ST.prefs.plan; const res = planRes(); const lw = lastWeight(); const kg = lw ? lw.kg : null; const goal = pl ? pl.goal : null; const o = parseMenuObs((ST.prefs.menu || {}).obs);
   const T = []; const n1 = v => fmtN(Math.round(v));
@@ -470,10 +470,14 @@ function nutriTips(){
   return T;
 }
 function tipsView(){
-  const T = nutriTips(); const all = UI.tipsAll; const L = all ? T : T.slice(0, 3);
-  return `<section class="tips"><div class="sec-head"><span class="eyebrow">Dicas com base científica</span><span class="tiny muted">${T.length} dicas</span></div>
-    <div class="tips-l">${L.map(x => `<article class="tip"><b>${esc(x.t)}</b><p>${esc(x.b)}</p><cite>${esc(x.r)}</cite></article>`).join('')}</div>
-    ${T.length > 3 ? `<button class="link" data-act="tips-all">${all ? 'Mostrar menos' : `Ver as ${T.length}`}</button>` : ''}</section>`;
+  /* v4.30: um card resumido; o toque abre todas as dicas e a setinha recolhe de novo (como nos cardápios) */
+  const T = nutriTips();
+  if (!UI.tipsAll) return `<section class="mn-card mn-mini tips"><button class="mn-mini-b" data-act="tips-all" aria-expanded="false"><div class="row between"><span class="eyebrow">Dicas com base científica</span>${I.down}</div>
+    <h3>${T.length} dicas para você</h3><p>Com base no seu plano e em estudos.</p>
+    <div class="mn-mini-m">${T.slice(0, 4).map(x => `<span>${esc(x.t)}</span>`).join('')}</div>
+    <div class="mn-mini-f"><span class="mono">${T.length > 4 ? `e mais ${T.length - 4}` : ''}</span><b>Ver dicas</b></div></button></section>`;
+  return `<section class="mn-card tips open"><button class="mn-min" data-act="tips-all" aria-expanded="true"><span class="eyebrow">Dicas com base científica</span>${I.down}</button>
+    <div class="tips-l">${T.map(x => `<article class="tip"><b>${esc(x.t)}</b><p>${esc(x.b)}</p><cite>${esc(x.r)}</cite></article>`).join('')}</div></section>`;
 }
 function nutritionTab(){
   const lead = '<p class="small ink2" style="margin:14px 4px 12px">Calorias e macros para o seu objetivo, ideias de cardápio e dicas com base científica.</p>';
@@ -552,7 +556,7 @@ A['mn-day'] = el => { ST.prefs.menu.day = +el.dataset.v; saveState(); render(); 
 A['mn-redo'] = () => { makeMenu(false); render(); toast('Cardápios novos'); };
 A['mn-resolve'] = () => { resolveMenu(); render(); toast('Porções ajustadas ao plano'); };
 A['mn-toggle'] = () => { const was = UI.mnOpen; UI.mnOpen = !UI.mnOpen; render(); if (was){ const c = $('.mn-card'); if (c && c.getBoundingClientRect().top < 0) c.scrollIntoView({block: 'start'}); } };
-A['tips-all'] = () => { UI.tipsAll = !UI.tipsAll; render(); };
+A['tips-all'] = () => { const was = UI.tipsAll; UI.tipsAll = !UI.tipsAll; render(); const c = $('.tips'); if (was && c && c.getBoundingClientRect().top < 0) c.scrollIntoView({block: 'start'}); Platform.haptic('light'); };
 A['mn-other'] = el => {
   const M = ST.prefs.menu; const res = planRes(); if (!M || !res) return; const di = M.day || 0; const mi = +el.dataset.m; const old = M.days[di].meals[mi];
   const o = parseMenuObs(M.obs); const cx = menuCtx(M, o, res); const T = menuTargets(res, o); const MT = mealTargets(M.keys, T, M.ts || {}, o); ensureWhey(M.whey); cx.wm = wheyMeals(M.keys, M.ts || {}, M.whey); MN_SCALE = Math.min(1.7, Math.max(1, T.k / 2000)); MN_GAIN = cx.goal === 'gain';

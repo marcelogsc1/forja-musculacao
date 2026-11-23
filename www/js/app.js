@@ -1,6 +1,6 @@
 // ================= estado =================
-const APP_VERSION = '4.29.3';
-const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura'};
+const APP_VERSION = '4.30.0';
+const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura', loginbg: 'fotos'};
 let ST = freshState();
 let SESS = [];
 const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '', progTab: 'geral', progEx: null, progMetric: 'kg', calMonth: null, calSel: today(), bwMetric: 'kg', exTab: 'sobre', expand: {}, rtab: 'minhas', xf: {}, tplOpt: {}, bld: null };
@@ -1096,6 +1096,7 @@ const PREF_OPTS = {
   inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
   bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
   lightbg: {t: 'Fundo do tema claro', o: LBG, f: v => ({aura: 'Gradiente do dia', tinta: 'Tinta do dia', nitido: 'Branco nítido', faixa: 'Faixa de energia'})[v] || 'Gradiente do dia', s: 'Usa a cor do treino do dia'},
+  loginbg: {t: 'Fundo da tela de entrada', o: ['fotos', 'figura'], f: v => ({fotos: 'Fotos em movimento', figura: 'Figura do exercício'})[v] || 'Fotos em movimento'},
   theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
   pics: {t: 'Imagens dos exercícios', o: () => ['anim'].concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => (({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D')},
 };
@@ -1106,7 +1107,7 @@ function vSettings(){
   const act = (a, ic, t, sub = '', cls = '', extra = '') => `<button class="s-row ${cls}" data-act="${a}" ${extra}><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span>${cls ? '' : I.chev}</button>`;
   const picsOk = !window.FORJA_FIG;
   return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}</div></section>
-  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}${row('lightbg', SI.img)}
+  <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}${row('lightbg', SI.img)}${typeof AUTH_PICS !== 'undefined' && AUTH_PICS.length ? row('loginbg', SI.img) : ''}
     <button class="s-row" data-act="motion-open"><span class="s-ic">${SI.spark}</span><span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${motionPreview(motionMode())}${I.chev}</button>
     ${picsOk ? row('pics', SI.img) : ''}</div></section>
   <section class="s-group"><div class="eyebrow">Objetivo e corpo</div><div class="list">${act('plan-open', I.flame, 'Assistente de objetivo', ST.prefs.plan ? 'Calorias, proteína e ritmo do seu plano' : 'Calcule calorias e proteína para o seu objetivo')}${act('go-body', I.note, 'Peso e medidas', 'Registros do corpo e gráficos')}</div></section>
@@ -1119,7 +1120,7 @@ function vSettings(){
     ${Store.mode === 'api' ? act('ask-delete-account', I.trash, 'Excluir minha conta', 'Apaga a conta e tudo que está na nuvem', 'danger') : ''}</div></section>
   <section class="s-group"><div class="eyebrow">Sobre</div><div class="list">
     ${!Platform.isArtifact ? `<a class="s-row" href="privacidade.html" target="_blank" rel="noopener"><span class="s-ic">${SI.doc}</span><span class="grow"><b>Política de privacidade</b></span>${I.chev}</a>` : ''}
-    <div class="s-row"><span class="s-ic">${I.info}</span><span class="grow"><b>Versão</b><span class="sub">Ilustração anatômica: react-native-body-highlighter (MIT) · fotos: Free Exercise DB</span></span><em>${APP_VERSION}</em></div></div></section>`;
+    <div class="s-row"><span class="s-ic">${I.info}</span><span class="grow"><b>Versão</b><span class="sub">Ilustração anatômica: react-native-body-highlighter (MIT) · fotos: Free Exercise DB · fotos da entrada: Unsplash</span></span><em>${APP_VERSION}</em></div></div></section>`;
 }
 PAGES.settings = {title: () => 'Configurações', view: () => vSettings()};
 /* ================= tela de entrada ================= */
@@ -1127,10 +1128,18 @@ PAGES.settings = {title: () => 'Configurações', view: () => vSettings()};
    formulário de e-mail separado, e vínculo quando o Google encontra um e-mail que já tem conta com senha. */
 const I_G = '<svg class="g-ic" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
 const gBtn = (label = 'Continuar com o Google') => Auth.googleOk ? `<button type="button" class="gbtn" data-act="auth-google">${I_G}<span>${label}</span></button>` : '';
+/* v4.30: etiquetas que passam devagar (da esquerda para a direita) e fundo opcional com fotos reais em colunas que se movem */
+const AUTH_TAGS = ['Treinos personalizados', 'Dietas personalizadas', 'Calculadora de calorias', 'Progressão de carga', 'Registro rápido', 'Ajuste inteligente do treino', 'Cardápios prontos', 'Em casa ou na academia', 'Medidas corporais', 'Timer de descanso', 'Gráficos de progresso', 'Salvo na nuvem'];
+const authMarq = () => { const t = AUTH_TAGS.map(x => `<i>${x}</i>`).join(''); return `<div class="auth-marq" aria-hidden="true"><div class="auth-marq-t">${t}${t}</div></div>`; };
+function authUsePics(){ return typeof AUTH_PICS !== 'undefined' && AUTH_PICS.length >= 6 && (ST.prefs.loginbg || 'fotos') === 'fotos'; }
+function authPics(){
+  const P = AUTH_PICS; const cols = [[], [], []]; P.forEach((f, i) => cols[i % 3].push(f));
+  return `<div class="auth-pics" aria-hidden="true">${cols.map((c, k) => { const imgs = c.map(f => `<img src="auth/${f}" alt="" decoding="async">`).join(''); return `<div class="ap-col c${k}"><div class="ap-t">${imgs}${imgs}</div></div>`; }).join('')}<i class="ap-fade"></i></div>`;
+}
 function authArt(){
   const fem = ST.profile && (ST.profile.sex === 'Feminino' || ST.profile.sex === 'F');
   const src = fem && typeof FIGF !== 'undefined' && FIGF.includes('desenv-halter') && !window.FORJA_FIG ? 'figf/desenv-halter.webp' : figSrc('dumbbell-shoulder-press');
-  return `<div class="auth-art ${fem ? 'f' : 'm'}" aria-hidden="true"><i class="ring"></i><img src="${src}" alt="" decoding="async"><span class="auth-tags"><i>Rotinas prontas</i><i>Progressão de carga</i><i>Na nuvem</i></span></div>`;
+  return `<div class="auth-art ${fem ? 'f' : 'm'}" aria-hidden="true"><i class="ring"></i><img src="${src}" alt="" decoding="async"></div>`;
 }
 function vAuth(p){
   const st = UI.auth || (UI.auth = {mode: 'start', show: false}); const m = st.mode;
@@ -1138,10 +1147,12 @@ function vAuth(p){
   const legal = `<p class="auth-legal">Ao continuar, você concorda com a <a href="privacidade.html" target="_blank" rel="noopener">política de privacidade</a>.</p>`;
   const bg = '<div class="auth-bg" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="grain"></i></div>';
   if (m === 'start'){
-    return `<div class="auth start">${bg}
+    const pics = authUsePics();
+    return `<div class="auth start${pics ? ' pics' : ''}">${pics ? authPics() : bg}
       <div class="auth-top">${p.first ? '<span></span>' : `<button class="icon clear" data-act="back" aria-label="Voltar">${I.back}</button>`}<span class="brand">${I.brand}Forja</span><span></span></div>
-      ${authArt()}
-      <div class="auth-hero"><h1 class="cond">Cada série<br><em>conta.</em></h1><p>Rotinas prontas, registro rápido de cargas e um progresso fácil de ler. Seus treinos ficam salvos e aparecem em qualquer aparelho.</p></div>
+      ${pics ? '<div class="auth-gap"></div>' : authArt()}
+      ${authMarq()}
+      <div class="auth-hero"><h1 class="cond auth-h">Treinos exclusivos<br><em>que se adaptam<br>a você</em></h1><p>Treinos personalizados, registro rápido de cargas e acompanhamento de progresso e nutrição. Seus treinos e dados ficam salvos e aparecem em qualquer aparelho.</p></div>
       ${st.err ? `<p class="auth-err" role="alert">${esc(st.err)}</p>` : ''}
       <div class="auth-cta">${gBtn()}<button class="mbtn" data-act="auth-mode" data-m="register">${I.mail}<span>Continuar com e-mail</span></button>
         <p class="auth-have">Já tem conta? <button class="link" data-act="auth-mode" data-m="login">Entrar</button></p></div>
