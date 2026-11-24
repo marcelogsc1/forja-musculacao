@@ -19,7 +19,7 @@ Antes do primeiro envio:
 
 1. **config.js:** com o `firebaseConfig` do seu projeto preenchido (o mesmo do site). Se restringir a chave de API por referenciador, inclua `https://localhost/*`, que é a origem do app Android.
 2. **Ícone e tela de abertura:** `npx @capacitor/assets generate` a partir de `www/icons/maskable-512.png`, ou Android Studio, New, Image Asset.
-3. **Permissões** em `android/app/src/main/AndroidManifest.xml`: `POST_NOTIFICATIONS` (aviso de fim de descanso) e `VIBRATE`.
+3. **Permissões** em `android/app/src/main/AndroidManifest.xml`: `POST_NOTIFICATIONS` (aviso de fim de descanso), `VIBRATE` e `SCHEDULE_EXACT_ALARM` (para o aviso tocar no segundo certo; no Android 14 o próprio app pede para o usuário liberar "Alarmes e lembretes" na primeira vez). O app cria o canal de notificação "Fim do descanso" com som e vibração.
 4. **Orientação:** `android:screenOrientation="portrait"` na `MainActivity`.
 5. **Versão:** em `android/app/build.gradle`, aumente `versionCode` (1, 2, 3...) a cada envio e ajuste `versionName`.
 6. **Gerar:** Build, Generate Signed App Bundle, crie uma chave de upload (`.jks`) e guarde em lugar seguro com a senha. Ative a Assinatura de apps do Google Play quando o Console pedir.
@@ -39,7 +39,7 @@ Antes do primeiro envio:
 
 ## 3. Alternativa: TWA (app que abre o site em tela cheia)
 
-Ferramentas como Bubblewrap ou PWABuilder geram um `.aab` que abre o seu site da Vercel em tela cheia. Vantagem: toda atualização do site já vale para o app. Desvantagens: depende de internet para abrir pela primeira vez e não usa os plugins nativos (vibração, notificação de descanso com tela bloqueada, tela ligada). Exige o arquivo `/.well-known/assetlinks.json` no site com a impressão digital da chave. Para o Forja, o Capacitor é a opção recomendada.
+Ferramentas como Bubblewrap ou PWABuilder geram um `.aab` que abre o seu site da Vercel em tela cheia. Vantagem: toda atualização do site já vale para o app. Desvantagens: depende de internet para abrir pela primeira vez e não usa os plugins nativos (vibração direta e tela ligada). Desde a v4.32 o aviso de fim do descanso funciona também nesse modo, pelo service worker do site, para descansos de até cerca de 5 minutos. Exige o arquivo `/.well-known/assetlinks.json` no site com a impressão digital da chave. Para o Forja, o Capacitor é a opção recomendada.
 
 ## Atualizações
 

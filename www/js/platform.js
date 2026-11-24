@@ -10,11 +10,14 @@ const Platform = (() => {
   const isArtifact = !!window.claude || /claude|anthropic/i.test(location.hostname);
   const reg = {};
   const plug = n => { if (!cap) return null; if (cap.Plugins && cap.Plugins[n]) return cap.Plugins[n]; if (isNative && cap.registerPlugin) return reg[n] || (reg[n] = cap.registerPlugin(n)); return null; };
-  let audio = null, wake = null, deferred = null;
+  let audio = null, wake = null, deferred = null, pre = null;
   const standalone = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } };
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent);
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; try { if (typeof canRerender === 'function' && canRerender()) render(); } catch (err) {} });
   window.addEventListener('appinstalled', () => { deferred = null; });
+  let chanOk = false;
+  const chan = async LN => { if (chanOk || !LN.createChannel) return; try { await LN.createChannel({id: 'descanso', name: 'Fim do descanso', description: 'Avisa quando o descanso entre as séries acaba', importance: 5, visibility: 1, vibration: true, lights: true}); chanOk = true; } catch (e) {} };
+  const swPost = msg => { try { if (isArtifact || !('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return; const c = navigator.serviceWorker.controller; if (c) c.postMessage(msg); else navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage(msg)).catch(() => {}); } catch (e) {} };
   const P = {
     isNative, isArtifact,
     haptic(kind = 'light'){
@@ -30,9 +33,40 @@ const Platform = (() => {
         [0, 0.22, 0.44].forEach((t, i) => { const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = i === 2 ? 1320 : 880; g.gain.setValueAtTime(0.0001, audio.currentTime + t); g.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + t + 0.18); o.connect(g).connect(audio.destination); o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.2); });
       } catch (e) {}
     },
+    /* bipes já agendados no relógio de áudio: tocam na hora certa mesmo se o navegador atrasar os timers */
+    alarmAt(sec){
+      P.alarmCancel(); if (!ST.prefs.sound) return false;
+      try {
+        audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume();
+        if (audio.state !== 'running') return false;
+        const m = audio.createGain(); m.connect(audio.destination); const t0 = audio.currentTime + Math.max(0, sec);
+        [0, 0.22, 0.44].forEach((t, i) => { const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = i === 2 ? 1320 : 880; g.gain.setValueAtTime(0.0001, t0 + t); g.gain.exponentialRampToValueAtTime(0.25, t0 + t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + t + 0.18); o.connect(g).connect(m); o.start(t0 + t); o.stop(t0 + t + 0.2); });
+        pre = m; return true;
+      } catch (e) { return false; }
+    },
+    alarmCancel(){ if (pre){ try { pre.disconnect(); } catch (e) {} pre = null; } },
+    buzz(){ try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {} },
     unlockAudio(){ try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) {} },
-    async scheduleRestEnd(date, label){ const LN = plug('LocalNotifications'); if (!LN) return; try { await LN.schedule({notifications: [{id: 7001, title: 'Descanso concluído', body: label || 'Hora da próxima série', schedule: {at: date, allowWhileIdle: true}}]}); } catch (e) {} },
-    async cancelRestEnd(){ const LN = plug('LocalNotifications'); if (LN) try { await LN.cancel({notifications: [{id: 7001}]}); } catch (e) {} },
+    /* v4.32: aviso do fim do descanso com o app em segundo plano.
+       Android (app): notificação local exata, num canal com som e vibração.
+       Navegador/PWA: o service worker espera o tempo e mostra a notificação (som e vibração do sistema),
+       só se o app não estiver na tela. No artefato do claude.ai não há como avisar com o app fechado. */
+    restNotify(){ if (isNative) return 'native'; if (isArtifact || !('Notification' in window) || !('serviceWorker' in navigator)) return 'none'; return Notification.permission; },
+    async askNotify(){
+      const LN = plug('LocalNotifications');
+      if (LN){ try { let p = await LN.checkPermissions(); if (p.display !== 'granted') p = await LN.requestPermissions(); await chan(LN); return p.display === 'granted'; } catch (e) { return false; } }
+      if (!('Notification' in window)) return false;
+      try { return (await Notification.requestPermission()) === 'granted'; } catch (e) { return false; }
+    },
+    async exactAlarmOk(){ const LN = plug('LocalNotifications'); if (!LN || !LN.checkExactNotificationSetting) return true; try { return (await LN.checkExactNotificationSetting()).exact_alarm !== 'denied'; } catch (e) { return true; } },
+    async openExactAlarm(){ const LN = plug('LocalNotifications'); if (LN && LN.changeExactNotificationSetting) try { await LN.changeExactNotificationSetting(); } catch (e) {} },
+    async scheduleRestEnd(date, label){
+      const body = label ? `${label}: hora da próxima série` : 'Hora da próxima série';
+      const LN = plug('LocalNotifications');
+      if (LN){ try { await chan(LN); await LN.cancel({notifications: [{id: 7001}]}).catch(() => {}); await LN.schedule({notifications: [{id: 7001, title: 'Descanso concluído', body, channelId: 'descanso', schedule: {at: date, allowWhileIdle: true}}]}); } catch (e) {} return; }
+      swPost({type: 'rest-at', at: +date, title: 'Descanso concluído', body});
+    },
+    async cancelRestEnd(){ const LN = plug('LocalNotifications'); if (LN){ try { await LN.cancel({notifications: [{id: 7001}]}); } catch (e) {} return; } swPost({type: 'rest-cancel'}); },
     async keepAwake(on){
       const K = plug('KeepAwake'); if (K){ try { on ? await K.keepAwake() : await K.allowSleep(); } catch (e) {} return; }
       try { if (on && 'wakeLock' in navigator && !wake){ wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } else if (!on && wake){ await wake.release(); wake = null; } } catch (e) { wake = null; }

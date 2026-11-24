@@ -1,5 +1,5 @@
 // ================= estado =================
-const APP_VERSION = '4.31.0';
+const APP_VERSION = '4.32.0';
 const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura', loginbg: 'fotos'};
 let ST = freshState();
 let SESS = [];
@@ -515,7 +515,9 @@ function restCard(r, w){
 
 
 // ================= Biblioteca =================
-function libList(){ const q = norm(UI.libQ.trim()); return [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => { const e = getEx(k); if (e.hid) return false; return (!UI.libM || e.m === UI.libM) && (!UI.libE || e.e === UI.libE) && (!q || norm(e.n).includes(q) || norm(MUSC[e.m] || '').includes(q)); }); }
+/* v4.32: busca por palavras, no nome, no músculo, no equipamento e nos apelidos de academia (pulley, peck deck, graviton...) */
+function exHit(k, q){ if (!q) return true; const e = getEx(k); const hay = norm(`${e.n} ${MUSC[e.m] || ''} ${EQUIP[e.e] || ''} ${(typeof EX_ALIAS !== 'undefined' && EX_ALIAS[k]) || ''}`); return q.split(/\s+/).filter(Boolean).every(w => hay.includes(w)); }
+function libList(){ const q = norm(UI.libQ.trim()); return [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => { const e = getEx(k); if (e.hid) return false; return (!UI.libM || e.m === UI.libM) && (!UI.libE || e.e === UI.libE) && exHit(k, q); }).sort((a, b) => q ? (norm(getEx(b).n).startsWith(q) - norm(getEx(a).n).startsWith(q)) : 0); }
 function vLibrary(embed){
   return `${embed ? '' : `<section class="row between" style="margin-top:20px"><h1 class="display h1">Exercícios</h1><button class="icon" data-act="new-ex" aria-label="Criar exercício" title="Criar exercício">${I.plus}</button></section>`}
   <section class="stack" style="gap:12px${embed ? ';margin-top:14px' : ''}"><div class="search">${svg('M11 17.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.2-4.2')}<input id="lib-q" class="field" type="search" placeholder="Buscar por nome ou músculo" value="${esc(UI.libQ)}" data-act="libq" autocomplete="off"></div>
@@ -806,13 +808,22 @@ let saveT = null; function saveSessionSoon(s){ clearTimeout(saveT); saveT = setT
 
 // ================= descanso =================
 const R = {end: 0, total: 0, tick: null, label: ''};
-function startRest(sec, label){ if (!sec) return; R.end = Date.now() + sec * 1000; R.total = sec; R.label = label || ''; R.buzzed = false; clearInterval(R.tick); R.tick = setInterval(drawRest, 250); Platform.scheduleRestEnd(new Date(R.end), label); drawRest(); const h = $('#top'); if (h && !$('#restmini') && curPage()?.type === 'session') render(); }
-function stopRest(){ clearInterval(R.tick); R.tick = null; $('#rest').hidden = true; const m = $('#restmini'); if (m) m.remove(); Platform.cancelRestEnd(); }
+function startRest(sec, label){ if (!sec) return; restAskOnce(); R.end = Date.now() + sec * 1000; R.total = sec; R.label = label || ''; R.buzzed = false; R.pre = Platform.alarmAt(sec); clearInterval(R.tick); R.tick = setInterval(drawRest, 250); Platform.scheduleRestEnd(new Date(R.end), label); drawRest(); const h = $('#top'); if (h && !$('#restmini') && curPage()?.type === 'session') render(); }
+/* v4.32: pede uma vez para avisar do fim do descanso com o app fechado (Android e navegador). */
+function restAskOnce(){
+  if (UI.restAsked || lsGet('forja.restask')) return; UI.restAsked = true; const st = Platform.restNotify();
+  if (st === 'none' || st === 'granted' || st === 'denied') return;
+  if (st === 'native'){ Platform.askNotify().then(ok => { lsSet('forja.restask', '1'); if (ok) Platform.exactAlarmOk().then(ex => { if (!ex) setTimeout(restExactSheet, 600); }); }); return; }
+  setTimeout(() => { if (UI.sheet || curPage()?.type !== 'session') return; UI.sheet = {kind: 'restask'}; openSheet(`${sheetHead('Aviso do descanso', 'Avisar mesmo com o app fechado?')}<p class="small ink2" style="margin:10px 0 18px">Quando você sair do app no descanso, o celular toca e vibra no fim do tempo.</p><button class="btn primary block" data-act="rest-notify-on">Ativar aviso</button><button class="btn ghost block" style="margin-top:10px" data-act="rest-notify-no">Agora não</button>`); }, 700);
+}
+function restExactSheet(){ UI.sheet = {kind: 'restexact'}; openSheet(`${sheetHead('Aviso do descanso', 'Falta uma permissão')}<p class="small ink2" style="margin:10px 0 18px">Para o aviso tocar na hora certa, permita "Alarmes e lembretes" para o Forja.</p><button class="btn primary block" data-act="rest-exact">Abrir configuração</button><button class="btn ghost block" style="margin-top:10px" data-act="close">Agora não</button>`); }
+function stopRest(){ Platform.alarmCancel(); R.pre = false; clearInterval(R.tick); R.tick = null; $('#rest').hidden = true; const m = $('#restmini'); if (m) m.remove(); Platform.cancelRestEnd(); }
 function updRestLabels(){ const left = Math.round((R.end - Date.now()) / 1000); const txt = left > 0 ? fmtClock(left) : 'pronto'; const a = $('#restmini'); if (a) a.textContent = txt; const b = $('#kprest'); if (b) b.textContent = txt; }
 function drawRest(){
   if (!R.tick) return;
   const el = $('#rest'); const left = Math.round((R.end - Date.now()) / 1000); const over = left <= 0;
-  if (over && !R.buzzed){ R.buzzed = true; Platform.alarm(); }
+  /* fim do descanso: com bipes agendados, só vibra; se a tela voltou bem depois do fim, não toca atrasado */
+  if (over && !R.buzzed){ R.buzzed = true; if (Date.now() - R.end < 4000){ if (R.pre) Platform.buzz(); else Platform.alarm(); } }
   if (left < -90){ stopRest(); return; }
   updRestLabels();
   const p = curPage(); if (!p || p.type !== 'session' || curSess()?.status !== 'open'){ el.hidden = true; return; }
@@ -958,7 +969,7 @@ function pickerBody(){
   const sh = UI.sheet; const q = norm(sh.q.trim());
   const opt = k => { const e = getEx(k); const on = sh.sel.includes(k); return `<button class="opt" data-act="pick" data-ex="${k}" ${sh.multi ? `aria-pressed="${on}"` : ''}>${thumb(k)}<span class="grow"><b>${esc(e.n)}</b><span class="s">${MUSC[e.m] || ''} · ${EQUIP[e.e] || ''}</span></span>${sh.multi ? `<span class="tick">${I.check}</span>` : ''}</button>`; };
   const all = [...Object.keys(CAT), ...Object.keys(ST.custom)].filter(k => k !== sh.cur && !getEx(k).hid);
-  if (q || sh.m){ const hits = all.filter(k => { const e = getEx(k); return (!sh.m || e.m === sh.m) && (!q || norm(e.n).includes(q)); }); return hits.length ? `<div class="stack" style="gap:8px">${hits.map(opt).join('')}</div>` : '<p class="muted">Nada encontrado.</p>'; }
+  if (q || sh.m){ const hits = all.filter(k => { const e = getEx(k); return (!sh.m || e.m === sh.m) && exHit(k, q); }); return hits.length ? `<div class="stack" style="gap:8px">${hits.map(opt).join('')}</div>` : '<p class="muted">Nada encontrado.</p>'; }
   if (sh.cur){ const c = getEx(sh.cur); const same = all.filter(k => getEx(k).p === c.p && c.p !== 'custom'); const musc = all.filter(k => getEx(k).m === c.m && !same.includes(k));
     return `<div class="eyebrow" style="margin:6px 0 10px">Mesmo movimento</div><div class="stack" style="gap:8px">${same.map(opt).join('') || '<p class="small muted">Sem outra opção do mesmo movimento.</p>'}</div><div class="eyebrow" style="margin:18px 0 10px">Mesmo músculo, outro ângulo</div><div class="stack" style="gap:8px">${musc.map(opt).join('') || '<p class="small muted">Sem outras opções.</p>'}</div>`; }
   return Object.keys(MUSC).map(g => { const l = all.filter(k => getEx(k).m === g); return l.length ? `<div class="eyebrow" style="margin:16px 0 10px">${MUSC[g]}</div><div class="stack" style="gap:8px">${l.map(opt).join('')}</div>` : ''; }).join('');
@@ -1092,6 +1103,7 @@ const SI = {
   out: svg('M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l-5-5 5-5M5 12h11'),
   doc: svg('M6 2h9l5 5v15H6zM14 2v6h6M9 13h8M9 17h6'),
 };
+function restNotifyRow(){ const st = Platform.restNotify(); if (st === 'none') return ''; const on = st === 'granted'; return `<button class="s-row" data-act="rest-notify-set"><span class="s-ic">${SI.bell || I.timer}</span><span class="grow"><b>Aviso com o app fechado</b><span class="sub">${st === 'native' ? 'Toca e vibra no fim do descanso' : on ? 'Ativado: toca e vibra no fim do descanso' : st === 'denied' ? 'Bloqueado nas configurações do navegador' : 'Toque para ativar'}</span></span>${on || st === 'native' ? '' : I.chev || ''}</button>`; }
 const PREF_OPTS = {
   goal: {t: 'Meta semanal', o: [0, 2, 3, 4, 5, 6], f: v => v ? `${v} treinos` : 'Automática', s: 'Treinos por semana. Automática segue a agenda'},
   rest: {t: 'Descanso padrão', o: [60, 90, 120, 180], f: v => fmtRest(v), s: 'Para exercícios novos e treino livre'},
@@ -1108,7 +1120,7 @@ function vSettings(){
   const tg = (k, ic, t, sub) => `<button class="s-row toggle" data-act="pref-tog" data-k="${k}" role="switch" aria-checked="${!!P[k]}"><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b><span class="sub">${sub}</span></span><i></i></button>`;
   const act = (a, ic, t, sub = '', cls = '', extra = '') => `<button class="s-row ${cls}" data-act="${a}" ${extra}><span class="s-ic">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<span class="sub">${sub}</span>` : ''}</span>${cls ? '' : I.chev}</button>`;
   const picsOk = !window.FORJA_FIG;
-  return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}</div></section>
+  return `<section class="s-group"><div class="eyebrow">Treino</div><div class="list">${row('goal', I.target)}${row('rest', I.timer)}${row('inc', SI.plate)}${row('bar', SI.bar)}${tg('sound', SI.bell, 'Som no fim do descanso', 'Toca três bipes curtos')}${tg('awake', SI.phone, 'Manter a tela ligada', 'Evita que o celular apague entre as séries')}${restNotifyRow()}</div></section>
   <section class="s-group"><div class="eyebrow">Aparência</div><div class="list">${row('theme', SI.sun)}${row('lightbg', SI.img)}${typeof AUTH_PICS !== 'undefined' && AUTH_PICS.length ? row('loginbg', SI.img) : ''}
     <button class="s-row" data-act="motion-open"><span class="s-ic">${SI.spark}</span><span class="grow"><b>Animação do treino</b><span class="sub">${(MOTION_MODES.find(m => m.v === motionMode()) || MOTION_MODES[0]).t}</span></span>${motionPreview(motionMode())}${I.chev}</button>
     ${picsOk ? row('pics', SI.img) : ''}</div></section>
@@ -1405,8 +1417,12 @@ A.finish = () => { closeKP(); const s = curSess(); if (!s) return; const st = st
 A['ask-discard'] = () => { const s = curSess(); if (!s) return; const draft = s.status === 'draft'; confirmSheet({title: draft ? 'Descartar este registro?' : 'Descartar este treino?', text: draft ? 'Nada será salvo no histórico.' : 'As séries anotadas hoje serão apagadas.', ok: 'Descartar', danger: true, onOk: () => { closeKP(); deleteSession(s.id); if (draft){ UI.stack = []; render(); } else { stopRest(); Platform.keepAwake(false); goTab('inicio'); } toast(draft ? 'Registro descartado' : 'Treino descartado'); }}); };
 A['ask-del-session'] = el => confirmSheet({title: 'Apagar este registro?', ok: 'Apagar', danger: true, onOk: () => { const sid = el.dataset.sid; const s = SESS.find(x => x.id === sid); deleteSession(sid); A.back(); toast('Registro apagado', () => { SESS.push(s); saveSession(s); render(); }); }});
 A['save-free'] = el => { const s = SESS.find(x => x.id === el.dataset.sid); const r = activeRoutine(); if (!r) return; const w = {id: uid('w'), nome: 'Treino ' + 'ABCDEFGHIJ'[r.workouts.length % 10], cor: r.workouts.length % COLORS, items: s.items.map(e => ({...newItem(e.ex), sets: Math.max(1, workSets(e).length || e.sets.length)}))}; r.workouts.push(w); saveState(); toast(`Salvo como ${w.nome} em ${r.nome}`); UI.stack = [{type: 'workout', rid: r.id, wid: w.id, edit: true}]; render(); };
-A['rest-add'] = () => { R.end = Math.max(R.end, Date.now()) + 15000; R.total += 15; R.buzzed = false; drawRest(); };
-A['rest-sub'] = () => { R.end -= 15000; drawRest(); };
+A['rest-notify-on'] = async () => { lsSet('forja.restask', '1'); const ok = await Platform.askNotify(); closeSheet(); toast(ok ? 'Pronto. O celular avisa no fim do descanso.' : 'Sem permissão. Dá para ativar depois nos Ajustes.'); if (ok && R.end > Date.now()) Platform.scheduleRestEnd(new Date(R.end), R.label); render(); };
+A['rest-notify-no'] = () => { lsSet('forja.restask', '1'); closeSheet(); };
+A['rest-exact'] = () => { closeSheet(); Platform.openExactAlarm(); };
+A['rest-notify-set'] = async () => { const st = Platform.restNotify(); if (st === 'denied'){ toast('As notificações estão bloqueadas. Libere nas configurações do navegador para o Forja.'); return; } const ok = await Platform.askNotify(); if (ok && st === 'native' && !(await Platform.exactAlarmOk())){ restExactSheet(); return; } toast(ok ? 'Aviso do descanso ativado' : 'Sem permissão para notificações'); render(); };
+A['rest-add'] = () => { R.end = Math.max(R.end, Date.now()) + 15000; R.total += 15; R.buzzed = false; R.pre = Platform.alarmAt((R.end - Date.now()) / 1000); Platform.scheduleRestEnd(new Date(R.end), R.label); drawRest(); };
+A['rest-sub'] = () => { R.end -= 15000; if (R.end > Date.now()){ R.pre = Platform.alarmAt((R.end - Date.now()) / 1000); Platform.scheduleRestEnd(new Date(R.end), R.label); } else { Platform.alarmCancel(); R.pre = false; Platform.cancelRestEnd(); } drawRest(); };
 A['rest-stop'] = () => stopRest();
 A.quick = el => quickMark(el.dataset.rid, el.dataset.wid, UI.calSel);
 A.calnav = el => { let [y, m] = UI.calMonth; m += +el.dataset.d; if (m < 0){ m = 11; y--; } if (m > 11){ m = 0; y++; } UI.calMonth = [y, m]; render(); };
