@@ -71,9 +71,9 @@ const Platform = (() => {
       const K = plug('KeepAwake'); if (K){ try { on ? await K.keepAwake() : await K.allowSleep(); } catch (e) {} return; }
       try { if (on && 'wakeLock' in navigator && !wake){ wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } else if (!on && wake){ await wake.release(); wake = null; } } catch (e) { wake = null; }
     },
-    themeColor(dark){
+    themeColor(dark, light = '#E8E6E1'){
       let m = document.querySelector('meta[name="theme-color"]'); if (!m){ m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); }
-      m.content = dark ? '#0E0F11' : '#E8E6E1';
+      m.content = dark ? '#0E0F11' : light;
       const SB = plug('StatusBar'); if (SB){ SB.setStyle({style: dark ? 'DARK' : 'LIGHT'}).catch(() => {}); SB.setBackgroundColor && SB.setBackgroundColor({color: m.content}).catch(() => {}); }
     },
     /* Botão voltar do Android / gesto de voltar. handler() devolve false quando está na raiz. */

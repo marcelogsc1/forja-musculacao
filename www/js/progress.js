@@ -150,12 +150,39 @@ function progExBody(ex){
   if (repRows.length > 1) h += `<section class="card pg-card"><div class="eyebrow">Maior carga por repetições</div><p class="tiny muted" style="margin:4px 0 10px">A carga mais alta que você já fez para pelo menos esse número de repetições.</p><div class="pg-reps">${repRows.map(r => `<div><span>${r.n} ${r.n === 1 ? 'rep' : 'reps'}</span><b class="num">${fmtN(r.b.kg)} kg</b><em>${r.b.reps > r.n ? `fez ${r.b.reps} · ` : ''}${fmtD(r.b.date)}</em></div>`).join('')}</div></section>`;
   const bestKey = byReps(H) ? null : bestRm.date;
   h += `<section><div class="sec-head"><span class="eyebrow">Histórico</span><span class="tiny muted">${H.length} ${H.length === 1 ? 'treino' : 'treinos'}</span></div><div class="list pg-hist">${H.slice().reverse().slice(0, 40).map(x => `<button class="li" data-act="open-past" data-sid="${x.sid}"><div class="grow"><b>${fmtD(x.date)}${x.date === bestKey ? ' <span class="pg-pr">recorde</span>' : ''}</b><span class="pg-sets">${x.sets.map(y => `<i>${y.kg > 0 ? `${fmtN(y.kg)}<small>×</small>${y.reps}` : `${y.reps}<small> reps</small>`}</i>`).join('')}</span></div>${I.chev}</button>`).join('')}</div></section>`;
+  h += `<button class="pg-move" data-act="px-move" data-ex="${ex}">${I.swap}Registrou no aparelho errado? Mover para outro exercício</button>`;
   return h;
 }
 PAGES.progex = {title: p => exName(p.ex), view: p => {
   const e = getEx(p.ex);
   return `<section class="pg-exhead">${thumb(p.ex)}<div class="grow"><div class="eyebrow">${MUSC[e.m] || ''} · ${EQUIP[e.e] || ''}</div><h1 class="display h2" style="margin-top:4px">${esc(e.n)}</h1></div><button class="btn sm" data-act="open-ex" data-ex="${p.ex}">Como fazer</button></section>${progExBody(p.ex)}`;
 }};
+
+/* v4.33: registros feitos num aparelho mas anotados em outro. Move as séries escolhidas para o exercício certo, sem perder nada;
+   se o treino já tem o exercício certo, as séries entram nele. Dá para desfazer pelo aviso. */
+A['px-move'] = el => openPicker({kind: 'move', cur: el.dataset.ex});
+function openMoveSheet(from, to){
+  const H = exSeriesCached(from).slice().reverse(); const plan = ST.routines.flatMap(r => r.workouts.filter(w => w.items.some(x => x.ex === from)).map(w => w.nome));
+  UI.sheet = {kind: 'pxmove', from, to, sel: new Set(H.map(x => x.sid)), plan: plan.length > 0, planN: plan}; drawMoveSheet();
+}
+function drawMoveSheet(){
+  const sh = UI.sheet; const H = exSeriesCached(sh.from).slice().reverse(); const n = sh.sel.size;
+  openSheet(`${sheetHead('Mover registros', exName(sh.to))}
+    <p class="small ink2" style="margin:10px 0 14px">Marque os treinos em que você fez <b>${esc(exName(sh.to))}</b>. Cargas e repetições vão junto, nada é apagado.</p>
+    <div class="stack" style="gap:8px">${H.map(x => `<button class="opt" data-act="pxm-sel" data-sid="${x.sid}" aria-pressed="${sh.sel.has(x.sid)}"><span class="grow"><b>${fmtD(x.date)}</b><span class="s">${x.sets.map(y => y.kg > 0 ? `${fmtN(y.kg)}×${y.reps}` : `${y.reps} reps`).join(' · ')}</span></span><span class="tick">${I.check}</span></button>`).join('')}</div>
+    ${sh.planN.length ? `<div class="eyebrow" style="margin:18px 0 8px">Plano de treino</div><button class="opt pxm-plan" data-act="pxm-plan" aria-pressed="${sh.plan}"><span class="grow"><b>Trocar também no plano</b><span class="s">${esc([...new Set(sh.planN)].join(', '))}</span></span><span class="tick">${I.check}</span></button>` : ''}
+    <div class="sheet-foot"><button class="btn primary block" data-act="pxm-go" ${n ? '' : 'disabled'}>${n ? `Mover ${n} ${n === 1 ? 'treino' : 'treinos'}` : 'Marque ao menos um treino'}</button></div>`);
+}
+A['pxm-sel'] = el => { const sh = UI.sheet; const id = el.dataset.sid; sh.sel.has(id) ? sh.sel.delete(id) : sh.sel.add(id); drawMoveSheet(); };
+A['pxm-plan'] = () => { UI.sheet.plan = !UI.sheet.plan; drawMoveSheet(); };
+A['pxm-go'] = () => {
+  const {from, to, sel, plan} = UI.sheet; const ss = SESS.filter(s => sel.has(s.id)); const snap = clone(ss); const rsnap = plan ? clone(ST.routines) : null;
+  ss.forEach(s => { const tgt = s.items.find(e => e.ex === to); s.items = s.items.filter(e => { if (e.ex !== from) return true; if (tgt){ tgt.sets.push(...e.sets); if (e.note && !tgt.note) tgt.note = e.note; return false; } e.ex = to; return true; }); saveSession(s); });
+  if (plan){ ST.routines.forEach(r => r.workouts.forEach(w => { w.items = w.items.filter(x => x.ex !== from || !w.items.some(y => y.ex === to)); w.items.forEach(x => { if (x.ex === from) x.ex = to; }); })); saveState(); }
+  _exsC.n = -1; const top = UI.stack[UI.stack.length - 1]; const nav = !!top && top.ex === from && !exSeries(from).length; if (nav) top.ex = to;
+  closeSheet(); render(); Platform.haptic('light');
+  toast(`${ss.length} ${ss.length === 1 ? 'treino movido' : 'treinos movidos'} para ${exName(to)}`, () => { snap.forEach(o => { const i = SESS.findIndex(s => s.id === o.id); if (i >= 0){ SESS[i] = o; saveSession(o); } }); if (rsnap){ ST.routines = rsnap; saveState(); } _exsC.n = -1; if (nav) top.ex = from; render(); });
+};
 
 // ---------- Músculos ----------
 function setsByMusc(L){ const o = {}; L.forEach(s => (s.items || []).forEach(e => { const n = workSets(e).length; if (!n) return; const g = getEx(e.ex).m; o[g] = (o[g] || 0) + n; })); return o; }

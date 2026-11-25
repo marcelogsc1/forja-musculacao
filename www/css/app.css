@@ -1586,17 +1586,15 @@ html[data-lbg="tinta"] #lbg::after{inset:0;background-image:radial-gradient(rgba
 html[data-lbg="nitido"] #lbg::before{inset:0 0 auto 0;height:3px;background:var(--day)}
 html[data-lbg="nitido"] #lbg::after{left:-25%;right:-25%;top:-140px;height:420px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--day) 14%,transparent),transparent)}
 html[data-lbg="nitido"] .card,html[data-lbg="nitido"] .list{border-color:transparent;box-shadow:0 1px 2px rgba(16,24,40,.05),0 12px 28px -18px rgba(16,24,40,.2)}
-/* D: faixa na cor do dia que rola junto com a página; o cabeçalho só fica branco enquanto está sobre ela */
-:root[data-lbg="faixa"]{--bg:#F5F5F4;--s1:#FFFFFF}
-html[data-lbg="faixa"] #lbg{height:250px;-webkit-mask-image:none;mask-image:none}
-html[data-lbg="faixa"] #lbg::before{left:0;top:0;width:220%;height:250px;background:linear-gradient(115deg,var(--day) 0%,var(--day) 50%,color-mix(in srgb,var(--day) 70%,#fff) 100%);animation:lbg-sheen 16s ease-in-out infinite alternate;will-change:transform}
-html[data-lbg="faixa"] #lbg::after{left:0;right:0;top:222px;height:60px;background:var(--bg);border-radius:28px 28px 0 0}
-@keyframes lbg-sheen{from{transform:translateX(0)}to{transform:translateX(-54%)}}
-html[data-lbg="faixa"].lbg-top header.top{background:transparent;border-color:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;--ink:#FFFFFF;--ink2:rgba(255,255,255,.85);--muted:rgba(255,255,255,.82);--s1:rgba(255,255,255,.18);--s2:rgba(255,255,255,.18);--line:rgba(255,255,255,.3);--line2:rgba(255,255,255,.4)}
-html[data-lbg="faixa"] header.top{transition:background-color .2s}
-html[data-lbg="faixa"] .greet>*,html[data-lbg="faixa"] .greet p,html[data-lbg="faixa"] #view>section:first-child>:is(h1,.eyebrow,.meta,p){color:#FFFFFF}
-html[data-lbg="faixa"] .greet p{opacity:.85}
-html[data-lbg="faixa"] #view>section:first-child>.hero-lbl{color:#FFFFFF;--pc:#FFFFFF}
+/* E (v4.33): brasa. O laranja da marca fica fixo no fundo da página toda, quente e sem saturar; os cartões continuam brancos para a leitura */
+:root[data-lbg="brasa"]{--bg:#F8E2CF;--s1:#FFFFFF;--s2:#F5DCC7;--s3:#EECDB3;--line:rgba(140,60,10,.1);--line2:rgba(140,60,10,.16)}
+html[data-lbg="brasa"] #lbg{height:min(640px,82vh);-webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.7) 50%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.7) 50%,transparent 100%)}
+html[data-lbg="brasa"] #lbg::before{inset:0;background:radial-gradient(115% 80% at 94% -14%,color-mix(in srgb,var(--ember) 44%,transparent),transparent 72%),radial-gradient(85% 60% at -10% 2%,color-mix(in srgb,var(--ember2) 36%,transparent),transparent 70%)}
+html[data-lbg="brasa"] .card,html[data-lbg="brasa"] .list{border-color:rgba(140,60,10,.06);box-shadow:0 1px 2px rgba(120,50,10,.05),0 12px 28px -20px rgba(120,50,10,.28)}
+/* v4.33: barras de abas no tema claro com a cor da marca, discretas */
+html[data-lbg] .seg{background:color-mix(in srgb,var(--ember) 7%,var(--s1));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ember) 16%,transparent)}
+html[data-lbg] .seg button{color:color-mix(in srgb,var(--muted) 80%,var(--ember))}
+html[data-lbg] .seg button[aria-pressed="true"]{background:var(--s1);color:color-mix(in srgb,var(--ember) 82%,#2a0d00);box-shadow:0 0 0 1px color-mix(in srgb,var(--ember) 32%,transparent),0 2px 6px -2px color-mix(in srgb,var(--ember) 30%,transparent)}
 @media (prefers-reduced-motion: reduce){html[data-lbg] #lbg::before{animation:none}}
 /* entrada sempre escura, com qualquer tema e qualquer fundo */
 html:has(body.auth-mode),html[data-lbg] body.auth-mode{background:#0E0F11}
@@ -1746,3 +1744,7 @@ body.onb-mode .app{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 .bq-why .bq-safe{margin-top:12px}
 .bq-whymore{margin-top:10px;padding:0;min-height:32px}
 .bq-links{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
+/* v4.33: mover registros para outro exercício (link discreto no fim do histórico) */
+.pg-move{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:2px 0 8px;padding:12px;border:0;background:none;color:var(--muted);font-size:13px;font-weight:500}
+.pg-move svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;flex:none}
+.pxm-plan{margin-top:6px}

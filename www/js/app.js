@@ -1,6 +1,6 @@
 // ================= estado =================
-const APP_VERSION = '4.32.0';
-const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'aura', loginbg: 'fotos'};
+const APP_VERSION = '4.33.0';
+const DEFAULT_PREFS = {theme: 'system', inc: 2.5, bar: 20, sound: true, rest: 90, goal: 0, awake: true, pics: 'anim', picsV: 1, lightbg: 'nitido', lbgV: 1, loginbg: 'fotos'};
 let ST = freshState();
 let SESS = [];
 const UI = { tab: 'inicio', stack: [], scroll: {}, libQ: '', libM: '', libE: '', progTab: 'geral', progEx: null, progMetric: 'kg', calMonth: null, calSel: today(), bwMetric: 'kg', exTab: 'sobre', expand: {}, rtab: 'minhas', xf: {}, tplOpt: {}, bld: null };
@@ -9,23 +9,20 @@ const PAGES = {};
 function freshState(){ return { v: 4, routines: [], active: null, custom: {}, media: {}, bw: [], prefs: {...DEFAULT_PREFS}, profile: {createdAt: new Date().toISOString()} }; }
 /* nomes antigos gerados pelo app, com tradução entre parênteses; nomes escritos pelo usuário não são tocados */
 const OLD_WNAMES = {'Push (empurrar)': 'Push', 'Pull (puxar)': 'Pull', 'Legs (pernas)': 'Legs', 'Pull (Terra)': 'Pull A', 'Push (Supino)': 'Push A', 'Pull (Remada)': 'Pull B', 'Push (Desenvolvimento)': 'Push B'};
-function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; const oldPv = (ST.prefs || {}).picsV; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); if (ST.prefs.pics === 'fig') ST.prefs.pics = 'anim'; if (!oldPv) ST.prefs.picsV = 1; ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
+function fixState(){ (ST.routines || []).forEach(r => (r.workouts || []).forEach(w => { if (OLD_WNAMES[w.nome]) w.nome = OLD_WNAMES[w.nome]; })); ST.routines = ST.routines || []; ST.custom = ST.custom || {}; ST.media = ST.media || {}; ST.bw = ST.bw || []; const oldPv = (ST.prefs || {}).picsV; const oldLv = (ST.prefs || {}).lbgV; ST.prefs = Object.assign({...DEFAULT_PREFS}, ST.prefs || {}); if (ST.prefs.pics === 'fig') ST.prefs.pics = 'anim'; if (!oldPv) ST.prefs.picsV = 1; if (!oldLv){ if (['aura', 'faixa'].includes(ST.prefs.lightbg)) ST.prefs.lightbg = 'nitido'; ST.prefs.lbgV = 1; } ST.profile = ST.profile || {}; if (!routineById(ST.active)) ST.active = ST.routines[0]?.id || null; }
 function getEx(id){ return CAT[id] || ST.custom[id] || {n: 'Exercício removido', m: 'peito', p: 'custom', e: 'outros', pri: [], sec: [], d: []}; }
 const exName = id => getEx(id).n;
 const routineById = id => ST.routines.find(r => r.id === id);
 const activeRoutine = () => routineById(ST.active) || ST.routines[0];
 function findWorkout(rid, wid){ const r = routineById(rid); return r && r.workouts.find(w => w.id === wid); }
 function isDark(){ const t = ST.prefs?.theme || 'system'; return t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); }
-function applyTheme(){ const t = ST.prefs?.theme || 'system'; const root = document.documentElement; if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t); Platform.themeColor(isDark()); applyLbg(); }
+function applyTheme(){ const t = ST.prefs?.theme || 'system'; const root = document.documentElement; if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t); Platform.themeColor(isDark(), LBG_TOP[ST.prefs?.lightbg] || LBG_TOP.nitido); applyLbg(); }
 /* v4.26: fundo do tema claro (Aparência). A cor do treino do dia entra como --day: do treino aberto ou do sugerido para hoje. */
-const LBG = ['aura', 'tinta', 'nitido', 'faixa'];
+const LBG = ['nitido', 'brasa', 'aura', 'tinta']; const LBG_TOP = {nitido: '#F2F3F5', brasa: '#F8DCC6', aura: '#F8F7F5', tinta: '#FBFAF8'};
 function applyLbg(){
-  const root = document.documentElement; const v = LBG.includes(ST.prefs?.lightbg) ? ST.prefs.lightbg : 'aura';
+  const root = document.documentElement; const v = LBG.includes(ST.prefs?.lightbg) ? ST.prefs.lightbg : 'nitido';
   if (isDark()) root.removeAttribute('data-lbg'); else root.setAttribute('data-lbg', v);
-  if (!document.getElementById('lbg') && document.body){ const d = document.createElement('div'); d.id = 'lbg'; d.setAttribute('aria-hidden', 'true'); document.body.prepend(d);
-    /* faixa de energia: o cabeçalho fica branco só enquanto ainda está em cima da faixa */
-    const top = () => root.classList.toggle('lbg-top', window.scrollY < 150); top(); window.addEventListener('scroll', top, {passive: true}); }
-  root.classList.toggle('lbg-top', window.scrollY < 150);
+  if (!document.getElementById('lbg') && document.body){ const d = document.createElement('div'); d.id = 'lbg'; d.setAttribute('aria-hidden', 'true'); document.body.prepend(d); }
   let cor = null; try { const p = curPage(); const sx = p && p.type === 'session' ? curSess() : openSession(); if (sx && sx.cor != null) cor = sx.cor; else { const r = activeRoutine(); const w = r && suggested(r); if (w) cor = w.cor; } } catch (e) {}
   const val = cor != null ? `var(--c${cor})` : 'var(--ember)'; if (root.style.getPropertyValue('--day') !== val) root.style.setProperty('--day', val);
 }
@@ -133,7 +130,9 @@ function regionLevels(sessions){
 const figSrc = f => (window.FORJA_FIG && window.FORJA_FIG[f]) || `fig/${f}.webp`;
 /* Animações 3D (ANIM, gerado por tools/anim.py): anim/<m|f>/<exercício>.mp4 e as miniaturas num atlas só
    (anim/<m|f>/thumbs.webp). Usa a versão do sexo do perfil quando existe e cai para a outra. Fora da versão arquivo único. */
-const ANIM_SET = (() => { const A = typeof ANIM !== 'undefined' ? ANIM : {}; const o = {}; for (const g of ['m', 'f']){ o[g] = new Map(); (A[g] || []).forEach((k, i) => o[g].set(k, i)); } o.cols = A.cols || 16; return o; })();
+const ANIM_SET = (() => { const A = typeof ANIM !== 'undefined' ? ANIM : {}; const o = {}; for (const g of ['m', 'f']){ o[g] = new Map(); (A[g] || []).forEach((k, i) => o[g].set(k, i)); } o.cols = A.cols || 16; o.at = A.at || {}; return o; })();
+/* atlas com o hash no nome: cada versão das miniaturas tem endereço próprio, então nenhum cache serve a grade antiga */
+const atlasUrl = g => `anim/${g}/${ANIM_SET.at[g] || 'thumbs.webp'}`;
 /* figura disponível? No artefato só vão as figuras que ainda fazem falta (limite de arquivos): FORJA_FIGS lista quais. */
 const figOk = c => !!(c && c.f && (!window.FORJA_FIGS || window.FORJA_FIGS.includes(c.f)));
 /* Animações disponíveis neste endereço? O site público (Vercel, publicado do GitHub) não leva os vídeos, que têm licença
@@ -142,7 +141,7 @@ let animAvail = (() => { try { return localStorage.getItem('forja-anim') !== '0'
 function probeAnim(){
   const g = ANIM_SET.m.size ? 'm' : ANIM_SET.f.size ? 'f' : null;
   if (window.FORJA_FIG || !g || typeof fetch !== 'function') return Promise.resolve(animAvail);
-  return fetch(`anim/${g}/thumbs.webp`, {method: 'HEAD', cache: 'no-store'}).then(r => {
+  return fetch(atlasUrl(g), {method: 'HEAD', cache: 'no-store'}).then(r => {
     const ok = r.ok && /image/.test(r.headers.get('content-type') || 'image');
     if (ok !== animAvail){ animAvail = ok; try { localStorage.setItem('forja-anim', ok ? '1' : '0'); } catch (e) {} if (canRerender()) render(); }
     return ok;
@@ -157,7 +156,7 @@ function animOf(ex, force){
 function animThumb(a){
   const C = ANIM_SET.cols, rows = Math.ceil(ANIM_SET[a.g].size / C);
   const x = C > 1 ? (a.i % C) / (C - 1) * 100 : 0, y = rows > 1 ? Math.floor(a.i / C) / (rows - 1) * 100 : 0;
-  return `<i class="at" style="background-image:url(anim/${a.g}/thumbs.webp);background-size:${C * 100}% auto;background-position:${+x.toFixed(4)}% ${+y.toFixed(4)}%"></i>`;
+  return `<i class="at" style="background-image:url(${atlasUrl(a.g)});background-size:${C * 100}% auto;background-position:${+x.toFixed(4)}% ${+y.toFixed(4)}%"></i>`;
 }
 const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* No artefato do Claude (limite de 512 arquivos), os vídeos de um sexo podem vir juntos em poucos pacotes:
@@ -169,7 +168,7 @@ function animVideoSrc(an){
   if (!e) return an.src + '.mp4';
   const key = an.g + '/' + an.ex; if (APK.urls[key]) return APK.urls[key];
   const pk = an.g + e[0];
-  (APK.packs[pk] || (APK.packs[pk] = fetch(`anim/${an.g}/pack${e[0]}.mp4`).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })))
+  (APK.packs[pk] || (APK.packs[pk] = fetch(`anim/${an.g}/${P.names ? P.names[e[0]] : 'pack' + e[0] + '.mp4'}`).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })))
     .then(buf => { APK.urls[key] = APK.urls[key] || URL.createObjectURL(new Blob([buf.slice(e[1], e[1] + e[2])], {type: 'video/mp4'}));
       document.querySelectorAll(`video[data-apk="${key}"]`).forEach(v => { v.src = APK.urls[key]; v.removeAttribute('data-apk'); if (v.autoplay) v.play().catch(() => {}); }); })
     .catch(() => { delete APK.packs[pk]; });
@@ -342,7 +341,7 @@ function heroName(name, tag = 'h2', key = ''){
   const s = String(name).trim(); const ws = s.split(/\s+/); const k = Math.max(4, ...ws.map(x => x.length), Math.ceil(s.length / 2.3));
   const anim = key && KIN[key] !== s && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); if (key) KIN[key] = s;
   let n = 0; const inner = ws.map(w => `<span class="w">${[...w].map(ch => `<span class="ch" style="--i:${n++}">${esc(ch)}</span>`).join('')}</span>`).join(' ');
-  return `<${tag} class="cond hero-name${anim ? ' kin' : ''}" style="--k:${k}" aria-label="${esc(s)}"><span aria-hidden="true">${inner}</span></${tag}>`;
+  return `<${tag} class="cond hero-name${anim ? ' kin' : ''}" style="--k:${k}" aria-label="${esc(s)}" data-mk="${esc(s)}"><span aria-hidden="true">${inner}</span></${tag}>`;
 }
 /* rede de segurança: se uma palavra ainda for larga demais para o cartão (fonte não carregada, nome incomum), reduz até caber */
 function fitNames(){ document.querySelectorAll('.hero-name').forEach(el => { let fs = parseFloat(getComputedStyle(el).fontSize); let n = 0; while (el.scrollWidth > el.clientWidth + 1 && fs > 28 && n++ < 30){ fs -= 4; el.style.fontSize = fs + 'px'; } }); }
@@ -975,7 +974,7 @@ function pickerBody(){
   return Object.keys(MUSC).map(g => { const l = all.filter(k => getEx(k).m === g); return l.length ? `<div class="eyebrow" style="margin:16px 0 10px">${MUSC[g]}</div><div class="stack" style="gap:8px">${l.map(opt).join('')}</div>` : ''; }).join('');
 }
 function drawPicker(){
-  const sh = UI.sheet; const titles = {add: ['Adicionar ao treino', 'Escolha um ou mais'], swap: ['Trocar só hoje', 'O plano continua igual'], replace: ['Substituir no plano', 'Vale para os próximos treinos'], extra: ['Adicionar ao treino de hoje', 'Escolha um ou mais']};
+  const sh = UI.sheet; const titles = {add: ['Adicionar ao treino', 'Escolha um ou mais'], swap: ['Trocar só hoje', 'O plano continua igual'], replace: ['Substituir no plano', 'Vale para os próximos treinos'], move: ['Qual exercício você fez?', 'Mover registros'], extra: ['Adicionar ao treino de hoje', 'Escolha um ou mais']};
   const [t, sub] = titles[sh.kind];
   openSheet(`${sheetHead(sub, t)}${sh.cur ? `<div style="margin-top:10px" class="small muted">Atual: <b style="color:var(--ink)">${esc(exName(sh.cur))}</b></div>` : ''}
     <div class="search" style="margin:14px 0 10px">${svg('M11 17.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM20 20l-4.2-4.2')}<input id="pick-q" class="field" type="search" placeholder="Buscar exercício" value="${esc(sh.q)}" data-act="pickq" autocomplete="off"></div>
@@ -990,7 +989,7 @@ function drawItemEdit(){
     <div class="row between"><span class="eyebrow">Séries</span><div class="stepper"><button data-act="ie-sets" data-d="-1" aria-label="Menos">−</button><output class="num">${d.sets}</output><button data-act="ie-sets" data-d="1" aria-label="Mais">+</button></div></div>
     <div class="formgrid"><label class="flabel"><span class="tiny muted">Reps mínimas</span><input id="ie-rmin" class="field num" inputmode="numeric" value="${d.rmin}"></label><label class="flabel"><span class="tiny muted">Reps máximas</span><input id="ie-rmax" class="field num" inputmode="numeric" value="${d.rmax}"></label></div>
     <div><div class="tiny muted" style="margin-bottom:8px">Descanso</div><div class="row wrap" style="gap:6px">${rests.map(r => `<button class="chip" data-act="ie-rest" data-r="${r}" aria-pressed="${r === d.rest}">${r ? fmtRest(r) : 'nenhum'}</button>`).join('')}</div></div>
-    <label class="flabel"><span class="tiny muted">Observação fixa</span><input id="ie-nota" class="field" maxlength="160" value="${esc(d.nota || '')}" placeholder="Ex.: banco no 3º furo"></label>
+    <label class="flabel"><span class="tiny muted">Observação fixa</span><input id="ie-nota" class="field" maxlength="160" value="${esc(d.nota || '')}" placeholder="Ex.: banco no 3º furo · descanso de 2 min"></label>
     <button class="btn primary block" data-act="ie-save">Salvar</button>
     <div class="menu"><button data-act="ie-replace">${I.swap}Substituir exercício</button><button data-act="open-ex-sheet" data-ex="${d.ex}">${I.info}Ver como fazer</button><button class="danger" data-act="ie-remove">${I.trash}Remover do treino</button></div></div>`);
 }
@@ -1109,7 +1108,7 @@ const PREF_OPTS = {
   rest: {t: 'Descanso padrão', o: [60, 90, 120, 180], f: v => fmtRest(v), s: 'Para exercícios novos e treino livre'},
   inc: {t: 'Botões + e − da carga', o: [1, 2, 2.5, 5], f: v => fmtN(v) + ' kg', s: 'Quanto cada toque soma ou tira no teclado'},
   bar: {t: 'Peso da barra', o: [10, 15, 20], f: v => v + ' kg', s: 'Usado na calculadora de anilhas'},
-  lightbg: {t: 'Fundo do tema claro', o: LBG, f: v => ({aura: 'Gradiente do dia', tinta: 'Tinta do dia', nitido: 'Branco nítido', faixa: 'Faixa de energia'})[v] || 'Gradiente do dia', s: 'Usa a cor do treino do dia'},
+  lightbg: {t: 'Fundo do tema claro', o: LBG, f: v => ({nitido: 'Branco', brasa: 'Brasa (laranja Forja)', aura: 'Gradiente do dia', tinta: 'Tinta do dia'})[v] || 'Branco', s: 'Branco, gradiente e tinta usam a cor do treino do dia'},
   loginbg: {t: 'Fundo da tela de entrada', o: ['fotos', 'figura'], f: v => ({fotos: 'Fotos em movimento', figura: 'Figura do exercício'})[v] || 'Fotos em movimento'},
   theme: {t: 'Tema', o: ['dark', 'light', 'system'], f: v => ({dark: 'Escuro', light: 'Claro', system: 'Igual ao sistema'})[v]},
   pics: {t: 'Imagens dos exercícios', o: () => ['anim'].concat(window.FORJA_NOPHOTO ? [] : ['foto']), f: v => (({anim: 'Animação 3D', fig: 'Ilustração', foto: 'Foto real'})[v] || 'Animação 3D')},
@@ -1359,7 +1358,7 @@ A['w-sets'] = el => { const p = curPage(); const r = routineById(p.rid); const w
 A['i-add'] = () => openPicker({kind: 'add', multi: true});
 A['ie-sets'] = el => { readItemEdit(); const d = UI.sheet.draft; d.sets = Math.max(1, Math.min(10, d.sets + +el.dataset.d)); drawItemEdit(); };
 A['ie-rest'] = el => { readItemEdit(); UI.sheet.draft.rest = +el.dataset.r; drawItemEdit(); };
-A['ie-save'] = () => { readItemEdit(); const p = curPage(); const w = findWorkout(p.rid, p.wid); w.items[UI.sheet.j] = UI.sheet.draft; saveState(); closeSheet(); render(); toast('Exercício atualizado'); };
+A['ie-save'] = () => { readItemEdit(); const d = UI.sheet.draft; const nr = obNoteRest(d.nota, d.rest); if (nr){ d.rest = nr.rest; d.nota = nr.note; } const p = curPage(); const w = findWorkout(p.rid, p.wid); w.items[UI.sheet.j] = d; saveState(); closeSheet(); render(); toast(nr ? `Descanso deste exercício: ${fmtRest(nr.rest)}` : 'Exercício atualizado'); };
 A['ie-replace'] = () => { readItemEdit(); const keep = UI.sheet; UI.sheet = {kind: 'replace', cur: keep.draft.ex, q: '', m: '', sel: [], back: keep}; drawPicker(); };
 A['ie-remove'] = () => { const p = curPage(); const w = findWorkout(p.rid, p.wid); const j = UI.sheet.j; const [x] = w.items.splice(j, 1); saveState(); closeSheet(); render(); toast(`${exName(x.ex)} removido`, () => { w.items.splice(j, 0, x); saveState(); render(); }); };
 A.pickm = el => { UI.sheet.m = el.dataset.m; drawPicker(); };
@@ -1369,6 +1368,7 @@ A.pick = el => {
   const s = curSess();
   if (sh.kind === 'swap'){ const e = s.items[sh.k]; e.ex = ex; const pre = prefillSets(ex, e.sets.length, s.id); e.sets.forEach((x, i) => { if (!x.ok){ Object.assign(x, {kg: pre[i].kg, reps: pre[i].reps, km: false, rm: false}); } }); saveSession(s); closeSheet(); render(); toast(`Hoje: ${exName(ex)}`); }
   else if (sh.kind === 'replace'){ const back = sh.back; back.draft.ex = ex; UI.sheet = back; drawItemEdit(); }
+  else if (sh.kind === 'move') openMoveSheet(sh.cur, ex);
 };
 A['pick-confirm'] = () => {
   const sh = UI.sheet;
@@ -1400,12 +1400,12 @@ A['ex-menu'] = el => { const s = curSess(); const k = +el.dataset.k; const e = s
     {label: 'Ver como fazer', icon: I.info, run: () => { UI.exTab = 'inst'; push({type: 'exercise', ex: e.ex}); }},
     {label: s.status === 'open' ? 'Trocar aparelho só hoje' : 'Trocar exercício', icon: I.swap, run: () => openPicker({kind: 'swap', k, cur: e.ex})},
     warmups(e) && !e.sets.some(x => x.t === 'w') ? {label: 'Adicionar séries de aquecimento', icon: I.flame, run: () => { e.sets.unshift(...warmups(e)); saveSession(s); render(); toast('3 séries de aquecimento adicionadas (50%, 70% e 85%)'); }} : null,
-    {label: 'Anotação', icon: I.note, run: () => { UI.sheet = {kind: 'note', k}; openSheet(`${sheetHead(exName(e.ex), 'Anotação deste treino')}<textarea id="note-in" class="field" style="margin-top:16px" maxlength="200" placeholder="Ex.: senti o ombro, banco no 4º furo">${esc(e.note || '')}</textarea><button class="btn primary block" style="margin-top:12px" data-act="note-save">Salvar</button>`); setTimeout(() => $('#note-in')?.focus(), 50); }},
+    {label: 'Anotação', icon: I.note, run: () => { UI.sheet = {kind: 'note', k}; openSheet(`${sheetHead(exName(e.ex), 'Anotação deste treino')}<textarea id="note-in" class="field" style="margin-top:16px" maxlength="200" placeholder="Ex.: senti o ombro, banco no 4º furo, descanso de 2 min">${esc(e.note || '')}</textarea><button class="btn primary block" style="margin-top:12px" data-act="note-save">Salvar</button>`); setTimeout(() => $('#note-in')?.focus(), 50); }},
     {label: `Descanso: ${fmtRest(t.rest)}`, icon: I.timer, run: () => menuSheet(exName(e.ex), 'Descanso hoje', [0, 45, 60, 90, 120, 150, 180].map(r => ({label: r ? fmtRest(r) : 'Sem descanso', icon: t.rest === r ? I.check : '', run: () => { e.rest = r; saveSession(s); render(); }})))},
     k > 0 ? {label: 'Mover para cima', icon: I.up, run: () => { [s.items[k - 1], s.items[k]] = [s.items[k], s.items[k - 1]]; UI.expand = {}; saveSession(s); render(); }} : null,
     k < s.items.length - 1 ? {label: 'Mover para baixo', icon: I.down, run: () => { [s.items[k + 1], s.items[k]] = [s.items[k], s.items[k + 1]]; UI.expand = {}; saveSession(s); render(); }} : null,
     {label: s.status === 'open' ? 'Tirar do treino de hoje' : 'Remover deste treino', icon: I.trash, danger: true, run: () => { const [rm] = s.items.splice(k, 1); UI.expand = {}; saveSession(s); render(); toast(`${exName(rm.ex)} retirado de hoje`, () => { s.items.splice(k, 0, rm); saveSession(s); render(); }); }}]); };
-A['note-save'] = () => { const s = curSess(); s.items[UI.sheet.k].note = $('#note-in').value.trim(); saveSession(s); closeSheet(); render(); };
+A['note-save'] = () => { const s = curSess(); const e = s.items[UI.sheet.k]; let v = $('#note-in').value.trim(); const nr = obNoteRest(v, itemTarget(s, e).rest); if (nr){ e.rest = nr.rest; v = nr.note; } e.note = v; saveSession(s); closeSheet(); render(); if (nr) toast(`Descanso deste exercício: ${fmtRest(nr.rest)}`); };
 A.unswap = el => { const s = curSess(); const e = s.items[+el.dataset.k]; e.ex = e.planned; const pre = prefillSets(e.ex, e.sets.length, s.id); e.sets.forEach((x, i) => { if (!x.ok) Object.assign(x, {kg: pre[i].kg, reps: pre[i].reps, km: false, rm: false}); }); saveSession(s); render(); };
 A['add-extra'] = () => { closeKP(); openPicker({kind: 'extra', multi: true}); };
 A.finish = () => { closeKP(); const s = curSess(); if (!s) return; const st = stats(s); const total = s.items.reduce((a, e) => a + e.sets.filter(x => x.t !== 'w').length, 0);

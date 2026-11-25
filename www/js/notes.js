@@ -31,7 +31,7 @@ let OB_VOCAB = null;
 const obVocab = () => OB_VOCAB || (OB_VOCAB = new Set(Object.values(CAT).flatMap(e => norm(e.n).split(/[^a-z0-9]+/)).filter(w => w.length >= 4 && !OB_STOP.has(w))));
 const ISO_P = ['quad-iso', 'fly', 'ombro-lat', 'ombro-front', 'ombro-post', 'biceps', 'martelo', 'triceps-over', 'triceps-push', 'flexora', 'pant', 'abd', 'abd-inf', 'obliquo', 'gluteo', 'adutor', 'antebraco', 'antebraco-flex', 'encolhimento'];
 /* exercícios que pedem técnica ou força avançada: só entram por troca automática se não houver outra opção */
-const OB_HARD = new Set(['flexora-nordica', 'sissy', 'paralelas', 'barra-fixa', 'barra-supinada', 'barra-neutra', 'barra-arqueiro', 'paralelas-peito', 'flexao-arqueiro', 'agachamento-unilateral', 'pike', 'flexao-declinada']);
+const OB_HARD = new Set(['remada-pendlay', 'barra-fixa-peso', 'flexora-nordica', 'sissy', 'paralelas', 'barra-fixa', 'barra-supinada', 'barra-neutra', 'barra-arqueiro', 'paralelas-peito', 'flexao-arqueiro', 'agachamento-unilateral', 'pike', 'flexao-declinada']);
 const EQ_PREF = ['halter', 'barra', 'maquina', 'cabo', 'smith', 'peso', 'casa', 'kettlebell', 'elastico', 'suspensao', 'outros'];
 
 /* equipamento que este treino já usa: se tem máquina ou polia, está numa academia */
@@ -140,9 +140,9 @@ function obFitTime(items, mins){
 /* opts.program: leitura para um programa inteiro (assistente). Foco em músculo só mexe nos treinos que já trabalham aquele músculo. */
 function obInterpret(text, w0, off = new Set(), opts = {}){
   let items = w0.items.map(x => ({...x})); const rules = [], flags = [], notes = [];
-  const ban = new Set(); let fitTo = null; let wset = {}; OB_CTX.plus = new Set(); OB_CTX.inv = opts.inv !== undefined ? (opts.inv ? new Set(opts.inv) : null) : obGymInv(w0.items || []); const S = !!opts.session; const lockd = x => S && x._done > 0; const tot = x => (x._done || 0) + x.sets; const used = new Set();
+  const ban = new Set(); let fitTo = null; let wset = {}; OB_CTX.plus = new Set(); OB_CTX.inv = opts.inv !== undefined ? (opts.inv ? new Set(opts.inv) : null) : obGymInv(w0.items || []); let prevRest = false; const restDone = new Set(); const S = !!opts.session; const lockd = x => S && x._done > 0; const tot = x => (x._done || 0) + x.sets; const used = new Set();
   const FILL = /\b(por favor|pfv|pf|obrigad[oa]|valeu|ok|blz|beleza)\b/g;
-  const clauses = norm(text).replace(/\s+e\s+(?=(nao|sem|mais|quero|prefiro|tenho|tirar|trocar|foco|focar|priorizar|descanso|estou|odeio|evitar)\b)/g, ';').split(/[\n.;!?]+|,|\bmas\b/).map(c => c.replace(FILL, '').trim()).filter(c => c.length > 2);
+  const clauses = obTimeNorm(norm(text)).replace(/\s+e\s+(?=(nao|sem|mais|quero|prefiro|tenho|tirar|trocar|foco|focar|priorizar|descanso|intervalo|pausa|estou|odeio|evitar)\b|(\d+(:\d\d)?|um|uma|dois|duas|tres)\s*(s|seg\w*|min\w*|m)?\s+(de\s+)?(descanso|intervalo|pausa|entre|n[oa]s?)\b)/g, ';').split(/[\n.;!?]+|,|\bmas\b/).map(c => c.replace(FILL, '').trim()).filter(c => c.length > 2);
   const push = (title, fn) => { const i = rules.length; const before = items.map(x => ({...x})); const bw = {...wset}; const log = fn(); if (!log || !log.length){ items = before; wset = bw; return false; } if (off.has(i)){ items = before; wset = bw; } rules.push({title, log, on: !off.has(i)}); return true; };
   // 0) "só halteres", "apenas peso do corpo", "em casa": libera só esses equipamentos
   let wl = null; let wlHome = false; OB_CTX.home = false;
@@ -156,7 +156,7 @@ function obInterpret(text, w0, off = new Set(), opts = {}){
     if (lockd(x)){ log.push(`${exName(x.ex)}: já começou, ficou como está`); return; } const alt = obAlt(x.ex, items, ban, wlMain); if (alt){ log.push(`${exName(x.ex)} → ${exName(alt)}`); items[j] = {...x, ex: alt}; } else log.push(`${exName(x.ex)}: sem substituto com esse equipamento, ficou como está`); }); return log; });
   // 1) primeiro as restrições de equipamento, para as outras regras já respeitarem
   OB_CTX.pref = {};
-  clauses.forEach(c => { if (!OB_NEG.test(c)) return; const [lhs, rhs] = c.split(/\s(?:por|pelo|pela)\s/); const exWords = lhs.split(/[^a-z0-9]+/).filter(w => obVocab().has(w) && !OB_EQ.some(([re]) => re.test(w)) && !OB_MUS.some(([re]) => re.test(w)));
+  clauses.forEach(c => { if (!OB_NEG.test(c) || obIsRest(c)) return; const [lhs, rhs] = c.split(/\s(?:por|pelo|pela)\s/); const exWords = lhs.split(/[^a-z0-9]+/).filter(w => obVocab().has(w) && !OB_EQ.some(([re]) => re.test(w)) && !OB_MUS.some(([re]) => re.test(w)));
     if (exWords.length) return; const pf = rhs && (OB_EQ.find(([re]) => re.test(rhs)) || [])[1]; OB_EQ.forEach(([re, eq]) => { if (re.test(lhs)){ ban.add(eq); if (pf && pf !== eq) OB_CTX.pref[eq] = pf; } }); });
   ban.forEach(eq => !wlBan.has(eq) && push(`Sem ${EQUIP[eq].toLowerCase()}`, () => { const log = []; items.forEach((x, j) => { const e = getEx(x.ex); if (!e || e.e !== eq) return; if (lockd(x)){ log.push(`${exName(x.ex)}: já começou, ficou como está`); return; } const alt = obAlt(x.ex, items, ban, OB_CTX.pref[eq]); if (alt){ log.push(`${exName(x.ex)} → ${exName(alt)}`); items[j] = {...x, ex: alt}; } else log.push(`${exName(x.ex)}: sem substituto com o equipamento disponível, ficou como está`); }); return log; }));
   clauses.forEach((c, ci) => {
@@ -168,20 +168,26 @@ function obInterpret(text, w0, off = new Set(), opts = {}){
         flags.push({title: `Dor no ${nome}`, joint: nome, list, text: list.length ? `Os exercícios deste treino que costumam exigir mais do ${nome}: ${list.join(', ')}. Com dor, o ajuste certo depende de avaliação: fale com um fisioterapeuta ou médico antes de mudar a carga. Você pode trocar cada um em Editar.` : `Nenhum exercício deste treino costuma exigir muito do ${nome}, mas com dor vale falar com um fisioterapeuta ou médico.`}); hit = true; });
       if (hit) return;
     }
-    // descanso com valor: entre séries (todos os exercícios) ou entre um exercício e o próximo
-    const isRest = /\b(descans\w*|intervalo|pausa|emend\w*)\b/.test(c) || (/\bentre (as |os |um |cada )?(series|exercicios?|aparelhos?)\b/.test(c) && obRestVal(c) != null);
+    // descanso: entre séries (no treino todo, num exercício, num músculo, nos compostos ou isolados) ou entre um exercício e o próximo
+    const isRest = obIsRest(c) || (prevRest && obRestVal(c) != null && OB_RSCOPE.test(c)); prevRest = isRest;
     if (isRest){
-      const exScope = /\bentre (os |um |cada )?(exercicios?|aparelhos?|maquinas?)\b|troca de (exercicio|aparelho)|de um exercicio (pro|para o|pra) (outro|proximo)|(depois|no fim|ao fim|ao terminar) (de )?(cada )?exercicio|emend\w*/.test(c);
-      const v = obRestVal(c); const none = /\bsem (descanso|intervalo|pausa)\b|\bemend\w*/.test(c);
-      const up = /\b(maior|mais longo|longo|mais descanso|descansar mais|aumentar)\b/.test(c), dn = /\b(menor|mais curto|curto|menos descanso|descansar menos|diminuir|reduzir)\b/.test(c);
+      const exScope = OB_REST_EX.test(c) && !/\bentre (as )?series\b/.test(c);
+      const v = obRestVal(c); const none = /\bsem (descanso|intervalo|pausa)\b|\bemend\w*|\bdireto\b/.test(c);
+      const dn = OB_RDN.test(c), up = !dn && OB_RUP.test(c);
       if (exScope){
         const base = w0.restEx != null ? w0.restEx : Math.round(items.reduce((a, x) => a + (x.rest || 60), 0) / Math.max(1, items.length));
         const nv = none ? 0 : v != null ? v : up ? Math.min(600, base + 30) : dn ? Math.max(0, base - 30) : null;
-        if (nv != null){ hit = push(nv ? `Descanso entre exercícios: ${fmtRest(nv)}` : 'Sem pausa extra entre exercícios', () => { if (w0.restEx === nv) return []; wset.restEx = nv; return [`Ao terminar um exercício: ${w0.restEx != null ? fmtRest(w0.restEx) : 'mesmo descanso das séries'} → ${nv ? fmtRest(nv) : 'segue direto para o próximo'}`]; }) || hit; if (hit) return; }
-      } else if (v != null || none){
-        const nv = none ? 0 : v;
-        hit = push(nv ? `Descanso entre séries: ${fmtRest(nv)}` : 'Sem descanso entre séries', () => items.map((x, j) => { if (x.rest === nv) return null; const l = `${exName(x.ex)}: ${fmtRest(x.rest || 0)} → ${fmtRest(nv)}`; items[j] = {...x, rest: nv}; return l; }).filter(Boolean)) || hit;
-        if (hit) return;
+        if (nv != null){ hit = push(nv ? `Descanso entre exercícios: ${fmtRest(nv)}` : 'Sem pausa extra entre exercícios', () => { if (w0.restEx === nv) return []; wset.restEx = nv; return [`Ao terminar um exercício: ${w0.restEx != null ? fmtRest(w0.restEx) : 'mesmo descanso das séries'} → ${nv ? fmtRest(nv) : 'segue direto para o próximo'}`]; }) || hit;
+          if (!hit && w0.restEx === nv){ flags.push({title: 'Já está assim', text: `O descanso entre exercícios já é ${nv ? fmtRest(nv) : 'sem pausa'}.`}); hit = true; } if (hit) return; }
+      } else if (v != null || none || up || dn){
+        const sc = obRestScope(c, items, mus, restDone); if (sc.label) sc.sel.forEach(x => restDone.add(x.ex));
+        if (sc.miss){ if (!opts.program) flags.push({title: 'Não achei esse exercício', text: `Não encontrei “${sc.miss}” neste treino. Confira o nome como aparece na lista.`}); return; }
+        if (!sc.sel.length){ if (!opts.program) flags.push({title: 'Nada a mudar', text: `Este treino não tem exercícios ${sc.label.replace(/^em /, 'de ').replace(/^nos /, '')}.`}); return; }
+        const lb = sc.label ? ' ' + sc.label : ''; const nv = none ? 0 : v;
+        const ttl = nv != null ? (nv ? `Descanso entre séries${lb}: ${fmtRest(nv)}` : `Sem descanso entre séries${lb}`) : `Descanso ${up ? 'maior' : 'menor'}${lb}`;
+        hit = push(ttl, () => sc.sel.map(x => { const j = items.indexOf(x); const r = nv != null ? nv : Math.max(30, Math.min(300, (x.rest || 60) + (up ? 30 : -30))); if (j < 0 || r === x.rest) return null; items[j] = {...x, rest: r}; return `${exName(x.ex)}: ${fmtRest(x.rest || 0)} → ${fmtRest(r)}`; }).filter(Boolean)) || hit;
+        if (!hit && nv != null && sc.sel.length){ flags.push({title: 'Já está assim', text: `O descanso${lb} já é ${fmtRest(nv)}.`}); hit = true; }
+        if (hit || opts.program) return;
       }
     }
     // tempo disponível
@@ -192,9 +198,6 @@ function obInterpret(text, w0, off = new Set(), opts = {}){
     if (style){ const S = {forca: ['mais força', 4, 6, 180, 2, 1], res: ['mais resistência', 12, 15, 60, 15, 20], hip: ['hipertrofia', 8, 12, 90, 10, 15]}[style];
       hit = push(`Estilo: ${S[0]}`, () => { const log = []; items.forEach((x, j) => { const iso = ISO_P.includes((getEx(x.ex) || {}).p); const n = iso ? (style === 'forca' ? {...x, rmin: 8, rmax: 12, rest: 90} : {...x, rmin: S[4], rmax: S[5], rest: style === 'res' ? 45 : 60}) : {...x, rmin: S[1], rmax: S[2], rest: S[3]};
         if (n.rmin !== x.rmin || n.rmax !== x.rmax || n.rest !== x.rest){ log.push(`${exName(x.ex)}: ${x.rmin}–${x.rmax} → ${n.rmin}–${n.rmax} reps, descanso ${fmtRest(n.rest)}`); items[j] = n; } }); return log; }) || hit; }
-    // descanso
-    const restUp = /\b(descanso (maior|mais longo|longo)|descansar mais|mais descanso)\b/.test(c), restDn = /\b(descanso (menor|mais curto|curto)|descansar menos|menos descanso)\b/.test(c);
-    if (restUp || restDn) hit = push(restUp ? 'Descanso maior' : 'Descanso menor', () => items.map((x, j) => { const r = Math.max(30, Math.min(300, (x.rest || 60) + (restUp ? 30 : -30))); if (r === x.rest) return null; items[j] = {...x, rest: r}; return `${exName(x.ex)}: ${fmtRest(x.rest || 60)} → ${fmtRest(r)}`; }).filter(Boolean)) || hit;
     if (hit && used.has(ci)) return;
     // v4.25: "trocar X por Y" (Y = equipamento, outro exercício ou um ângulo)
     const sw = c.match(/\b(?:troc\w*|substitu\w*|mud\w*)\s+(?:o |a |os |as )?(.+?)\s+(?:por|pelo|pela|pra|para)\s+(?:o |a |um |uma )?(.+)$/);
@@ -278,6 +281,49 @@ function obInterpret(text, w0, off = new Set(), opts = {}){
     else if (tgt >= min) flags.push({title: `Cabe em ${tgt} minutos`, text: S ? `Pela estimativa do app, o que falta leva cerca de ${est()} minutos.` : `Pela estimativa do app, este treino já leva cerca de ${est()} minutos.`}); }
   return {rules, flags, notes, items, wset};
 }
+/* v4.33: descanso nas observações. Palavras fortes bastam; as fracas (timer, respiro, tempo...) precisam de um valor ou de "mais/menos". */
+const OB_REST_W = /\b(descans\w*|intervalos?|pausas?|emend\w*)\b/;
+const OB_REST_W2 = /\b(recupera\w*|respiro|respirar|timer|cronometro|relogio|rest|esper\w*|tempo (de |do |da )?(descanso|intervalo|pausa|recuperacao))\b/;
+const OB_REST_EX = /\bentre (os |um |uma |cada |dois )?(exercicios?|aparelhos?|maquinas?)\b|\btroc\w* de (exercicio|aparelho|maquina)\b|\b(de|entre) um (exercicio|aparelho) (pro|para o|pra|e) (outro|proximo)\b|\b(depois|no fim|ao fim|ao terminar|ao acabar) (de |do )?(cada )?(exercicio|aparelho)\b|\bemend\w*/;
+const OB_RBETWEEN = /\bentre (as |os |um |uma |cada )?(series|exercicios?|aparelhos?|maquinas?)\b|\btroc\w* de (exercicio|aparelho|maquina)\b/;
+const OB_RUP = /\b(maior|mais longo|longos?|mais (tempo|descanso)|descansar mais|aument\w*|estend\w*|alonga\w*)\b/;
+const OB_RDN = /\b(menor|mais curto|curtos?|menos|descansar menos|diminu\w*|reduz\w*|encurt\w*)\b/;
+const OB_RCOMP = /\b(compostos?|multiarticulares?|basicos?|pesados?|grandes)\b/, OB_RISO = /\b(isolados?|isoladores?|isolamentos?|monoarticulares?|acessorios?|pequenos?)\b/;
+const OB_RSCOPE = /\b(n[oa]s?|em|entre)\b/;
+const OB_RSTRIP = /\b(descans\w*|intervalos?|pausas?|recupera\w*|respiro|respirar|timer|cronometro|relogio|rest|esper\w*|tempo|entre|series?|cada|tod[oa]s?|aparelhos?|exercicios?|segundos?|segs?|minutos?|mins?|min|meio|maior|menor|longo|curto|mais|menos|aument\w*|diminu\w*|reduz\w*|quero|queria|deixar|deixa|colocar|coloca|ficar|fica|usar)\b|\d+(:\d\d)?\s*(s|m)?\b/g;
+/* "2 min e 30 s", "2m30", "2'30", "1,5 min" → "2:30"; "2'" → "2 min" (antes de quebrar as frases) */
+function obTimeNorm(t){
+  return t.replace(/(\d+)[.,](\d+)\s*(minutos?|mins?|m)\b/g, (_, a, b) => `${a}:${pad(Math.round(+('0.' + b) * 60))}`)
+    .replace(/(\d+)\s*(?:minutos?|mins?|m|')\s*(?:e\s*)?(\d{1,2})\s*(?:segundos?|segs?|s|''|")(?![a-z])/g, (_, a, b) => `${a}:${pad(+b)}`)
+    .replace(/(\d+)\s*(?:minutos?|mins?|m)\s+e\s+(\d{2})\b(?!\s*(min|rep|serie|x|kg))/g, (_, a, b) => `${a}:${b}`)
+    .replace(/(\d+)\s*(?:min|m|')(\d{2})\b/g, '$1:$2').replace(/(\d+)\s*'(?!')/g, '$1 min');
+}
+function obIsRest(c){
+  if (/\brest.?paus|\bpausa\w* (de \d+ ?s\w* )?(embaixo|em baixo|no fundo|no topo|em cima|na contracao)|\bisometri/.test(c)) return false;
+  const val = obRestVal(c) != null || OB_RUP.test(c) || OB_RDN.test(c);
+  return OB_REST_W.test(c) || ((OB_REST_W2.test(c) || OB_RBETWEEN.test(c)) && val);
+}
+/* quais exercícios a frase de descanso atinge: um exercício citado, um músculo, compostos ou isolados, ou todos */
+function obRestScope(c, items, mus, done = new Set()){
+  const iso = x => ISO_P.includes((getEx(x.ex) || {}).p); const lead = t => t.replace(/^((n[oa]s?|em|d[oa]s?|de)\s+)+/, '');
+  if (done.size && /\b(resto|demais|outr[oa]s|restantes?)\b/.test(c)) return {sel: items.filter(x => !done.has(x.ex)), label: 'nos demais'};
+  const co = OB_RCOMP.test(c), is = OB_RISO.test(c);
+  if (co !== is) return co ? {sel: items.filter(x => !iso(x)), label: 'nos compostos'} : {sel: items.filter(iso), label: 'nos isolados'};
+  const clean = c.replace(OB_RSTRIP, ' ').replace(/\s+/g, ' ').trim();
+  const tg = obMatchItems(clean, items); if (tg.length) return {sel: tg, label: tg.length === 1 ? 'em ' + exName(tg[0].ex).toLowerCase() : 'em ' + lead(clean)};
+  if (mus.length) return {sel: items.filter(x => mus.includes((getEx(x.ex) || {}).m)), label: 'em ' + mus.map(m => MUSC[m].toLowerCase()).join(' e ')};
+  if (obWords(clean).some(w => obVocab().has(w) && !OB_EQ.some(([re]) => re.test(w)))) return {sel: [], miss: lead(clean)};
+  return {sel: items, label: null};
+}
+/* v4.33: descanso escrito na anotação de um exercício ("descanso de 2 min", "pausa maior") muda só o descanso dele; o trecho sai do texto */
+function obNoteRest(text, cur){
+  const parts = String(text || '').split(/([.;!\n]+|,)/); let rest = null;
+  for (let i = 0; i < parts.length; i += 2){ const c = obTimeNorm(norm(parts[i])); if (!obIsRest(c) || OB_REST_EX.test(c)) continue;
+    const v = /\bsem (descanso|intervalo|pausa)\b/.test(c) ? 0 : obRestVal(c); const dn = OB_RDN.test(c), up = !dn && OB_RUP.test(c);
+    const r = v != null ? v : up || dn ? Math.max(30, Math.min(300, (cur || 60) + (up ? 30 : -30))) : null; if (r == null) continue;
+    rest = r; parts[i] = ''; if (i + 1 < parts.length) parts[i + 1] = ''; }
+  return rest == null ? null : {rest, note: parts.join('').replace(/^[\s.,;!]+|[\s,;]+$/g, '').replace(/\s{2,}/g, ' ')};
+}
 /* valor de descanso em segundos: "90 s", "2 min", "1:30", "minuto e meio", "dois minutos", "descanso 60" */
 function obRestVal(c){
   const cl = v => Math.max(10, Math.min(600, Math.round(v / 5) * 5)); let m;
@@ -352,7 +398,7 @@ function adjCtx(){ const sh = UI.sheet; if (!sh || sh.kind !== 'adj') return nul
     return {s, w0: {items: sessToPlan(s), restEx: s.restEx != null ? s.restEx : wk && wk.restEx}, name: s.wname}; }
   const r = routineById(sh.rid); const w = r && r.workouts.find(x => x.id === sh.wid); return w ? {r, w, w0: w, name: w.nome} : null; }
 function adjChips(items, S){
-  const ms = new Set(items.map(x => (getEx(x.ex) || {}).m)); const c = [S ? 'Só tenho mais 20 minutos' : 'Tenho 45 minutos', 'Treino mais leve hoje'];
+  const ms = new Set(items.map(x => (getEx(x.ex) || {}).m)); const c = [S ? 'Só tenho mais 20 minutos' : 'Tenho 45 minutos', 'Descanso de 90 s', '2 min entre exercícios', 'Treino mais leve hoje'];
   [['peito', 'Mais peito superior'], ['costas', 'Mais largura nas costas'], ['ombros', 'Mais deltoide lateral'], ['gluteos', 'Mais glúteo médio'], ['biceps', 'Mais cabeça longa do bíceps'], ['triceps', 'Mais cabeça longa do tríceps'], ['posteriores', 'Mais posterior de coxa'], ['quadriceps', 'Mais frente da coxa']].forEach(([m, t]) => { if (ms.has(m)) c.push(t); });
   c.push(S ? 'Só halteres hoje' : 'Só halteres', 'Sem máquinas', 'Uma série a menos em tudo', '3 séries em tudo');
   return [...new Set(c)].slice(0, 10);

@@ -27,7 +27,7 @@ const LOCAIS = {
 /* O que cada exercício precisa para ser feito. Base pelo tipo de equipamento, mais exceções conhecidas. */
 const NEEDS_BASE = {barra: ['barra'], halter: ['halter'], cabo: ['cabo'], maquina: ['maquina'], smith: ['smith'], kettlebell: ['kettlebell'], elastico: ['elastico'], suspensao: ['suspensao'], peso: [], casa: [], outros: []};
 const NEEDS_X = {
-  'barra-fixa': ['barrafixa'], 'barra-supinada': ['barrafixa'], 'barra-neutra': ['barrafixa'], 'elev-pernas-barra': ['barrafixa'], 'remada-invertida': ['barrafixa'], 'barra-assistida-elastico': ['barrafixa', 'elastico'],
+  'barra-fixa': ['barrafixa'], 'barra-fixa-peso': ['barrafixa'], 'barra-supinada': ['barrafixa'], 'barra-neutra': ['barrafixa'], 'elev-pernas-barra': ['barrafixa'], 'remada-invertida': ['barrafixa'], 'barra-assistida-elastico': ['barrafixa', 'elastico'],
   'paralelas': ['paralelas'], 'paralelas-peito': ['paralelas'],
   'elev-joelhos-paralela': ['maquina'], 'hiperextensao': ['maquina'], 'abd-declinado': ['maquina'], 'pant-burrinho': ['maquina'], 'corrida': ['maquina'], 'roda': ['roda'], 'pular-corda': ['corda'], 'elev-frontal-anilha': ['anilha'],
   'flexao-inclinada': ['cadeira'], 'flexao-declinada': ['cadeira'], 'mergulho-banco': ['cadeira'], 'elevacao-pelvica-sofa': ['cadeira'], 'remada-porta': ['porta'], 'remada-mesa': ['mesa'],
@@ -54,23 +54,24 @@ const GYM_TIPOS = {
   nsei: {n: 'Não sei dizer', d: 'Uma academia comum.', inv: ['halter', 'barra', 'bancosup', 'rack', 'smith', 'polia', 'cross', 'legpress', 'maqinf', 'maqsup', 'barrafixa', 'cardio']},
 };
 const GYM_PREF = [['livre', 'Pesos livres'], ['equil', 'Equilibrado'], ['maq', 'Máquinas']];
-const G_CROSS = new Set(['crossover', 'crossover-baixo', 'crossover-alto', 'lenhador', 'coice-cabo', 'pull-through', 'supino-cabo', 'rosca-martelo-cruzada', 'elev-lateral-cabo', 'triceps-coice-cabo', 'rosca-cabo-alto']);
+const G_CROSS = new Set(['crucifixo-incl-cabo', 'crossover', 'crossover-baixo', 'crossover-alto', 'lenhador', 'coice-cabo', 'pull-through', 'supino-cabo', 'rosca-martelo-cruzada', 'elev-lateral-cabo', 'triceps-coice-cabo', 'rosca-cabo-alto']);
 const G_RACK = new Set(['agachamento', 'agachamento-frontal', 'afundo-barra', 'bom-dia']);
 const G_BENCH = new Set(['supino-reto-barra', 'supino-incl-barra', 'supino-decl-barra', 'supino-fechado']);
-const G_ARTIC = new Set(['remada-apoiada-t', 'hip-thrust-maquina', 'hiperext-reversa', 'pant-sentado', 'elev-lateral-maquina', 'mergulho-maquina', 'desenv-maquina-2', 'remada-alta-maquina']);
+const G_ARTIC = new Set(['agachamento-pendulo', 'gluteo-maquina', 'remada-apoiada-t', 'hip-thrust-maquina', 'hiperext-reversa', 'pant-sentado', 'elev-lateral-maquina', 'mergulho-maquina', 'desenv-maquina-2', 'remada-alta-maquina']);
 const G_CARDIO = new Set(['esteira', 'caminhada-inclinada', 'bike', 'eliptico', 'remo-ergometro', 'stepmill', 'air-bike', 'corrida']);
 /* o que da academia o exercício precisa (vazio: dá em qualquer academia) */
 function gymNeeds(id){
   const x = CAT[id]; if (!x) return [];
   const nx = (NEEDS_X[id] || []).filter(n => n === 'barrafixa' || n === 'paralelas');
+  if (id === 'terra-hexagonal') return ['barra', 'articulada'];
   if (x.e === 'barra') return ['barra', ...(G_RACK.has(id) ? ['rack'] : []), ...(G_BENCH.has(id) ? ['bancosup'] : [])];
   if (x.e === 'halter') return ['halter'];
   if (x.e === 'smith') return ['smith'];
   if (x.e === 'kettlebell') return ['kettlebell'];
   if (x.e === 'cabo') return [G_CROSS.has(id) ? 'cross' : 'polia'];
   if (x.e === 'maquina'){
-    if (G_CARDIO.has(id)) return ['cardio']; if (id === 'hack') return ['hack']; if (id === 'leg-press' || id === 'pant-legpress' || id === 'leg-press-horizontal') return ['legpress'];
-    if (['extensora', 'cadeira-flexora', 'mesa-flexora', 'pant-pe', 'flexora-em-pe'].includes(id)) return ['maqinf']; if (id === 'abducao' || id === 'adutora') return ['abdutora'];
+    if (G_CARDIO.has(id)) return ['cardio']; if (id === 'hack' || id === 'pant-hack') return ['hack']; if (['leg-press', 'pant-legpress', 'leg-press-horizontal', 'leg-press-unilateral'].includes(id)) return ['legpress'];
+    if (['extensora', 'cadeira-flexora', 'mesa-flexora', 'pant-pe', 'flexora-em-pe', 'extensora-unilateral', 'flexora-unilateral'].includes(id)) return ['maqinf']; if (id === 'abducao' || id === 'adutora') return ['abdutora'];
     if (G_ARTIC.has(id)) return ['articulada']; if (NEEDS_X[id] && NEEDS_X[id].includes('maquina') && ['elev-joelhos-paralela', 'hiperextensao', 'abd-declinado', 'pant-burrinho'].includes(id)) return [];
     return ['maqsup'];
   }
@@ -96,34 +97,34 @@ const SLOTS = {
   pressH: {r: 'main', c: ['supino-reto-barra', 'supino-reto-halter', 'supino-reto-maquina', 'supino-elastico', 'trx-supino', 'trx-flexao', 'flexao', 'flexao-joelhos', 'flexao-parede']},
   pressH2: {r: 'comp', c: ['supino-reto-maquina', 'supino-reto-halter', 'supino-reto-smith', 'flexao-aberta', 'supino-elastico', 'flexao']},
   pressI: {r: 'comp', c: ['supino-incl-halter', 'supino-incl-maquina', 'supino-incl-barra', 'supino-incl-smith', 'supino-squeeze', 'flexao-declinada', 'supino-elastico']},
-  fly: {r: 'iso', c: ['voador', 'crossover', 'crossover-baixo', 'crossover-alto', 'crucifixo-halter', 'crucifixo-incl', 'crucifixo-solo', 'flexao-aberta']},
+  fly: {r: 'iso', c: ['voador', 'crossover', 'crossover-baixo', 'crossover-alto', 'crucifixo-incl-cabo', 'crucifixo-halter', 'crucifixo-incl', 'crucifixo-solo', 'flexao-aberta']},
   dip: {r: 'comp', c: ['paralelas-peito', 'mergulho-maquina', 'flexao-diamante', 'mergulho-cadeiras']},
   pullV: {r: 'comp', c: ['puxada-aberta', 'puxada-maquina', 'barra-fixa', 'puxada-elastico', 'pullover-halter', 'kb-remada', 'trx-remada', 'remada-mesa', 'superman-puxada']},
   pullV2: {r: 'comp', c: ['puxada-neutra', 'puxada-supinada', 'graviton', 'barra-supinada', 'barra-neutra', 'barra-arqueiro', 'puxada-elastico', 'pullover-halter', 'kb-remada', 'trx-remada', 'remada-mochila', 'superman-puxada']},
-  rowH: {r: 'comp', c: ['remada-curvada', 'remada-baixa', 'remada-maquina', 'serrote', 'remada-curvada-halter', 'kb-remada', 'remada-elastico', 'trx-remada', 'remada-invertida', 'remada-mesa', 'remada-porta', 'remada-mochila']},
-  rowH2: {r: 'comp', c: ['remada-maquina', 'remada-iso', 'remada-apoiada-t', 'remada-incl-halter', 'kb-renegade', 'kb-remada', 'remada-unilateral-elastico', 'trx-remada', 'remada-invertida', 'remada-mochila', 'remada-porta', 'remada-mesa']},
+  rowH: {r: 'comp', c: ['remada-curvada', 'remada-baixa', 'remada-baixa-aberta', 'remada-maquina', 'serrote', 'remada-curvada-halter', 'remada-pendlay', 'kb-remada', 'remada-elastico', 'trx-remada', 'remada-invertida', 'remada-mesa', 'remada-porta', 'remada-mochila']},
+  rowH2: {r: 'comp', c: ['remada-maquina', 'remada-iso', 'remada-baixa-aberta', 'remada-apoiada-t', 'remada-incl-halter', 'kb-renegade', 'kb-remada', 'remada-unilateral-elastico', 'trx-remada', 'remada-invertida', 'remada-mochila', 'remada-porta', 'remada-mesa']},
   ohp: {r: 'comp', c: ['desenv-halter', 'desenv-maquina', 'desenv-barra', 'kb-desenv', 'desenv-elastico', 'pike', 'flexao-declinada']},
   lat: {r: 'small', c: ['elev-lateral-cabo', 'elev-lateral-maquina', 'elev-lateral-halter', 'remada-alta-halter', 'elev-frontal-elastico', 'elev-y-solo']},
-  front: {r: 'small', c: ['elev-frontal', 'elev-frontal-cabo']},
+  front: {r: 'small', c: ['elev-frontal', 'elev-frontal-cabo', 'elev-frontal-barra']},
   rear: {r: 'small', c: ['voador-inverso', 'face-pull', 'crucifixo-inverso-halter', 'crucifixo-inverso-incl', 'face-pull-elastico', 'trx-remada-posterior', 'trx-y', 'crucifixo-inverso-elastico', 'anjo-reverso', 'elev-y-solo']},
-  shrug: {r: 'iso', c: ['encolhimento-halter', 'encolhimento-barra']},
+  shrug: {r: 'iso', c: ['encolhimento-halter', 'encolhimento-barra', 'encolhimento-smith']},
   bi: {r: 'iso', c: ['rosca-barra', 'rosca-halter', 'rosca-elastico', 'trx-rosca', 'barra-supinada']},
   bi2: {r: 'iso', c: ['rosca-inclinada', 'rosca-martelo', 'rosca-concentrada', 'rosca-elastico', 'rosca-scott-halter']},
-  bi3: {r: 'iso', c: ['rosca-scott', 'rosca-martelo-corda', 'rosca-martelo', 'rosca-concentrada', 'rosca-arrastada', 'rosca-martelo-cruzada']},
-  tri: {r: 'iso', c: ['triceps-corda', 'triceps-frances-halter', 'triceps-elastico', 'trx-triceps', 'flexao-diamante', 'mergulho-banco', 'mergulho-cadeiras']},
-  tri2: {r: 'iso', c: ['triceps-frances-cabo', 'triceps-halter-deitado', 'triceps-coice', 'triceps-coice-cabo', 'triceps-unilateral-halter', 'mergulho-banco', 'flexao-diamante']},
-  tri3: {r: 'iso', c: ['triceps-testa', 'triceps-barra', 'triceps-frances-pe', 'paralelas']},
+  bi3: {r: 'iso', c: ['rosca-scott', 'rosca-scott-cabo', 'rosca-martelo-corda', 'rosca-martelo', 'rosca-concentrada', 'rosca-arrastada', 'rosca-martelo-cruzada']},
+  tri: {r: 'iso', c: ['triceps-corda', 'triceps-v', 'triceps-frances-halter', 'triceps-elastico', 'trx-triceps', 'flexao-diamante', 'mergulho-banco', 'mergulho-cadeiras']},
+  tri2: {r: 'iso', c: ['triceps-frances-cabo', 'triceps-halter-deitado', 'triceps-coice', 'triceps-coice-cabo', 'triceps-unilateral-cabo', 'triceps-unilateral-halter', 'mergulho-banco', 'flexao-diamante']},
+  tri3: {r: 'iso', c: ['triceps-testa', 'triceps-barra', 'triceps-v', 'triceps-frances-pe', 'paralelas']},
   squat: {r: 'main', c: ['agachamento', 'hack', 'goblet', 'agachamento-halter', 'agachamento-sumo-halter', 'agachamento-elastico', 'trx-agachamento', 'agachamento-livre', 'agachamento-cadeira']},
-  squat2: {r: 'comp', c: ['leg-press', 'leg-press-horizontal', 'hack', 'agachamento-smith', 'bulgaro', 'bulgaro-cadeira', 'goblet', 'kb-afundo', 'agachamento-elastico', 'trx-agachamento', 'trx-agachamento-unilateral', 'subida-degrau', 'agachamento-cossaco', 'agachamento-unilateral']},
-  lunge: {r: 'comp', c: ['bulgaro', 'afundo', 'afundo-reverso-halter', 'afundo-lateral-halter', 'afundo-cruzado-halter', 'step-up', 'kb-afundo', 'afundo-reverso', 'subida-caixa', 'afundo-caminhando', 'afundo-lateral', 'afundo-cruzado', 'descida-degrau']},
-  hinge: {r: 'comp', c: ['stiff-barra', 'stiff-halter', 'kb-stiff', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral', 'bom-dia-solo']},
-  dead: {r: 'main', c: ['levantamento-terra', 'terra-halter', 'kb-terra', 'kb-sumo', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral', 'bom-dia-solo']},
-  legcurl: {r: 'iso', c: ['cadeira-flexora', 'mesa-flexora', 'flexora-em-pe', 'flexora-halter', 'stiff-unilateral', 'trx-flexora', 'flexora-elastico', 'flexora-toalha', 'flexora-nordica', 'ponte-unilateral']},
-  legext: {r: 'iso', c: ['extensora', 'extensora-elastico', 'sissy', 'cadeirinha']},
-  glute: {r: 'comp', c: ['elevacao-pelvica', 'hip-thrust-maquina', 'hip-thrust-halter', 'ponte-halter', 'kettlebell-swing', 'ponte', 'pull-through', 'ponte-elastico', 'coice-elastico', 'elevacao-pelvica-sofa', 'ponte-unilateral', 'ponte-solo', 'coice-quatro']},
-  abduct: {r: 'small', c: ['abducao', 'abducao-elastico', 'monster-walk', 'abducao-deitada', 'hidrante', 'ostra']},
-  adduct: {r: 'small', c: ['adutora', 'adutor-deitado']},
-  calf: {r: 'small', c: ['pant-pe', 'pant-sentado', 'pant-halter', 'pant-degrau']},
+  squat2: {r: 'comp', c: ['leg-press', 'leg-press-horizontal', 'hack', 'agachamento-pendulo', 'agachamento-smith', 'afundo-smith', 'leg-press-unilateral', 'bulgaro', 'bulgaro-cadeira', 'goblet', 'kb-afundo', 'agachamento-elastico', 'trx-agachamento', 'trx-agachamento-unilateral', 'subida-degrau', 'agachamento-cossaco', 'agachamento-unilateral']},
+  lunge: {r: 'comp', c: ['bulgaro', 'afundo', 'afundo-smith', 'afundo-reverso-halter', 'afundo-lateral-halter', 'afundo-cruzado-halter', 'step-up', 'kb-afundo', 'afundo-reverso', 'subida-caixa', 'afundo-caminhando', 'afundo-lateral', 'afundo-cruzado', 'descida-degrau']},
+  hinge: {r: 'comp', c: ['stiff-barra', 'stiff-halter', 'stiff-smith', 'kb-stiff', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral', 'bom-dia-solo']},
+  dead: {r: 'main', c: ['levantamento-terra', 'terra-hexagonal', 'terra-halter', 'kb-terra', 'kb-sumo', 'kettlebell-swing', 'stiff-elastico', 'ponte-unilateral', 'bom-dia-solo']},
+  legcurl: {r: 'iso', c: ['cadeira-flexora', 'mesa-flexora', 'flexora-em-pe', 'flexora-unilateral', 'flexora-halter', 'stiff-unilateral', 'trx-flexora', 'flexora-elastico', 'flexora-toalha', 'flexora-nordica', 'ponte-unilateral']},
+  legext: {r: 'iso', c: ['extensora', 'extensora-unilateral', 'extensora-elastico', 'sissy', 'cadeirinha']},
+  glute: {r: 'comp', c: ['elevacao-pelvica', 'hip-thrust-maquina', 'elevacao-pelvica-smith', 'hip-thrust-halter', 'ponte-halter', 'kettlebell-swing', 'ponte', 'gluteo-maquina', 'pull-through', 'ponte-elastico', 'coice-elastico', 'elevacao-pelvica-sofa', 'ponte-unilateral', 'ponte-solo', 'coice-quatro']},
+  abduct: {r: 'small', c: ['abducao', 'abducao-cabo', 'abducao-elastico', 'monster-walk', 'abducao-deitada', 'hidrante', 'ostra']},
+  adduct: {r: 'small', c: ['adutora', 'aducao-cabo', 'adutor-deitado']},
+  calf: {r: 'small', c: ['pant-pe', 'pant-sentado', 'pant-hack', 'pant-halter', 'pant-degrau']},
   core: {r: 'core', c: ['abd-polia', 'abd-maquina', 'elev-pernas', 'pallof', 'prancha', 'abd-reverso', 'perdigueiro', 'prancha-urso', 'hollow-hold']},
   core2: {r: 'core', c: ['lenhador', 'rotacao-tronco', 'elev-pernas-barra', 'kb-moinho', 'abd-russo', 'dead-bug', 'prancha-lateral', 'canoa', 'v-up', 'limpador', 'prancha-lateral-rotacao', 'prancha-spiderman', 'flutter', 'sit-up', 'prancha-toque-ombro', 'trx-prancha']},
   hiit: {r: 'circ', c: ['burpee', 'kb-snatch', 'agachamento-salto', 'escalador', 'salto-grupado', 'corda-naval', 'air-bike', 'prancha-polichinelo']},
@@ -169,17 +170,17 @@ const FOCUS_DAY = {peito: 'FUP', costas: 'FUB', bracos: 'FUPB', ombros: 'FUP', g
 /* Escolhe o exercício da vaga: só o que dá para fazer no local; com o equipamento principal do local primeiro
    (num programa de kettlebell, o kettlebell vem antes do peso do corpo). */
 /* pedem força ou técnica avançada: fora dos programas de iniciante */
-const HARD = ['sissy', 'agachamento-unilateral', 'flexora-nordica', 'flexao-parede-invertida', 'flexao-arqueiro', 'paralelas', 'paralelas-peito', 'kb-snatch', 'elev-pernas-barra', 'flexao-palma', 'barra-arqueiro', 'joelho-cotovelo-suspenso', 'trx-pike', 'salto-grupado', 'trx-agachamento-unilateral', 'canivete'];
+const HARD = ['remada-pendlay', 'barra-fixa-peso', 'sissy', 'agachamento-unilateral', 'flexora-nordica', 'flexao-parede-invertida', 'flexao-arqueiro', 'paralelas', 'paralelas-peito', 'kb-snatch', 'elev-pernas-barra', 'flexao-palma', 'barra-arqueiro', 'joelho-cotovelo-suspenso', 'trx-pike', 'salto-grupado', 'trx-agachamento-unilateral', 'canivete'];
 /* v4.31: limitações e condições. Fontes: ACSM (2026, treino de força; hipertensão), NSCA (idosos, 2019; joelho),
    ACOG (gestação, 2020) e revisões sobre dor lombar e ombro. "ban" sai do programa; "pre" sobe na lista da vaga. */
 const LIMS = {
-  ombro: {n: 'Ombro', ban: ['remada-alta', 'remada-alta-halter', 'remada-alta-maquina', 'desenv-barra', 'paralelas', 'paralelas-peito', 'mergulho-maquina', 'mergulho-banco', 'mergulho-cadeiras', 'supino-reto-barra', 'supino-incl-barra', 'supino-decl-barra', 'barra-fixa', 'puxada-aberta', 'barra-arqueiro', 'pullover-halter', 'flexao-arqueiro', 'flexao-parede-invertida', 'pike', 'trx-pike', 'triceps-frances-pe', 'triceps-frances-halter', 'kb-snatch', 'crucifixo-halter', 'crucifixo-incl', 'crucifixo-solo', 'flexao-aberta'],
+  ombro: {n: 'Ombro', ban: ['remada-alta', 'remada-alta-halter', 'remada-alta-maquina', 'desenv-barra', 'paralelas', 'paralelas-peito', 'mergulho-maquina', 'mergulho-banco', 'mergulho-cadeiras', 'supino-reto-barra', 'supino-incl-barra', 'supino-decl-barra', 'barra-fixa', 'puxada-aberta', 'barra-arqueiro', 'pullover-halter', 'flexao-arqueiro', 'flexao-parede-invertida', 'pike', 'trx-pike', 'triceps-frances-pe', 'triceps-frances-halter', 'kb-snatch', 'crucifixo-halter', 'crucifixo-incl', 'crucifixo-solo', 'flexao-aberta', 'barra-fixa-peso', 'elev-frontal-barra'],
     pre: ['supino-pegada-neutra', 'supino-reto-halter', 'supino-reto-maquina', 'desenv-maquina', 'puxada-neutra', 'face-pull', 'remada-baixa', 'triceps-corda'], more: 'rowH2',
     why: 'Ombro: saem remada alta, paralelas, desenvolvimento com barra e crucifixo aberto. Entram halteres e pegada neutra, e mais puxadas do que empurrões.'},
-  joelho: {n: 'Joelho', ban: ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'skipping', 'corrida', 'pular-corda', 'skater', 'sissy', 'agachamento-unilateral', 'trx-agachamento-unilateral', 'agachamento-cossaco', 'afundo-caminhando', 'afundo-cruzado', 'afundo-cruzado-halter', 'afundo-lateral', 'afundo-lateral-halter', 'bulgaro', 'bulgaro-cadeira', 'agachamento-frontal', 'afundo-barra', 'descida-degrau', 'flexora-nordica', 'kb-afundo', 'afundo', 'agachamento'],
-    pre: ['leg-press', 'agachamento-cadeira', 'subida-degrau', 'step-up', 'elevacao-pelvica', 'hip-thrust-maquina', 'cadeira-flexora', 'mesa-flexora', 'goblet'], depth: true,
+  joelho: {n: 'Joelho', ban: ['agachamento-salto', 'afundo-salto', 'salto-grupado', 'burpee', 'skipping', 'corrida', 'pular-corda', 'skater', 'sissy', 'agachamento-unilateral', 'trx-agachamento-unilateral', 'agachamento-cossaco', 'afundo-caminhando', 'afundo-cruzado', 'afundo-cruzado-halter', 'afundo-lateral', 'afundo-lateral-halter', 'bulgaro', 'bulgaro-cadeira', 'agachamento-frontal', 'afundo-barra', 'descida-degrau', 'flexora-nordica', 'kb-afundo', 'afundo', 'agachamento', 'afundo-smith', 'agachamento-pendulo'],
+    pre: ['leg-press', 'agachamento-cadeira', 'subida-degrau', 'step-up', 'elevacao-pelvica', 'hip-thrust-maquina', 'elevacao-pelvica-smith', 'cadeira-flexora', 'mesa-flexora', 'goblet'], depth: true,
     why: 'Joelho: sem saltos, afundos profundos e agachamento livre com barra. Agachamentos e leg press vão até cerca de 90° de joelho, com mais glúteo e posterior.'},
-  lombar: {n: 'Lombar', ban: ['levantamento-terra', 'terra-sumo', 'bom-dia', 'bom-dia-solo', 'remada-curvada', 'remada-curvada-halter', 'agachamento', 'agachamento-frontal', 'afundo-barra', 'stiff-barra', 'kettlebell-swing', 'kb-snatch', 'sit-up', 'v-up', 'canivete', 'abd-declinado', 'elev-pernas', 'elev-pernas-barra', 'flutter', 'limpador', 'abd-russo', 'superman-puxada', 'desenv-barra', 'abd-solo', 'rotacao-tronco'],
+  lombar: {n: 'Lombar', ban: ['levantamento-terra', 'terra-sumo', 'bom-dia', 'bom-dia-solo', 'remada-curvada', 'remada-curvada-halter', 'agachamento', 'agachamento-frontal', 'afundo-barra', 'stiff-barra', 'kettlebell-swing', 'kb-snatch', 'sit-up', 'v-up', 'canivete', 'abd-declinado', 'elev-pernas', 'elev-pernas-barra', 'flutter', 'limpador', 'abd-russo', 'superman-puxada', 'desenv-barra', 'abd-solo', 'rotacao-tronco', 'remada-pendlay', 'terra-hexagonal', 'stiff-smith'],
     pre: ['leg-press', 'leg-press-horizontal', 'remada-maquina', 'hack', 'remada-apoiada-t', 'remada-incl-halter', 'remada-iso', 'serrote', 'remada-baixa', 'elevacao-pelvica', 'hip-thrust-maquina', 'stiff-halter', 'perdigueiro', 'prancha-lateral', 'dead-bug', 'pallof', 'prancha'],
     why: 'Lombar: saem terra e stiff com barra, bom-dia, remada curvada e agachamento com barra nas costas. Entram remadas com apoio, leg press, elevação pélvica e core de estabilidade, como perdigueiro e prancha lateral.'},
   punho: {n: 'Punho ou cotovelo', ban: ['flexao', 'flexao-joelhos', 'flexao-diamante', 'flexao-declinada', 'flexao-aberta', 'flexao-arqueiro', 'flexao-palma', 'flexao-inclinada', 'flexao-parede', 'trx-flexao', 'prancha-toque-ombro', 'prancha-urso', 'urso', 'escalador', 'burpee', 'prancha-spiderman', 'prancha-polichinelo', 'rosca-barra', 'triceps-testa', 'triceps-barra', 'agachamento-frontal', 'kb-snatch', 'pike', 'paralelas', 'paralelas-peito', 'rosca-punho', 'rosca-punho-inversa'],

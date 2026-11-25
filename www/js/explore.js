@@ -47,7 +47,7 @@ const pcard = t => `<button class="pcard" data-act="open-template" data-tid="${t
 const pslide = t => `<button class="pslide" data-act="open-template" data-tid="${t.id}">${coverArt(t, 'big')}</button>`;
 function bodyThumb(regs, back){
   const arr = back ? BODYDATA.back : BODYDATA.front, vb = back ? BODYDATA.vbB : BODYDATA.vbF, border = back ? BODYDATA.bb : BODYDATA.bf;
-  let h = ''; for (const [skin, r, d] of arr) h += `<path class="${skin ? 'm-skin' : r.some(x => regs.includes(x)) ? 'm-pri' : 'm-off'}" d="${d}"/>`;
+  const all = regs === true; let h = ''; for (const [skin, r, d] of arr) h += `<path class="${skin ? 'm-skin' : all || r.some(x => regs.includes(x)) ? 'm-pri' : 'm-off'}" d="${d}"/>`;
   return `<svg viewBox="${vb.join(' ')}" aria-hidden="true">${h}<path class="m-border" d="${border}"/></svg>`;
 }
 const FOCO_BACK = {costas: 1, gluteos: 1};
@@ -126,7 +126,7 @@ function builderTpl(){
     goal: [b.goal], local: [b.local], nivel: bldNivel(b.nivel), freq: b.dias, dur: b.dur, foco: b.focos.slice(), tag: ['MEU', 'PROGRAMA'], art: LOCAIS[b.local].art, workouts: ob.workouts, obsRes: ob, why, clear};
 }
 /* Cartão do assistente: borda com uma luz laranja girando em volta */
-function builderCta(){ return `<button class="builder-cta spin-b" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Algumas perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>6 passos</i><i class="hot">1 minuto</i></span></button>`; }
+function builderCta(){ return `<button class="builder-cta spin-b" data-act="open-builder"><span class="grow"><span class="eyebrow" style="color:var(--ember)">Sob medida</span><b class="display h3" style="display:block;margin-top:6px">Montar meu programa</b><span class="small ink2" style="display:block;margin-top:6px">Algumas perguntas rápidas e o Forja monta os treinos para a sua rotina.</span></span><span class="bc-chips"><i>${BSTEPS.filter(x => x !== 'gym' || (UI.bld || BLD0).local === 'academia').length} passos</i><i class="hot">1 minuto</i></span></button>`; }
 /* Observações do assistente: as mesmas regras do campo do treino, aplicadas a cada treino do programa.
    Devolve os treinos ajustados e um resumo agrupado (o que mudou, em quais treinos, alertas e lembretes). */
 function bldObs(workouts, text, inv){
@@ -232,7 +232,7 @@ function vBuilderStep(b, step){
       <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="estilo">Continuar</button></div>`; }
   else if (step === 'foco'){ q = 'Quer dar prioridade a algum músculo?'; const fs = b.focos;
     body = `<p class="ink2" style="margin:-6px 0 16px">Opcional. Escolha até ${FOCO_MAX}: eles ganham volume extra e entram mais cedo nos treinos, sem deixar o resto de lado.</p><div class="list">
-      <button class="li frow bq-foco" data-act="bld-foco" data-v="" aria-pressed="${!fs.length}"><span class="fthumb">${bodyThumb([], 0)}</span><div class="grow"><b>Não, quero equilíbrio</b><span class="sub">Todos os grupos com o mesmo peso</span></div><i class="tick">${I.check}</i></button>
+      <button class="li frow bq-foco" data-act="bld-foco" data-v="" aria-pressed="${!fs.length}"><span class="fthumb">${bodyThumb(true, 0)}</span><div class="grow"><b>Não, quero equilíbrio</b><span class="sub">Todos os grupos com o mesmo peso</span></div><i class="tick">${I.check}</i></button>
       ${Object.entries(FOCOS).map(([k, f]) => { const on = fs.includes(k); const full = !on && fs.length >= FOCO_MAX; return `<button class="li frow bq-foco multi" data-act="bld-foco" data-v="${k}" aria-pressed="${on}" ${full ? 'data-full="1"' : ''}><span class="fthumb">${bodyThumb(f.reg, FOCO_BACK[k])}</span><div class="grow"><b>${esc(f.n)}</b>${on ? `<span class="sub">${fs.indexOf(k) === 0 && fs.length > 1 ? 'Prioridade principal' : 'Prioridade'}</span>` : ''}</div><i class="tick">${on && fs.length > 1 ? `<span class="mono">${fs.indexOf(k) + 1}</span>` : I.check}</i></button>`; }).join('')}</div>
       <div class="bq-foot"><button class="btn primary block" data-act="bld-next" data-step="foco">${fs.length ? `Continuar · ${fs.length} ${fs.length === 1 ? 'prioridade' : 'prioridades'}` : 'Continuar'}</button></div>`; }
   else if (step === 'obs'){ q = 'Alguma observação ou preferência?';

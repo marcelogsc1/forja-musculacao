@@ -215,7 +215,9 @@ function kineticName(name, ty, tag, key){
     else if (ty === 'rest') deco = '<i class="kd-z">z</i><i class="kd-z kd-z2">z</i>';
   }
   const cls = `cond hero-name${kinetic ? ` kt kt-${ty}` : ''}${enter ? ' kin' : ''}`;
-  return `<${tag} class="${cls}" style="--k:${k}" aria-label="${esc(s)}"><span class="hn" aria-hidden="true">${inner}${deco}</span></${tag}>`;
+  /* data-mk: quando a palavra muda (UPPER → LOWER), o título é recriado inteiro. Sem isso o morph reaproveita as letras antigas
+     e cria só as novas, que começam a animação atrasadas e ficam fora do ritmo das outras. */
+  return `<${tag} class="${cls}" style="--k:${k}" aria-label="${esc(s)}" data-mk="${esc(ty + ':' + s)}"><span class="hn" aria-hidden="true">${inner}${deco}</span></${tag}>`;
 }
 /* Bloco do nome do cartão conforme o estilo escolhido.
    words: palavras do anel do selo (dia + músculos). */
